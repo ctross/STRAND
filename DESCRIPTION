@@ -1,7 +1,10 @@
 Package: STRAND
 Title: An R package for simulating and analyzing social network data in R and Stan
 Version: 0.0.0.9000
-Authors@R: person("Cody", "Ross", email = "ctross@ucdavis.edu", role = c("aut", "cre"))
+Authors@R: c(person("Cody", "Ross", email = "ctross@ucdavis.edu", role = c("aut", "cre")),
+             person("Daniel", "Redhead", email = " ", role = c("aut")),
+             person("Richard", "McElreath", email = " ", role = c("aut")))
+
 Description: Simulate social network data using a variety of standard tools and analyze data using full Bayesian inference in Stan
 Depends: rethinking
 License: Who knows!
