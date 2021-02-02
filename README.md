@@ -1,4 +1,4 @@
-DieTryin
+STRAND
 ========
 
 ![Logo](/logo.jpg)
