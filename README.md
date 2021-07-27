@@ -11,6 +11,6 @@ STRAND
 
 **STRAND** also allows users to conduct data analysis. Users can specify complex Bayesian social network models using a simple, lm() style, syntax. Single-sampled self report data can be modeled using stochastic block models or the social relations model, with or with-out covariates. Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement. Here we provide a brief overview of a workflow. For further details on any step, see our full publication in X at <>.
   
-  **STRAND** is part of an ecosystem of tools for modern social network analysis. **DieTryin** is a companion package designed to facilitate the collection of roster-based network data, and to run network-structured economic games. **ResolveR** is a package for semisupervised data cleaning, de-duplication, and record linkage.
+  **STRAND** is part of an ecosystem of tools for modern social network analysis. **DieTryin** is a companion package designed to facilitate the collection of roster-based network data, and to run network-structured economic games. **ResolveR** is a package for semi-supervised data cleaning, de-duplication, and record linkage.
 
 
