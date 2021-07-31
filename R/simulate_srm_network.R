@@ -1,4 +1,4 @@
-#' A function to simulate single layer directed networks 
+#' A function to simulate single layer directed networks using a social relations model
 #'
 #' This is a function to simulate single layer network data with sender-receiver effects and dyadic reciprocity. This function
 #' is essentially a social relations model.

@@ -1,6 +1,6 @@
-#' A function to organize network data and covariates 
+#' A function to create a STRAND data object
 #'
-#' This is a data wrangling function designed to organize network data and covariates into a form that can be used by STRAND for model fitting. All 
+#' This function will organize network data and covariates into a form that can be used by STRAND for model fitting. All 
 #' STRAND model fitting functions require their data to be supplied in the format exported here.
 #'
 #' @param 
@@ -8,15 +8,15 @@
 #' and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
 #' represents i's reports of transfers from j to i.
 #' @param 
-#' ground_truth A list of secondary network data about the same latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
+#' ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
 #' @param 
-#' group_ids A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in self_report. This should be provided as a factor.
+#' group_ids A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
 #' @param 
-#' individual_covariates An N_id by N_parameters dataframe of covariates.
+#' individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
 #' @param 
 #' dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
-#' @return A list of data formatted for use in STRAND models.
+#' @return A list of data formatted for use by STRAND models.
 #' @export
 #' @examples
 #' \dontrun{
@@ -99,7 +99,6 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
         if(is.null(dyadic_covariates)){
           N_dyadic_predictors = 0
-          dyadic_predictors = 0
          } else{
           N_dyadic_predictors = length(dyadic_covariates)
           dyadic_predictors = dyadic_covariates
@@ -140,7 +139,7 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
-   attr(model_dat, "group_ids_character") = group_ids_character 
+   attr(model_dat, "group_ids_character") = unique(group_ids_character)
    
   return(model_dat)
 }

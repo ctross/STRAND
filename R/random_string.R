@@ -3,7 +3,7 @@
 #' This is a small helper function to create random ID codes.
 #'
 #' @param 
-#' N Number of ID codes to make
+#' N Number of ID codes to generate
 #' @param 
 #' length Length of ID codes
 #' @return A vector of unique ID codes

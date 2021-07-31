@@ -1,21 +1,21 @@
 #' Simulate a self-reported network 
 #'
-#' This function allows the user to simulate a self-reported network (along with a true tie network, and a network of resource flows). 
-#' The function first simulates true tie data using the simulate_sbm_plus_srm_network() function, and then simulate self-reports and observable resource flows over the true network.
-#' This lets the user investiagte the effects of response biases, like false positive rate, on network properties.
+#' This function allows the user to simulate a self-reported network, along with a 'true' network, and a network of resource flows. 
+#' The function first simulates the true network data using the simulate_sbm_plus_srm_network() function, and then simulate self-reports and observable resource flows over the true network.
+#' This allows the user to investigate the effects of response biases, such as false positive rate, on network properties.
 #'
 #' @param 
 #' N_id Number of individuals.
 #' @param 
 #' N_groups Number of groups.
 #' @param 
-#' group_probs A vector of the probabilities of being in each group.
+#' group_probs A vector of the probabilities of individuals being in each group.
 #' @param 
 #' B Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.
 #' @param 
-#' in_block Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.
+#' in_block Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.
 #' @param 
-#' out_block Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter. 
+#' out_block Tie probabilities between members of different groups. This is overridden by a non-NULL B parameter. 
 #' @param 
 #' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
 #' @param 
@@ -25,9 +25,9 @@
 #' @param 
 #' dr_sigma Standard deviation for dyadic random effects.
 #' @param 
-#' sr_rho Correlation of sender-receiver effects: aka. generalized reciprocity.
+#' sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
 #' @param 
-#' dr_rho Correlation of dyad effects: aka. dyadic reciprocity.
+#' dr_rho Correlation of dyad effects: (i.e., dyadic reciprocity).
 #' @param 
 #' individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param 
@@ -228,11 +228,11 @@ for ( i in 1:N_id ){
 
 for(i in 1:N_id){
  for (g in 1:N_periods)
- goods_flows[i,i,g] <- 0
+ goods_flows[i,i,g] <- -99
 
- statement_flows[i,i,1] <- 0
+ statement_flows[i,i,1] <- -99
  if(N_responses == 2)
- statement_flows[i,i,2] <- 0
+ statement_flows[i,i,2] <- -99
 }
 
 

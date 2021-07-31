@@ -3,9 +3,9 @@
 #' This is a function to organize Stan output and provide summaries of key model parameters
 #'
 #' @param 
-#' input A STRAND model object, obtained by fitting a block model.
+#' input A STRAND model object, obtained by fitting a stochastic block model.
 #' @param 
-#' include_samples Should raw samples be returned? Or only the summary statistics? Samples can take up a lot of space.
+#' include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples
@@ -14,6 +14,9 @@
 #' }
 #'
 
+
+# Should change to allow users to specify HPDI intervals
+
 summarize_bm_results = function(input, include_samples=TRUE){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bm_results() requires a fitted object of class: STRAND Model Object. Please use fit_block_model() to run your model.")
@@ -21,7 +24,7 @@ summarize_bm_results = function(input, include_samples=TRUE){
 
     if(attributes(input)$fit_type != "mcmc"){
         stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
-              during experimantal model runs, but final inferences should be based on MCMC sampling.")   
+              during experimental model runs, but final inferences should be based on MCMC sampling.")   
     }
 
     ###################################################### Create samples 
@@ -111,7 +114,7 @@ summarize_bm_results = function(input, include_samples=TRUE){
 
      results_srm_base = matrix(NA, nrow=input$data$N_groups^2, ncol=6)
  
-     group_ids_character = unique(attr(input$data, "group_ids_character"))
+     group_ids_character = attr(input$data, "group_ids_character")
 
      for(b1 in 1:input$data$N_groups){
       for(b2 in 1:input$data$N_groups){

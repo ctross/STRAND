@@ -3,9 +3,9 @@
 #' This is a function to organize Stan output and provide summaries of key model parameters
 #'
 #' @param 
-#' input A STRAND model object, obtained by fitting a latent network model plus flows.
+#' input A STRAND model object, obtained by fitting a latent network model including observed network flows.
 #' @param 
-#' include_samples Should raw samples be returned? Or only the summary statistics? Samples can take up a lot of space.
+#' include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples
@@ -14,6 +14,9 @@
 #' }
 #'
 
+# Should change to allow users to specify HPDI intervals
+
+
 summarize_lnmf_results = function(input, include_samples=TRUE){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_lnmf_results() requires a fitted object of class: STRAND Model Object. Please use fit_latent_network_plus_flows_model() to run your model.")
@@ -21,7 +24,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE){
 
     if(attributes(input)$fit_type != "mcmc"){
         stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
-              during experimantal model runs, but final inferences should be based on MCMC sampling.")   
+              during experimental model runs, but final inferences should be based on MCMC sampling.")   
     }
 
     ###################################################### Create samples 
@@ -269,7 +272,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE){
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1])
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1])
  
-     group_ids_character = unique(attr(input$data, "group_ids_character"))
+     group_ids_character = attr(input$data, "group_ids_character")
 
      for(b1 in 1:input$data$N_groups){
       for(b2 in 1:input$data$N_groups){

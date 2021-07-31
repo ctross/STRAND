@@ -1,6 +1,6 @@
-#' A function to simulate single layer directed networks 
+#' A function to simulate single layer directed networks using a combined stochastic block and social relations model
 #'
-#' This is a function to simulate single layer network data with block structure, sender-receiver effects, and dyadic reciprocity. This function
+#' This is a function to simulate single layer network data with a stochastic block structure, sender-receiver effects, and dyadic reciprocity. This function
 #' is essentially the union of a social relations model and a stochastic block model.
 #'
 #' @param 
@@ -8,25 +8,25 @@
 #' @param 
 #' N_groups Number of groups.
 #' @param 
-#' group_probs A vector of the probabilities of being in each group.
+#' group_probs A vector of the probabilities of individuals being in each group.
 #' @param 
-#' B Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.
+#' B Tie probabilities between group blocks. If B is null, then in_block and out_block can be specified to create B.
 #' @param 
-#' in_block Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.
+#' in_block Tie probabilities between memebers of the same group. This is overridden by a non-NULL B parameter.
 #' @param 
-#' out_block Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter. 
+#' out_block Tie probabilities between memebers of different groups. This is overridden by a non-NULL B parameter. 
 #' @param 
-#' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
+#' sr_mu Mean A vector for sender and receivier random effects. In most cases, this should be c(0,0).
 #' @param 
-#' dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
+#' dr_mu Mean A vector for dyadic random effects. In most cases, this should be c(0,0).
 #' @param 
-#' sr_sigma Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
+#' sr_sigma A standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
 #' @param 
 #' dr_sigma Standard deviation for dyadic random effects.
 #' @param 
-#' sr_rho Correlation of sender-receiver effects: aka. generalized reciprocity.
+#' sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
 #' @param 
-#' dr_rho Correlation of dyad effects: aka. dyadic reciprocity.
+#' dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
 #' @param 
 #' individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param 

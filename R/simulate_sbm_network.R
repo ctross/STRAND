@@ -1,19 +1,19 @@
-#' A function to simulate single layer directed networks 
+#' A function to simulate single layer directed networks with a stochastic block structure
 #'
-#' This is a function to simulate single layer network data with block structure. 
+#' This is a function to simulate single layer network data with a stochastic block structure. 
 #'
 #' @param 
 #' N_id Number of individuals.
 #' @param 
-#' N_groups Number of groups.
+#' N_groups Number of groups (i.e., blocks).
 #' @param 
-#' group_probs A vector of the probabilities of being in each group.
+#' group_probs A vector of the probabilities of individuals being in each group.
 #' @param 
-#' B Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.
+#' B Tie probabilities between group blocks. If B is null, then in_block and out_block can be specified to create B.
 #' @param 
-#' in_block Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.
+#' in_block Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.
 #' @param 
-#' out_block Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter. 
+#' out_block Tie probabilities between memebers of different groups. This is overridden by a non-NULL B parameter. 
 #' @param 
 #' individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param 
