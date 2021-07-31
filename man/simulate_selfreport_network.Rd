@@ -41,25 +41,25 @@ simulate_selfreport_network(
 
 \item{N_groups}{Number of groups.}
 
-\item{group_probs}{A vector of the probabilities of being in each group.}
+\item{group_probs}{A vector of the probabilities of individuals being in each group.}
 
 \item{B}{Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.}
 
-\item{in_block}{Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.}
+\item{in_block}{Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.}
 
-\item{out_block}{Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter.}
+\item{out_block}{Tie probabilities between members of different groups. This is overridden by a non-NULL B parameter.}
 
 \item{sr_mu}{Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).}
 
 \item{sr_sigma}{Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.}
 
-\item{sr_rho}{Correlation of sender-receiver effects: aka. generalized reciprocity.}
+\item{sr_rho}{Correlation of sender-receiver effects (i.e., generalized reciprocity).}
 
 \item{dr_mu}{Mean vector for dyadic random effects. In most cases, this should be c(0,0).}
 
 \item{dr_sigma}{Standard deviation for dyadic random effects.}
 
-\item{dr_rho}{Correlation of dyad effects: aka. dyadic reciprocity.}
+\item{dr_rho}{Correlation of dyad effects: (i.e., dyadic reciprocity).}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -105,9 +105,9 @@ Support is on the unit interval. If covariates are centered, this can be loosly 
 A list of data formatted for use in Stan models.
 }
 \description{
-This function allows the user to simulate a self-reported network (along with a true tie network, and a network of resource flows). 
-The function first simulates true tie data using the simulate_sbm_plus_srm_network() function, and then simulate self-reports and observable resource flows over the true network.
-This lets the user investiagte the effects of response biases, like false positive rate, on network properties.
+This function allows the user to simulate a self-reported network, along with a 'true' network, and a network of resource flows. 
+The function first simulates the true network data using the simulate_sbm_plus_srm_network() function, and then simulate self-reports and observable resource flows over the true network.
+This allows the user to investigate the effects of response biases, such as false positive rate, on network properties.
 }
 \examples{
 \dontrun{

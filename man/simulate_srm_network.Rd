@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulate_srm_network.R
 \name{simulate_srm_network}
 \alias{simulate_srm_network}
-\title{A function to simulate single layer directed networks}
+\title{A function to simulate single layer directed networks using a social relations model}
 \usage{
 simulate_srm_network(
   N_id = 99,

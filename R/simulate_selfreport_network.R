@@ -228,11 +228,11 @@ for ( i in 1:N_id ){
 
 for(i in 1:N_id){
  for (g in 1:N_periods)
- goods_flows[i,i,g] <- -99
+ goods_flows[i,i,g] <- 0
 
- statement_flows[i,i,1] <- -99
+ statement_flows[i,i,1] <- 0
  if(N_responses == 2)
- statement_flows[i,i,2] <- -99
+ statement_flows[i,i,2] <- 0
 }
 
 

@@ -92,6 +92,7 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
         if(is.null(individual_covariates)){
           N_individual_predictors = 0
+          individual_predictors = 0
          } else{
           N_individual_predictors = dim(individual_covariates)[2]  
           individual_predictors = individual_covariates
@@ -99,6 +100,7 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
         if(is.null(dyadic_covariates)){
           N_dyadic_predictors = 0
+          dyadic_predictors = 0
          } else{
           N_dyadic_predictors = length(dyadic_covariates)
           dyadic_predictors = dyadic_covariates

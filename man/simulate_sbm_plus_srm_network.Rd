@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulate_sbm_plus_srm_network.R
 \name{simulate_sbm_plus_srm_network}
 \alias{simulate_sbm_plus_srm_network}
-\title{A function to simulate single layer directed networks}
+\title{A function to simulate single layer directed networks using a combined stochastic block and social relations model}
 \usage{
 simulate_sbm_plus_srm_network(
   N_id = 90,
@@ -28,25 +28,25 @@ simulate_sbm_plus_srm_network(
 
 \item{N_groups}{Number of groups.}
 
-\item{group_probs}{A vector of the probabilities of being in each group.}
+\item{group_probs}{A vector of the probabilities of individuals being in each group.}
 
-\item{B}{Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.}
+\item{B}{Tie probabilities between group blocks. If B is null, then in_block and out_block can be specified to create B.}
 
-\item{in_block}{Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.}
+\item{in_block}{Tie probabilities between memebers of the same group. This is overridden by a non-NULL B parameter.}
 
-\item{out_block}{Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter.}
+\item{out_block}{Tie probabilities between memebers of different groups. This is overridden by a non-NULL B parameter.}
 
-\item{sr_mu}{Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).}
+\item{sr_mu}{Mean A vector for sender and receivier random effects. In most cases, this should be c(0,0).}
 
-\item{sr_sigma}{Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.}
+\item{sr_sigma}{A standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.}
 
-\item{sr_rho}{Correlation of sender-receiver effects: aka. generalized reciprocity.}
+\item{sr_rho}{Correlation of sender-receiver effects (i.e., generalized reciprocity).}
 
-\item{dr_mu}{Mean vector for dyadic random effects. In most cases, this should be c(0,0).}
+\item{dr_mu}{Mean A vector for dyadic random effects. In most cases, this should be c(0,0).}
 
 \item{dr_sigma}{Standard deviation for dyadic random effects.}
 
-\item{dr_rho}{Correlation of dyad effects: aka. dyadic reciprocity.}
+\item{dr_rho}{Correlation of dyad effects (i.e., dyadic reciprocity).}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -63,7 +63,7 @@ group_ids (a vector of length N_id, giving the group of each individual), indivi
 and dyadic_predictors (the supplied covariate data is saved along with the network data).
 }
 \description{
-This is a function to simulate single layer network data with block structure, sender-receiver effects, and dyadic reciprocity. This function
+This is a function to simulate single layer network data with a stochastic block structure, sender-receiver effects, and dyadic reciprocity. This function
 is essentially the union of a social relations model and a stochastic block model.
 }
 \examples{

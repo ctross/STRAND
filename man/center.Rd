@@ -2,7 +2,7 @@
 % Please edit documentation in R/center.R
 \name{center}
 \alias{center}
-\title{A function to center data}
+\title{A function to mean center data}
 \usage{
 center(input)
 }
@@ -13,7 +13,7 @@ center(input)
 A vector of centered data.
 }
 \description{
-This is a simple helper function to center data, as it makes parameter interpretation easier.
+This is a simple helper function to mean center data. We recommmend to mean center covariates as it makes parameter interpretation easier.
 }
 \examples{
 \dontrun{

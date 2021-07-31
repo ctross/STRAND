@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulate_sbm_network.R
 \name{simulate_sbm_network}
 \alias{simulate_sbm_network}
-\title{A function to simulate single layer directed networks}
+\title{A function to simulate single layer directed networks with a stochastic block structure}
 \usage{
 simulate_sbm_network(
   N_id = 90,
@@ -26,15 +26,15 @@ simulate_sbm_network(
 \arguments{
 \item{N_id}{Number of individuals.}
 
-\item{N_groups}{Number of groups.}
+\item{N_groups}{Number of groups (i.e., blocks).}
 
-\item{group_probs}{A vector of the probabilities of being in each group.}
+\item{group_probs}{A vector of the probabilities of individuals being in each group.}
 
-\item{B}{Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.}
+\item{B}{Tie probabilities between group blocks. If B is null, then in_block and out_block can be specified to create B.}
 
-\item{in_block}{Tie probabilities between memebers of the same group. Overridden by a non-NULL B parameter.}
+\item{in_block}{Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.}
 
-\item{out_block}{Tie probabilities between memebers of different groups.  Overridden by a non-NULL B parameter.}
+\item{out_block}{Tie probabilities between memebers of different groups. This is overridden by a non-NULL B parameter.}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -51,7 +51,7 @@ group_ids (a vector of length N_id, giving the group of each individual), indivi
 and dyadic_predictors (the supplied covariate data is saved along with the network data).
 }
 \description{
-This is a function to simulate single layer network data with block structure.
+This is a function to simulate single layer network data with a stochastic block structure.
 }
 \examples{
 \dontrun{

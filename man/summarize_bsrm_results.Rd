@@ -7,9 +7,9 @@
 summarize_bsrm_results(input, include_samples = TRUE)
 }
 \arguments{
-\item{input}{A STRAND model object, obtained by fitting a block plus social relations model.}
+\item{input}{A STRAND model object, obtained by fitting a combined stochastic block and social relations model.}
 
-\item{include_samples}{Should raw samples be returned? Or only the summary statistics? Samples can take up a lot of space.}
+\item{include_samples}{An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.}
 }
 \value{
 A STRAND results object including summary table, a summary list, and samples.

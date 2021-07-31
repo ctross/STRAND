@@ -7,7 +7,7 @@
 random_string(N = 1, length = 12)
 }
 \arguments{
-\item{N}{Number of ID codes to make}
+\item{N}{Number of ID codes to generate}
 
 \item{length}{Length of ID codes}
 }

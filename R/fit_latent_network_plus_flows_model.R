@@ -67,45 +67,76 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
         stop("The supplied data are not appropriate for a latent network model with flows. Please ensure that self_report data are double sampled and that ground-truth data are included.")
     }
     
-    ############################################################################# Prepare data and parse formulas
+    if(data$N_individual_predictors==0 & focal_regression != ~ 1){
+        stop("No individual covariate data has been provided. focal_regression must equal ~ 1 ")
+    }
+
+    if(data$N_individual_predictors==0 & target_regression != ~ 1){
+        stop("No individual covariate data has been provided. target_regression must equal ~ 1 ")
+    }
+
+    if(data$N_individual_predictors==0 & fpr_regression != ~ 1){
+        stop("No individual covariate data has been provided. fpr_regression must equal ~ 1 ")
+    }
+
+    if(data$N_individual_predictors==0 & rtt_regression != ~ 1){
+        stop("No individual covariate data has been provided. rtt_regression must equal ~ 1 ")
+    }
+
+    if(data$N_individual_predictors==0 & theta_regression != ~ 1){
+        stop("No individual covariate data has been provided. theta_regression must equal ~ 1 ")
+    }
+
+    if(data$N_dyadic_predictors==0 & dyad_regression != ~ 1){
+        stop("No individual covariate data has been provided. dyad_regression must equal ~ 1 ")
+    }
+    
+
+############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)
     dyad_names = names(data$dyadic_predictors)
 
+    ################################################################ Dyad model matrix
+     if(data$N_dyadic_predictors>0){
+     dyad_dims = c(data$N_id, data$N_id, length(dyad_names))
 
-    dyad_dims = c(data$N_id, data$N_id, length(dyad_names))
-
-    dyad_dat = list()
-
-    for(i in 1:dyad_dims[3]){
+     dyad_dat = list()
+     for(i in 1:dyad_dims[3]){
       dyad_dat[[i]] = c(data$dyadic_predictors[[i]])  
      }
 
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
      dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
-
      colnames(dyad_dat) = dyad_names
+     dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
 
-    dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
-
-    dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
-
-
-    for(i in 1:ncol(dyad_model_matrix)){
+     dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
+     for(i in 1:ncol(dyad_model_matrix)){
       dyad_dat_out[,,i] = matrix(dyad_model_matrix[,i], nrow=dyad_dims[1], ncol=dyad_dims[2])  
      }
 
-      dimnames(dyad_dat_out)[[3]] = colnames(dyad_model_matrix)
+     dimnames(dyad_dat_out)[[3]] = colnames(dyad_model_matrix)
+     data$dyad_set = dyad_dat_out
+     } else{
+      data$dyad_set = array(1, c(data$N_id, data$N_id, 1))
+     }
 
+     ################################################################ Individual model matrix
+     if(data$N_individual_predictors>0){
+      data$fpr_set = model.matrix( fpr_regression , data$individual_predictors )
+      data$rtt_set = model.matrix( rtt_regression , data$individual_predictors )
+      data$theta_set = model.matrix( theta_regression , data$individual_predictors )
+      data$focal_set = model.matrix( focal_regression , data$individual_predictors )
+      data$target_set = model.matrix( target_regression , data$individual_predictors )
+     } else{
+      data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
+      data$target_set = matrix(1,nrow=data$N_id, ncol=1)
+      data$fpr_set = matrix(1,nrow=data$N_id, ncol=1)
+      data$rtt_set = matrix(1,nrow=data$N_id, ncol=1)
+      data$theta_set = matrix(1,nrow=data$N_id, ncol=1)
+     }
 
-    data$fpr_set = model.matrix( fpr_regression , data$individual_predictors )
-    data$rtt_set = model.matrix( rtt_regression , data$individual_predictors )
-    data$theta_set = model.matrix( theta_regression , data$individual_predictors )
-    data$focal_set = model.matrix( focal_regression , data$individual_predictors )
-    data$target_set = model.matrix( target_regression , data$individual_predictors )
-    data$dyad_set = dyad_dat_out
-    
-
-    data$N_params = c(ncol(data$focal_set), ncol(data$target_set), ncol(data$fpr_set), ncol(data$rtt_set), ncol(data$theta_set), ncol(dyad_model_matrix))
+    data$N_params = c(ncol(data$focal_set), ncol(data$target_set), ncol(data$fpr_set), ncol(data$rtt_set), ncol(data$theta_set), dim(data$dyad_set)[3])
 
     data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
 

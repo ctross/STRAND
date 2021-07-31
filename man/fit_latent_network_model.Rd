@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_latent_network_model.R
 \name{fit_latent_network_model}
 \alias{fit_latent_network_model}
-\title{A function to run STRAND latent network models}
+\title{A function to run latent network models using the STRAND framework}
 \usage{
 fit_latent_network_model(
   data = model_dat,
@@ -19,7 +19,7 @@ fit_latent_network_model(
 )
 }
 \arguments{
-\item{data}{A data object of class STRAND, prepared using the make_strand_data() function. Must include the covariates used in the formulas listed below.}
+\item{data}{A data object of class STRAND, prepared using the make_strand_data() function. The data object must include all covariates used in the formulas listed below.}
 
 \item{fpr_regression}{A formula for the predictors of false positive rate. Specified as in lm(), e.g.: ~ Age + Education}
 
@@ -27,26 +27,29 @@ fit_latent_network_model(
 
 \item{theta_regression}{A formula for the predictors of theta, the probability that a given individual duplicates a response from layer 1 into layer 2. Specified as in lm(), e.g.: ~ 1}
 
-\item{focal_regression}{A formula for the predictors of out-degree. Aka focal effects, or the effects of individual covariates on outgoing ties. Specified as in lm(), e.g.: ~ Age * Education}
+\item{focal_regression}{A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
-\item{target_regression}{A formula for the predictors of in-degree. Aka target effects, or the effects of individual covariates on incoming ties. Specified as in lm(), e.g.: ~ Age * Education}
+\item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
-\item{dyad_regression}{A formula for the predictors of dyadic relationships. Specified as in lm(), e.g.: ~ Kinship + Friendship}
+\item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(),, e.g.: ~ Kinship + Friendship}
 
-\item{mode}{A string giving the mode stan should use to fit the model. "mcmc" is recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
+\item{mode}{A string giving the mode stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
-users must be familar with cmdstanr and its methods.}
+users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.}
 
-\item{return_latent_network}{Should the reconstructed latent tie probabilities be exported? Warning: for large networks, this option can require substantial memory.}
+\item{return_latent_network}{An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.}
 
-\item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)}
+\item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)}
 }
 \value{
 A STRAND model object containing the data used, and the Stan results.
 }
 \description{
-This function allows a user to supply emprical or simulated data, and analyse it using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
+This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
 and a series of formulas following standard lm() style syntax.
+}
+\details{
+It is important to note that all individuals' block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
 }
 \examples{
 \dontrun{
