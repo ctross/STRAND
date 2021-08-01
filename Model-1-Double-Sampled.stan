@@ -1,6 +1,6 @@
 functions{
     //# probability of observed variables relevant to ij dyad
-    real prob_sgij( int[] sij, int[] sji, int tie, vector fpri, vector fprj, vector rtti, vector rttj) {
+    real prob_sgij( int[] sij, int[] sji, int tie, vector fpri, vector fprj, vector rtti, vector rttj, real theta) {
        vector[2] y;
       
     //# model likelihood
@@ -9,8 +9,14 @@ functions{
         y[1] = bernoulli_logit_lpmf(sij[1] | fpri[1]);
 
             //# prob j says i helps j
+            if(sji[1] == 0){
         y[2] = bernoulli_logit_lpmf(sji[2] | fprj[2]);
-
+                           }
+              else{
+        y[2] = log_mix(theta, 
+                      bernoulli_logit_lpmf(sji[2] | 1),
+                      bernoulli_logit_lpmf(sji[2] | fprj[2])); 
+                           }
       }
 
     else{ //#  if(tie==1){
@@ -18,34 +24,94 @@ functions{
         y[1] = bernoulli_logit_lpmf(sij[1] | rtti[1]);
 
         //# prob j says i helps j
+        if(sji[1] == 0){
         y[2] = bernoulli_logit_lpmf(sji[2] | rttj[2]);
+                      }
+              else{
+        y[2] = log_mix(theta, 
+                      bernoulli_logit_lpmf(sji[2] | 1),
+                      bernoulli_logit_lpmf(sji[2] | rttj[2])); 
+        }
       }
         return(sum(y));
     }
 }
 
 data{
-    int N_networktypes;           //# Number of network types
-    int N_id;                     //# Number of respondents
-    int N_groups;                 //# Number of observed groups in block strucutre
-    int N_responses;              //# Number of responses in the self-report network, 2 is double sampled
-    int group[N_id];              //# Group ID code of individual i
-    int s[N_id,N_id,N_responses]; //# Networks of responses
-    vector[N_id] predictor_1;     //# Individual level covariate
+    int N_networktypes;                                               
+    int N_id;                                                         
+    int N_groups;                                                     
+    int N_responses;        
+
+    int N_params [6];                                          
+
+    int group_ids[N_id];                                              
+    int outcomes[N_id,N_id,N_responses];                              
+
+    matrix[N_id, N_params[1]] focal_set;
+    matrix[N_id, N_params[2]] target_set;
+    matrix[N_id, N_params[3]] fpr_set;
+    matrix[N_id, N_params[4]] rtt_set;
+    matrix[N_id, N_params[5]] theta_set;
+
+    real dyad_set[N_id, N_id, N_params[6]];
+
+    int export_network;
 }
 
 transformed data{
  real S;
  real penalty;
 
+ matrix[N_id, N_params[1]-1] focal_individual_predictors; 
+ matrix[N_id, N_params[2]-1] target_individual_predictors; 
+ matrix[N_id, N_params[3]-1] fpr_individual_predictors; 
+ matrix[N_id, N_params[4]-1] rtt_individual_predictors; 
+ matrix[N_id, N_params[5]-1] theta_individual_predictors; 
+
+ real dyad_individual_predictors[N_id, N_id, N_params[6]-1]; 
+
+//# Make penalty terms
  S = 0;
  for(i in 1:N_id){
    for(j in 1:N_id){
      if(i != j)
-   S += (s[i,j,1] + s[j,i,2] + 0.0)/2.0;
+   S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
  }}
 
-  penalty = S^(1/1.5);
+  penalty = S^(1/2.0);
+
+//# Make pruned data
+  
+  if(N_params[1]>1){
+  for(i in 2:N_params[1]){
+  focal_individual_predictors[ , i-1] = focal_set[,i];  
+   }}
+
+  if(N_params[2]>1){
+  for(i in 2:N_params[2]){
+  target_individual_predictors[ , i-1] = target_set[,i];  
+   }}
+
+  if(N_params[3]>1){
+  for(i in 2:N_params[3]){
+  fpr_individual_predictors[ , i-1] = fpr_set[,i];  
+   }}
+
+  if(N_params[4]>1){
+  for(i in 2:N_params[4]){
+  rtt_individual_predictors[ , i-1] = rtt_set[,i];  
+   }}
+
+  if(N_params[5]>1){
+  for(i in 2:N_params[5]){
+  theta_individual_predictors[ , i-1] = theta_set[,i];  
+   }}
+
+  if(N_params[6]>1){
+  for(i in 2:N_params[6]){
+  dyad_individual_predictors[ , , i-1] = dyad_set[,,i];  
+   }}
 }
 
 parameters{
@@ -53,21 +119,23 @@ parameters{
     //# Measurement model
     vector<lower=0, upper=1>[N_networktypes] false_positive_rate;
     vector<lower=0, upper=1>[N_networktypes] recall_of_true_ties;
+    real<lower=0, upper=1> theta_mean;
 
     vector<lower=0>[N_networktypes] fpr_sigma;
     vector<lower=0>[N_networktypes] rtt_sigma;
+    real<lower=0> theta_sigma;
 
     vector[N_networktypes] fpr_raw[N_id];
     vector[N_networktypes] rtt_raw[N_id];
+    real theta_raw[N_id];
 
-    vector[N_networktypes] fpr_effects_1;
-    vector[N_networktypes] rtt_effects_1;   
-
+    vector[N_params[3]-1] fpr_effects[N_networktypes];
+    vector[N_params[4]-1] rtt_effects[N_networktypes]; 
+    vector[N_params[5]-1] theta_effects;   
 
     //########################################################### Latent Netowrk
     //# SBM + SRM model
-    real out_block;
-    real in_block;
+    matrix[N_groups, N_groups] B;
 
     vector<lower=0>[2] sr_sigma;  //# Variation of sender-receiver effects
     cholesky_factor_corr[2] sr_L;
@@ -78,7 +146,9 @@ parameters{
     matrix[N_id, N_id] dr_raw;
 
     //# Effects of covariate
-    vector[N_responses] sr_effects_1;
+    vector[N_params[1]-1] focal_effects;
+    vector[N_params[2]-1] target_effects;
+    vector[N_params[6]-1] dyad_effects;  
 }
 
 model{
@@ -86,43 +156,68 @@ model{
   matrix[N_id, N_id] dr;
   vector[N_networktypes] fpr[N_id];
   vector[N_networktypes] rtt[N_id];
+  real theta[N_id];
 
   vector[2] scrap;
-  matrix[N_groups,N_groups] B;
 
   matrix[N_id, N_id] p;
   matrix[N_id, N_id] mixed_p;
 
     //# Priors on effects of covariates
-    sr_effects_1 ~ normal(0,1);
-    fpr_effects_1 ~ normal(0,1);
-    rtt_effects_1 ~ normal(0,1);
+    focal_effects ~ normal(0,1);
+    target_effects ~ normal(0,1);
+    dyad_effects ~ normal(0,1);
+    theta_effects ~ normal(0,1);
 
+   for(k in 1:N_networktypes){
+    fpr_effects[k] ~ normal(0,1);
+    rtt_effects[k] ~ normal(0,1);
+    }
+    
     //# Priors for measurement model
-    false_positive_rate ~ beta(1,10);
-    recall_of_true_ties ~ beta(10,1);
+    false_positive_rate ~ beta(1,20);
+    recall_of_true_ties ~ beta(20,1);
+    theta_mean ~ beta(3,12);
 
     fpr_sigma ~ exponential(1);
     rtt_sigma ~ exponential(1);
+    theta_sigma ~ exponential(1);
 
     for(i in 1:N_id){
     fpr_raw[i] ~ normal(0,1);
     rtt_raw[i] ~ normal(0,1);
+    theta_raw[i] ~ normal(0,1);
     }
 
     for(i in 1:N_id){
-    fpr[i] = logit(false_positive_rate) + predictor_1[i]*fpr_effects_1 + fpr_sigma .* fpr_raw[i];
-    rtt[i] = logit(recall_of_true_ties) + predictor_1[i]*rtt_effects_1 + rtt_sigma .* rtt_raw[i];
-    }
+    vector[N_networktypes] fpr_terms;
+    vector[N_networktypes] rtt_terms;
+
+     for(k in 1:N_networktypes){
+      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
+      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
+     }
+
+    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
+    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
+    theta[i] = inv_logit(logit(theta_mean) + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    }    
 
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
+
     sr_sigma ~ exponential(1);
     sr_L ~ lkj_corr_cholesky(2.5);
 
-    for(i in 1:N_id)
-    sr[i] = predictor_1[i]*sr_effects_1 + diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i];
+    for(i in 1:N_id){
+     vector[2] sr_terms;
+
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+
+     sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
+     }
 
     //# Dyadic priors for social relations model
     to_vector(dr_raw) ~ normal(0,1);
@@ -134,8 +229,8 @@ model{
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1];
-     dr[j,i] = scrap[2];
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
      }}
 
     for(i in 1:N_id){
@@ -143,15 +238,12 @@ model{
     }
 
     //# priors for B
-    in_block ~ normal(logit(0.1/sqrt(N_id)), 0.5);
-    out_block ~ normal(logit(0.01/sqrt(N_id)), 0.5);
-
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] = in_block; //# transfers more likely within groups
+                B[i,j] ~ normal(logit(1/sqrt(N_id)), 0.5);   //# transfers more likely within groups
             } else {
-                B[i,j] = out_block; //# transfers less likely between groups
+                B[i,j] ~ normal(logit(0.1/sqrt(N_id)), 0.5); //# transfers less likely between groups
             }
         }}
 
@@ -163,9 +255,9 @@ model{
 
                 //# consider each possible state of true tie and compute prob of data
                 for(tie in 0:1) {
-                  terms[tie+1] = prob_sgij(s[i,j,], s[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j]);
+                  terms[tie+1] = prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
                 }
-      p[i,j] = inv_logit( B[group[i], group[j]] + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
+      p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
       mixed_p[i,j] = log_mix( p[i,j] , terms[2] , terms[1] );  //# Model as a mixture distribution
       }
    }
@@ -183,33 +275,35 @@ model{
 
 generated quantities{
     // compute posterior prob of each network tie
-    matrix[N_id, N_id] p_tie_out;
-    matrix[N_id, N_id] p;
-
-    {                
+    matrix[N_id*export_network, N_id*export_network] p_tie_out;
+ 
+    if(export_network==1){                
                 vector[2] terms;
                 int tie;
-                vector[N_networktypes] alpha;
-                vector[N_networktypes] beta;
                 vector[N_networktypes] fpr[N_id];
                 vector[N_networktypes] rtt[N_id];
-                matrix[N_groups,N_groups] B;
+                real theta[N_id];
                 vector[2] sr[N_id];
                 matrix[N_id, N_id] dr;
                 vector[2] scrap;
+                matrix[N_id, N_id] p;
             
-
     for(i in 1:N_id){
-     sr[i] = predictor_1[i]*sr_effects_1 + diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i];
-    }
+     vector[2] sr_terms;
+
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+
+     sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
+     }
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1];
-     dr[j,i] = scrap[2];
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
     }}
 
     for(i in 1:N_id){
@@ -217,35 +311,34 @@ generated quantities{
     }
 
     for(i in 1:N_id){
-    fpr[i] = logit(false_positive_rate) + predictor_1[i]*fpr_effects_1 + fpr_sigma .* fpr_raw[i];
-    rtt[i] = logit(recall_of_true_ties) + predictor_1[i]*rtt_effects_1 + rtt_sigma .* rtt_raw[i];
-    }
+    vector[N_networktypes] fpr_terms;
+    vector[N_networktypes] rtt_terms;
 
-    for ( i in 1:N_groups ){
-    for ( j in 1:N_groups ) {
-       if ( i==j ) {
-         B[i,j] = in_block; //# transfers more likely within groups
-            } else {
-         B[i,j] = out_block; //# transfers less likely between groups
-      }
-    }}
+     for(k in 1:N_networktypes){
+      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
+      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
+     }
 
+    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
+    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
+    theta[i] = inv_logit(logit(theta_mean) + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    }  
 
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
             if ( i != j ) {
                 // consider each possible state of true tie and compute prob of data
-                p[i,j] = inv_logit( B[group[i], group[j]] + sr[i,1] + sr[j,2] + dr[i,j]);
+                p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j]);
 
                 tie = 0;
                 terms[1] = 
                     log1m( p[i,j] ) + 
-                    prob_sgij(s[i,j,], s[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j]);
+                    prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
 
                 tie = 1;
                 terms[2] = 
                     log( p[i,j] ) + 
-                    prob_sgij(s[i,j,], s[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j]);
+                    prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
 
                 p_tie_out[i,j] = exp(terms[2] - log_sum_exp( terms ));
             }
@@ -256,7 +349,7 @@ generated quantities{
    p[i,i] = 0; 
    p_tie_out[i,i] = 0;
    }
-}
+ }
 }
 
 
