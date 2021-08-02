@@ -101,23 +101,26 @@ for( i in 1:N_id){
  }
 
 # Build true network
-p = y_true = matrix(NA, N_id, N_id)
+dr = p = y_true = matrix(NA, N_id, N_id)
 # Loop over upper triangle and create ties from i to j, and j to i
 for ( i in 1:(N_id-1) ){
     for ( j in (i+1):N_id){
 # Dyadic effects
- dr = rmvnorm2(1, Mu=c(dr_mu), sigma=rep(dr_sigma,2), Rho=Rho_dr)
+ dr_scrap = rmvnorm2(1, Mu=c(dr_mu), sigma=rep(dr_sigma,2), Rho=Rho_dr)
 
  if(!is.null(dyadic_predictors)){
-  dr[1] = dr[1] + sum(dyadic_effects*dyadic_predictors[i,j,]) 
-  dr[2] = dr[2] + sum(dyadic_effects*dyadic_predictors[j,i,]) 
+  dr_scrap[1] = dr_scrap[1] + sum(dyadic_effects*dyadic_predictors[i,j,]) 
+  dr_scrap[2] = dr_scrap[2] + sum(dyadic_effects*dyadic_predictors[j,i,]) 
   }
 
+ dr[i,j] = dr_scrap[1]
+ dr[j,i] = dr_scrap[2]
+
 # Simulate outcomes
- p[i,j] = inv_logit( logit(B) + sr[i,1] + sr[j,2] + dr[1])
+ p[i,j] = inv_logit( logit(B) + sr[i,1] + sr[j,2] + dr_scrap[1])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
- p[j,i] = inv_logit( logit(B) + sr[j,1] + sr[i,2] + dr[2])
+ p[j,i] = inv_logit( logit(B) + sr[j,1] + sr[i,2] + dr_scrap[2])
  y_true[j,i] = rbern( 1 , p[j,i] )
         }
     }
@@ -125,9 +128,10 @@ for ( i in 1:(N_id-1) ){
 for ( i in 1:N_id ){
     y_true[i,i] = 0
     p[i,i] = 0
+    dr[i,i] = 0
  }
 
-return(list(network=y_true, tie_strength=p, group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors))
+return(list(network=y_true, tie_strength=p, group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr))
 }
 
 

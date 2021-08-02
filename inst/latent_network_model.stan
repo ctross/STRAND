@@ -62,6 +62,7 @@ data{
 transformed data{
  real S;
  real penalty;
+ int N_per_group [N_groups];
 
  matrix[N_id, N_params[1]-1] focal_individual_predictors; 
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
@@ -69,9 +70,19 @@ transformed data{
  matrix[N_id, N_params[4]-1] rtt_individual_predictors; 
  matrix[N_id, N_params[5]-1] theta_individual_predictors; 
 
- real dyad_individual_predictors[N_id, N_id, N_params[6]-1]; 
+ real dyad_individual_predictors[N_id, N_id, N_params[6]-1];
 
-//# Make penalty terms
+ //# By group Ns 
+ for(k in 1: N_groups){
+  N_per_group[k] = 0;
+  }
+
+ for(i in 1:N_id){
+  N_per_group[group_ids[i]] += 1;
+  }
+
+
+ //# Make penalty terms
  S = 0;
  for(i in 1:N_id){
    for(j in 1:N_id){
@@ -79,9 +90,9 @@ transformed data{
    S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
  }}
 
-  penalty = S^(1/2.0);
+  penalty = S^(1/1.5);
 
-//# Make pruned data
+ //# Make pruned data
   
   if(N_params[1]>1){
   for(i in 2:N_params[1]){
@@ -175,8 +186,8 @@ model{
     }
     
     //# Priors for measurement model
-    false_positive_rate ~ beta(1,20);
-    recall_of_true_ties ~ beta(20,1);
+    false_positive_rate ~ beta(1,14);
+    recall_of_true_ties ~ beta(14,1);
     theta_mean ~ beta(3,12);
 
     fpr_sigma ~ exponential(1);
@@ -241,9 +252,9 @@ model{
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(1/sqrt(N_id)), 0.5);   //# transfers more likely with groups
+                B[i,j] ~ normal(logit(0.1/sqrt(N_per_group[i])), 1.5);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(0.1/sqrt(N_id)), 0.5); //# transfers less likely between groups
+                B[i,j] ~ normal(logit(0.01/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), 1.5); //# transfers less likely between groups
             }
         }}
 
@@ -257,6 +268,7 @@ model{
                 for(tie in 0:1) {
                   terms[tie+1] = prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
                 }
+                
       p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
       mixed_p[i,j] = log_mix( p[i,j] , terms[2] , terms[1] );  //# Model as a mixture distribution
       }
