@@ -118,8 +118,8 @@ for ( i in 1:(N_id-1) ){
   dr_scrap[2] = dr_scrap[2] + sum(dyadic_effects*dyadic_predictors[j,i,]) 
   }
 
- dr[i,j] = dr_scrap[1]
- dr[j,i] = dr_scrap[2]
+ dr[i,j] = dr_scrap[1] + logit(B[ groups[i] , groups[j] ])
+ dr[j,i] = dr_scrap[2] + logit(B[ groups[j] , groups[i] ])
 
 # Simulate outcomes
  p[i,j] = inv_logit( logit(B[ groups[i] , groups[j] ]) + sr[i,1] + sr[j,2] + dr_scrap[1])
