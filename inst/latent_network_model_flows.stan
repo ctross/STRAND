@@ -83,6 +83,8 @@ data{
 transformed data{
  real S;
  real penalty;
+ int N_per_group [N_groups];
+
 
  matrix[N_id, N_params[1]-1] focal_individual_predictors; 
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
@@ -91,6 +93,15 @@ transformed data{
  matrix[N_id, N_params[5]-1] theta_individual_predictors; 
 
  real dyad_individual_predictors[N_id, N_id, N_params[6]-1]; 
+
+//# By group Ns 
+ for(k in 1: N_groups){
+  N_per_group[k] = 0;
+  }
+
+ for(i in 1:N_id){
+  N_per_group[group_ids[i]] += 1;
+  }
 
 //# Make penalty terms
  S = 0;
@@ -214,8 +225,8 @@ model{
     }
     
     //# Priors for measurement model
-    false_positive_rate ~ beta(1,20);
-    recall_of_true_ties ~ beta(20,1);
+    false_positive_rate ~ beta(1,14);
+    recall_of_true_ties ~ beta(14,1);
     theta_mean ~ beta(3,12);
 
     fpr_sigma ~ exponential(1);
@@ -280,9 +291,9 @@ model{
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(1/sqrt(N_id)), 0.5);   //# transfers more likely with groups
+                B[i,j] ~ normal(logit(0.1/sqrt(N_per_group[i])), 1.5);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(0.1/sqrt(N_id)), 0.5); //# transfers less likely between groups
+                B[i,j] ~ normal(logit(0.01/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), 1.5); //# transfers less likely between groups
             }
         }}
 
@@ -392,8 +403,3 @@ generated quantities{
 }
 
 
-
-
-
-
-  
