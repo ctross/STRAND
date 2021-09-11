@@ -208,8 +208,8 @@ model{
   matrix[N_id, N_id] p;
   matrix[N_id, N_id] mixed_p;
 
-    effect_max ~ exponential(2.5);
-    effect_decay ~ exponential(2.5);
+    effect_max ~ exponential(0.1);
+    effect_decay ~ exponential(5);
 
     flow_rate ~ beta(3, 12);
 
