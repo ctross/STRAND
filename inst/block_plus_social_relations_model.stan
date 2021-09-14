@@ -19,6 +19,17 @@ transformed data{
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
  real dyad_individual_predictors[N_id, N_id, N_params[3]-1]; 
 
+ int N_per_group [N_groups];
+
+  //# By group Ns 
+ for(k in 1: N_groups){
+  N_per_group[k] = 0;
+  }
+
+ for(i in 1:N_id){
+  N_per_group[group_ids[i]] += 1;
+  }
+
 //# Make pruned data
   
   if(N_params[1]>1){
