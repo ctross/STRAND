@@ -106,9 +106,9 @@ model{
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(1/sqrt(N_id)), 0.5);   //# transfers more likely with groups
+                B[i,j] ~ normal(logit(0.1/sqrt(N_per_group[i])), 1.5);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(0.1/sqrt(N_id)), 0.5); //# transfers less likely between groups
+                B[i,j] ~ normal(logit(0.01/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), 1.5); //# transfers less likely between groups
             }
         }}
 
@@ -123,5 +123,3 @@ model{
 
 
  }
-
-
