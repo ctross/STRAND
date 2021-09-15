@@ -6,11 +6,7 @@
 #' @param 
 #' N_id Number of individuals.
 #' @param 
-#' N_groups Number of groups.
-#' @param 
-#' group_probs A vector of the probabilities of being in each group.
-#' @param 
-#' B Intercept tie probabilities.
+#' B Intercept tie probability.
 #' @param 
 #' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
 #' @param 
@@ -40,15 +36,12 @@
 #' \dontrun{
 #' A = simulate_srm_network(N_id = 100, B=0.002, individual_predictor=matrix(rnorm(100, 0, 1), nrow=100,ncol=1), individual_effects=matrix(c(1.2, 0.5),ncol=1,nrow=2))
 #' Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
-#' V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids]
 #' 
 #' plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 #' }
 #'
                                          
 simulate_srm_network = function(N_id = 99,                        # Number of respondents
-                                N_groups = 3,                     # Number of block, aka social groups
-                                group_probs = c(0.2, 0.5, 0.3),   # Density of each group in overall network
                                 B = 0.01,                         # Tie probabilities
                                 sr_mu = c(0,0),                   # Average sender (cell 1) and reciever (cell 2) effect log odds
                                 sr_sigma = c(0.3, 1.5),           # Sender (cell 1) and reciever (cell 2) effect variances 
@@ -81,9 +74,6 @@ simulate_srm_network = function(N_id = 99,                        # Number of re
    }
    }
 
-# Sample respondents into groups
-groups = sample( 1:N_groups , size=N_id , replace=TRUE , prob=group_probs )
-
 # Create correlation matrices (aka matrixes)
 Rho_sr = Rho_dr = diag(c(1,1))
 Rho_sr[1,2] = Rho_sr[2,1] = sr_rho
@@ -113,14 +103,14 @@ for ( i in 1:(N_id-1) ){
   dr_scrap[2] = dr_scrap[2] + sum(dyadic_effects*dyadic_predictors[j,i,]) 
   }
 
- dr[i,j] = dr_scrap[1] + logit(B[ groups[i] , groups[j] ])
- dr[j,i] = dr_scrap[2] + logit(B[ groups[j] , groups[i] ])
+ dr[i,j] = dr_scrap[1] 
+ dr[j,i] = dr_scrap[2] 
 
 # Simulate outcomes
- p[i,j] = inv_logit( logit(B) + sr[i,1] + sr[j,2] + dr_scrap[1])
+ p[i,j] = inv_logit( logit(B) + sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
- p[j,i] = inv_logit( logit(B) + sr[j,1] + sr[i,2] + dr_scrap[2])
+ p[j,i] = inv_logit( logit(B) + sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rbern( 1 , p[j,i] )
         }
     }
@@ -131,7 +121,7 @@ for ( i in 1:N_id ){
     dr[i,i] = 0
  }
 
-return(list(network=y_true, tie_strength=p, group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr))
+return(list(network=y_true, tie_strength=p,  individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr))
 }
 
 
