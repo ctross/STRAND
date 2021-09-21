@@ -56,6 +56,8 @@ data{
 
     real dyad_set[N_id, N_id, N_params[6]];
 
+    matrix[22, 2] priors;
+
     int export_network;
 }
 
@@ -90,7 +92,7 @@ transformed data{
    S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
  }}
 
-  penalty = S^(1/1.5);
+  penalty = S^(1/priors[19,1]);
 
  //# Make pruned data
   
@@ -175,24 +177,24 @@ model{
   matrix[N_id, N_id] mixed_p;
 
     //# Priors on effects of covariates
-    focal_effects ~ normal(0,1);
-    target_effects ~ normal(0,1);
-    dyad_effects ~ normal(0,1);
-    theta_effects ~ normal(0,1);
+     focal_effects ~ normal(priors[12,1], priors[12,2]);
+     target_effects ~ normal(priors[13,1], priors[13,2]);
+     dyad_effects ~ normal(priors[14,1], priors[14,2]);
+     theta_effects ~ normal(priors[9,1], priors[9,2]);
 
    for(k in 1:N_networktypes){
-    fpr_effects[k] ~ normal(0,1);
-    rtt_effects[k] ~ normal(0,1);
+    fpr_effects[k] ~ normal(priors[7,1], priors[7,2]);
+    rtt_effects[k] ~ normal(priors[8,1], priors[8,2]); 
     }
     
     //# Priors for measurement model
-    false_positive_rate ~ beta(1,14);
-    recall_of_true_ties ~ beta(14,1);
-    theta_mean ~ beta(3,12);
+    false_positive_rate ~ beta(priors[1,1], priors[1,2]);
+    recall_of_true_ties ~ beta(priors[2,1], priors[2,2]);
+    theta_mean ~ beta(priors[3,1], priors[3,2]);
 
-    fpr_sigma ~ exponential(1);
-    rtt_sigma ~ exponential(1);
-    theta_sigma ~ exponential(1);
+    fpr_sigma ~ exponential(priors[4,1]);
+    rtt_sigma ~ exponential(priors[5,1]);
+    theta_sigma ~ exponential(priors[6,1]);
 
     for(i in 1:N_id){
     fpr_raw[i] ~ normal(0,1);
@@ -218,8 +220,8 @@ model{
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
 
-    sr_sigma ~ exponential(1);
-    sr_L ~ lkj_corr_cholesky(2.5);
+    sr_sigma ~ exponential(priors[15,1]);
+    sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     for(i in 1:N_id){
      vector[2] sr_terms;
@@ -232,8 +234,8 @@ model{
 
     //# Dyadic priors for social relations model
     to_vector(dr_raw) ~ normal(0,1);
-    dr_sigma ~ exponential(1);
-    dr_L ~ lkj_corr_cholesky(2.5);
+    dr_sigma ~ exponential(priors[16,1]);
+    dr_L ~ lkj_corr_cholesky(priors[18,1]);
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
@@ -252,9 +254,9 @@ model{
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(0.1/sqrt(N_per_group[i])), 1.5);   //# transfers more likely within groups
+                B[i,j] ~ normal(logit(priors[10,1]/sqrt(N_per_group[i])), priors[10,2]);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(0.01/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), 1.5); //# transfers less likely between groups
+                B[i,j] ~ normal(logit(priors[11,1]/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), priors[11,2]); //# transfers less likely between groups
             }
         }}
 
@@ -366,7 +368,3 @@ generated quantities{
 
 
 
-
-
-
-  

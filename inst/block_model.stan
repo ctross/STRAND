@@ -12,12 +12,25 @@ data{
     matrix[N_id, N_params[1]] focal_set;
     matrix[N_id, N_params[2]] target_set;
     real dyad_set[N_id, N_id, N_params[3]];
+
+    matrix[22, 2] priors;
 }
 
 transformed data{
  matrix[N_id, N_params[1]-1] focal_individual_predictors; 
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
  real dyad_individual_predictors[N_id, N_id, N_params[3]-1]; 
+
+ int N_per_group [N_groups];
+
+  //# By group Ns 
+ for(k in 1: N_groups){
+  N_per_group[k] = 0;
+  }
+
+ for(i in 1:N_id){
+  N_per_group[group_ids[i]] += 1;
+  }
 
 //# Make pruned data
   
@@ -54,9 +67,9 @@ model{
   matrix[N_id, N_id] dr;
 
     //# Priors on effects of covariates
-    focal_effects ~ normal(0,1);
-    target_effects ~ normal(0,1);
-    dyad_effects ~ normal(0,1);
+     focal_effects ~ normal(priors[12,1], priors[12,2]);
+     target_effects ~ normal(priors[13,1], priors[13,2]);
+     dyad_effects ~ normal(priors[14,1], priors[14,2]);
 
     for(i in 1:N_id){
      vector[2] sr_terms;
@@ -82,9 +95,9 @@ model{
     for ( i in 1:N_groups ){
         for ( j in 1:N_groups ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(1/sqrt(N_id)), 0.5);   //# transfers more likely with groups
+                B[i,j] ~ normal(logit(priors[10,1]/sqrt(N_per_group[i])), priors[10,2]);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(0.1/sqrt(N_id)), 0.5); //# transfers less likely between groups
+                B[i,j] ~ normal(logit(priors[11,1]/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), priors[11,2]); //# transfers less likely between groups
             }
         }}
 
@@ -99,5 +112,12 @@ model{
 
 
  }
+
+
+
+                 
+                 
+
+
 
 

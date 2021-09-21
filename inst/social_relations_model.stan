@@ -11,6 +11,8 @@ data{
     matrix[N_id, N_params[2]] target_set;
 
     real dyad_set[N_id, N_id, N_params[3]];
+
+    matrix [22, 2] priors;
 }
 
 transformed data{
@@ -62,16 +64,16 @@ model{
   vector[2] scrap;
 
     //# Priors on effects of covariates
-    focal_effects ~ normal(0,1);
-    target_effects ~ normal(0,1);
-    dyad_effects ~ normal(0,1);   
+     focal_effects ~ normal(priors[12,1], priors[12,2]);
+     target_effects ~ normal(priors[13,1], priors[13,2]);
+     dyad_effects ~ normal(priors[14,1], priors[14,2]);
 
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
 
-    sr_sigma ~ exponential(1);
-    sr_L ~ lkj_corr_cholesky(2.5);
+    sr_sigma ~ exponential(priors[15,1]);    
+    sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     for(i in 1:N_id){
      vector[2] sr_terms;
@@ -84,8 +86,8 @@ model{
 
     //# Dyadic priors for social relations model
     to_vector(dr_raw) ~ normal(0,1);
-    dr_sigma ~ exponential(1);
-    dr_L ~ lkj_corr_cholesky(2.5);
+    dr_sigma ~ exponential(priors[16,1]);
+    dr_L ~ lkj_corr_cholesky(priors[18,1]);
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
@@ -101,7 +103,7 @@ model{
     }
 
     //# priors for 
-    B[1,1] ~ normal(logit(1/sqrt(N_id)), 2.5);
+    B[1,1] ~ normal(logit(priors[10,1]/sqrt(N_id)), priors[10,2]);
 
 
     //# likelihood
@@ -116,7 +118,3 @@ model{
 
  }
 
-
-
-
-  
