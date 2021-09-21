@@ -256,13 +256,14 @@ summarize_lnm_results = function(input, include_samples=TRUE){
    df = data.frame(results_out)
    colnames(df) = c("Variable", "Median", "HPDI:0.05","HPDI:0.95","Mean","SD") 
 
-   print(results_list)
 
    res_final = list(summary=df, summary_list=results_list)
 
   if(include_samples==TRUE){
     res_final$samples=samples
    }
+
+   print(df)
 
     attr(res_final, "class") <- "STRAND Results Object"
     return(res_final)

@@ -19,6 +19,8 @@
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param 
+#' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
 #' @export
 #' @examples
@@ -40,7 +42,8 @@ fit_block_model = function(data=model_dat,
                           dyad_regression,
                           mode="mcmc",
                           stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                       iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+                                                       iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+                          priors=make_priors()
                                     ){
 
     ############################################################################# Check inputs
@@ -105,6 +108,8 @@ fit_block_model = function(data=model_dat,
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
     data$export_network = 0
+
+    data$priors = priors
 
     ############################################################################# Fit model
 

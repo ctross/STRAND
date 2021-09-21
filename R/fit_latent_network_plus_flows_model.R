@@ -27,6 +27,8 @@
 #' return_latent_network An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param 
+#' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
 #' @export
 #' @examples
@@ -55,7 +57,8 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
                                     mode="mcmc",
                                     return_latent_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+                                    priors=make_priors()
                                     ){
 
     ############################################################################# Check inputs
@@ -139,6 +142,8 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), ncol(data$fpr_set), ncol(data$rtt_set), ncol(data$theta_set), dim(data$dyad_set)[3])
 
     data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
+
+    data$priors = priors
 
     ############################################################################# Fit model
     
