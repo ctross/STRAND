@@ -6,8 +6,6 @@
 \usage{
 simulate_srm_network(
   N_id = 99,
-  N_groups = 3,
-  group_probs = c(0.2, 0.5, 0.3),
   B = 0.01,
   sr_mu = c(0, 0),
   sr_sigma = c(0.3, 1.5),
@@ -24,11 +22,7 @@ simulate_srm_network(
 \arguments{
 \item{N_id}{Number of individuals.}
 
-\item{N_groups}{Number of groups.}
-
-\item{group_probs}{A vector of the probabilities of being in each group.}
-
-\item{B}{Intercept tie probabilities.}
+\item{B}{Intercept tie probability.}
 
 \item{sr_mu}{Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).}
 
@@ -64,7 +58,6 @@ is essentially a social relations model.
 \dontrun{
 A = simulate_srm_network(N_id = 100, B=0.002, individual_predictor=matrix(rnorm(100, 0, 1), nrow=100,ncol=1), individual_effects=matrix(c(1.2, 0.5),ncol=1,nrow=2))
 Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
-V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids]
 
 plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 }

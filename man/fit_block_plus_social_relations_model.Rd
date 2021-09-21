@@ -11,7 +11,8 @@ fit_block_plus_social_relations_model(
   dyad_regression,
   mode = "mcmc",
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
-    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+  priors = make_priors()
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ use the optimizer provided by Stan, and "vb" to run the variational inference ro
 users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.}
 
 \item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)}
+
+\item{priors}{A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed.}
 }
 \value{
 A STRAND model object containing the data used, and the Stan results.

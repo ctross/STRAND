@@ -15,7 +15,8 @@ fit_latent_network_plus_flows_model(
   mode = "mcmc",
   return_latent_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
-    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+  priors = make_priors()
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdst
 \item{return_latent_network}{An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.}
 
 \item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)}
+
+\item{priors}{A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed.}
 }
 \value{
 A STRAND model object containing the data used, and the Stan results.
