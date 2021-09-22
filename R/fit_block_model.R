@@ -43,7 +43,7 @@ fit_block_model = function(data=model_dat,
                           mode="mcmc",
                           stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                        iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
-                          priors=make_priors()
+                          priors=NULL
                                     ){
 
     ############################################################################# Check inputs
@@ -109,7 +109,11 @@ fit_block_model = function(data=model_dat,
 
     data$export_network = 0
 
+    if(is.null(priors)){
+      data$priors =  make_priors()
+      } else{
     data$priors = priors
+      }
 
     ############################################################################# Fit model
 

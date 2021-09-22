@@ -298,7 +298,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE){
     res_final$samples=samples
    }
 
-   print(df)
+   print(results_list)
 
     attr(res_final, "class") <- "STRAND Results Object"
     return(res_final)

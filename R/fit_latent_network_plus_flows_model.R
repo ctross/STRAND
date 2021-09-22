@@ -58,7 +58,7 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
                                     return_latent_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
-                                    priors=make_priors()
+                                    priors=NULL
                                     ){
 
     ############################################################################# Check inputs
@@ -143,7 +143,11 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
 
     data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
 
+    if(is.null(priors)){
+      data$priors =  make_priors()
+      } else{
     data$priors = priors
+      }
 
     ############################################################################# Fit model
     
