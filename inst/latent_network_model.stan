@@ -294,11 +294,11 @@ generated quantities{
     vector[N_networktypes*export_network] rtt[N_id*export_network];
     vector[2*export_network] sr[N_id*export_network];
     matrix[N_id*export_network, N_id*export_network] dr;
+    real theta[N_id*export_network];
  
     if(export_network==1){                
                 vector[2] terms;
                 int tie;
-                real theta[N_id];
                 vector[2] scrap;
                 matrix[N_id, N_id] p;
             
