@@ -1,6 +1,6 @@
 #' A function to run social relations models using the STRAND framework
 #' 
-#' This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian social relations model in Stan. The user must supply a STRAND data object,
+#' This function allows users to analyse empirical or simulated data using a Bayesian social relations model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. 
 #'
 #' @param 

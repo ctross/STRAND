@@ -1,6 +1,6 @@
 #' A function to run latent network models that include flows using the STRAND framework
 #' 
-#' This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
+#' This function allows users to analyse empirical or simulated data using using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. The self-report network data and 'true' flows (e.g., observations of exchanges or interactions) are jointly modelled.
 #'
 #' It is important to note that all individuals' block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.

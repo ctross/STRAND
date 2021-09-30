@@ -1,6 +1,6 @@
 #' A function to run stochastic block models using the STRAND framework
 #' 
-#' This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian stochastic block model in Stan. The user must supply a STRAND data object,
+#' This function allows users to analyse empirical or simulated data using a Bayesian stochastic block model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. 
 #'
 #' It is important to note that all individuals' block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
@@ -12,15 +12,15 @@
 #' @param 
 #' target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param 
-#' dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(),, e.g.: ~ Kinship + Friendship
+#' dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
 #' @param 
-#' mode A string giving the mode stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
+#' mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' @param 
-#' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
+#' priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
 #' @export
 #' @examples

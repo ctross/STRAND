@@ -1,9 +1,9 @@
 #' A function to create priors for STRAND models
 #' 
-#' This function allows users to change the numerical values of priors (but not their distributions). You should only change these values if you read and understand the source code. 
+#' This function allows users to change the numerical values of priors (but not their distributions). Users should only change these values if they have read and understood the source code. 
 #'
 #' @param 
-#' priors_to_change A named vector of priors to change. To get paramter names, run: make_priors(include_rownames=TRUE). Values must be 2-vectors. If the prior has only one parameter, inlcude 0 as the second element.
+#' priors_to_change A named vector of priors to change. To get parameter names, run: make_priors(include_rownames=TRUE). Values must be 2-vectors. If the prior has only one parameter, inlcude 0 as the second element.
 #' @param 
 #' include_rownames Should rownames be printed?
 #' @return A STRAND priors matrix.

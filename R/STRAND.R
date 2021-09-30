@@ -8,7 +8,7 @@
 #'These tools allow for simulation not only of realistic human social networks, but also allow researchers to simulate the effects of 
 #'potential biases—like respondents falsely reporting ties or failing to recall real ties—on network level properties.
 #' @section Network analysis functions:
-#'Users can specify complex Bayesian social network models using a simple, lm() style, syntax. 
+#'Users can specify complex Bayesian social network models using simple lm() style syntax. 
 #'Single-sampled self report data can be modeled using stochastic block models or the social relations model, with or with-out covariates. 
 #'Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement.
 #' @section Summary functions:

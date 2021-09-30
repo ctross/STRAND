@@ -1,6 +1,6 @@
 #' A function to create a STRAND data object
 #'
-#' This function will organize network data and covariates into a form that can be used by STRAND for model fitting. All 
+#' This function organizes network data and covariates into a form that can be used by STRAND for model fitting. All 
 #' STRAND model fitting functions require their data to be supplied in the format exported here.
 #'
 #' @param 
