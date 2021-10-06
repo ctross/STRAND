@@ -142,8 +142,6 @@ model{
 generated quantities{
     //# compute posterior prob of each network tie
     matrix[N_id*export_network, N_id*export_network] p;
-    vector[N_networktypes*export_network] fpr[N_id*export_network];
-    vector[N_networktypes*export_network] rtt[N_id*export_network];
     vector[2*export_network] sr[N_id*export_network];
     matrix[N_id*export_network, N_id*export_network] dr;
  
@@ -174,18 +172,6 @@ generated quantities{
      dr[i,i] = -99; //# ignore this :)
     }
 
-    for(i in 1:N_id){
-    vector[N_networktypes] fpr_terms;
-    vector[N_networktypes] rtt_terms;
-
-     for(k in 1:N_networktypes){
-      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
-      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
-     }
-
-    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
-    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
-    }  
 
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
