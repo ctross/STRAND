@@ -77,6 +77,8 @@ data{
 
     real dyad_set[N_id, N_id, N_params[6]];
 
+    matrix[22, 2] priors;
+
     int export_network;
 }
 
