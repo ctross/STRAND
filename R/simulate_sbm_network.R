@@ -122,10 +122,10 @@ for ( i in 1:(N_id-1) ){
  dr[j,i] = dr_scrap[2] + logit(B[ groups[j] , groups[i] ])
 
 # Simulate outcomes
- p[i,j] = inv_logit( logit(B[ groups[i] , groups[j] ]) + sr[i,1] + sr[j,2] + dr_scrap[1])
+ p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
- p[j,i] = inv_logit( logit(B[ groups[j] , groups[i] ]) + sr[j,1] + sr[i,2] + dr_scrap[2])
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rbern( 1 , p[j,i] )
         }
     }

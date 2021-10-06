@@ -103,14 +103,14 @@ for ( i in 1:(N_id-1) ){
   dr_scrap[2] = dr_scrap[2] + sum(dyadic_effects*dyadic_predictors[j,i,]) 
   }
 
- dr[i,j] = dr_scrap[1] 
- dr[j,i] = dr_scrap[2] 
+ dr[i,j] = dr_scrap[1] + logit(B)
+ dr[j,i] = dr_scrap[2] + logit(B)
 
 # Simulate outcomes
- p[i,j] = inv_logit( logit(B) + sr[i,1] + sr[j,2] + dr[i,j])
+ p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
- p[j,i] = inv_logit( logit(B) + sr[j,1] + sr[i,2] + dr[j,i])
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rbern( 1 , p[j,i] )
         }
     }
