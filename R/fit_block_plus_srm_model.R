@@ -18,6 +18,8 @@
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
+#' return_latent_network An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.
+#' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' @param 
 #' priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
@@ -41,6 +43,7 @@ fit_block_plus_social_relations_model = function(data=model_dat,
                                     target_regression,
                                     dyad_regression,
                                     mode="mcmc",
+                                    return_latent_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
                                     priors=NULL
@@ -107,7 +110,7 @@ fit_block_plus_social_relations_model = function(data=model_dat,
     
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
-    data$export_network = 0
+    data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
 
     if(is.null(priors)){
       data$priors =  make_priors()
@@ -147,7 +150,7 @@ fit_block_plus_social_relations_model = function(data=model_dat,
      stop("Must supply a legal mode value: mcmc, vb, or optim.")
     }
 
-    bob = list(data=data, fit=fit, return_latent_network=NA )
+    bob = list(data=data, fit=fit, return_latent_network=return_latent_network )
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "SRM+SBM"
