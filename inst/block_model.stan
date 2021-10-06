@@ -113,6 +113,49 @@ model{
 
  }
 
+generated quantities{
+    //# compute posterior prob of each network tie
+    matrix[N_id*export_network, N_id*export_network] p;
+    vector[2*export_network] sr[N_id*export_network];
+    matrix[N_id*export_network, N_id*export_network] dr;
+ 
+    if(export_network==1){                
+                vector[2] terms;
+
+    for(i in 1:N_id){
+     vector[2] sr_terms;
+
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+
+     sr[i] =  sr_terms;
+     }
+
+    for(i in 1:(N_id-1)){
+    for(j in (i+1):N_id){
+     dr[i,j] =  dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ])) + B[group_ids[i], group_ids[j]];
+     dr[j,i] =  dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ])) + B[group_ids[j], group_ids[i]];
+    }}
+
+    for(i in 1:N_id){
+     dr[i,i] = -99; //# ignore this :)
+    }
+
+
+    for ( i in 1:N_id ) {
+        for ( j in 1:N_id ) {
+            if ( i != j ) {
+                // consider each possible state of true tie and compute prob of data
+                p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+            }
+        }//j
+    }//i
+
+  for ( i in 1:N_id ) {
+   p[i,i] = 0; 
+   }
+ }
+}
 
 
                  

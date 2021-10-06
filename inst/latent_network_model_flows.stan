@@ -354,8 +354,8 @@ generated quantities{
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
-     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ])) + B[group_ids[i], group_ids[j]];
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ])) + B[group_ids[j], group_ids[i]];
     }}
 
     for(i in 1:N_id){
@@ -380,7 +380,7 @@ generated quantities{
         for ( j in 1:N_id ) {
             if ( i != j ) {
                 // consider each possible state of true tie and compute prob of data
-                p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j]);
+                p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
 
                 tie = 0;
                 terms[1] = 
