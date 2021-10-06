@@ -14,6 +14,8 @@ data{
     real dyad_set[N_id, N_id, N_params[3]];
 
     matrix[22, 2] priors;
+
+    int export_network;
 }
 
 transformed data{
@@ -137,52 +139,68 @@ model{
  }
 
 
-# generated quantities{
-#     //# compute posterior prob of each network tie
-#     matrix[N_id*export_network, N_id*export_network] p;
+generated quantities{
+    //# compute posterior prob of each network tie
+    matrix[N_id*export_network, N_id*export_network] p;
+    vector[N_networktypes*export_network] fpr[N_id*export_network];
+    vector[N_networktypes*export_network] rtt[N_id*export_network];
+    vector[2*export_network] sr[N_id*export_network];
+    matrix[N_id*export_network, N_id*export_network] dr;
  
-#     if(export_network==1){                
-#                 vector[2] sr[N_id];
-#                 matrix[N_id, N_id] dr;
-#                 vector[2] scrap;
-      
+    if(export_network==1){                
+                vector[2] terms;
+                int tie;
+                vector[2] scrap;
             
-#     for(i in 1:N_id){
-#      vector[2] sr_terms;
+    for(i in 1:N_id){
+     vector[2] sr_terms;
 
-#      sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
-#      sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
 
-#      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
-#      }
+     sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
+     }
 
-#     for(i in 1:(N_id-1)){
-#     for(j in (i+1):N_id){
-#      scrap[1] = dr_raw[i,j];
-#      scrap[2] = dr_raw[j,i];
-#      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-#      dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
-#      dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
-#     }}
+    for(i in 1:(N_id-1)){
+    for(j in (i+1):N_id){
+     scrap[1] = dr_raw[i,j];
+     scrap[2] = dr_raw[j,i];
+     scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
+    }}
 
-#     for(i in 1:N_id){
-#      dr[i,i] = -99; //# ignore this :)
-#     }
+    for(i in 1:N_id){
+     dr[i,i] = -99; //# ignore this :)
+    }
 
-#     for ( i in 1:N_id ) {
-#         for ( j in 1:N_id ) {
-#             if ( i != j ) {
-#                 //# consider each possible state of true tie and compute prob of data
-#                 p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j]);
-#             }
-#         }//j
-#     }//i
+    for(i in 1:N_id){
+    vector[N_networktypes] fpr_terms;
+    vector[N_networktypes] rtt_terms;
 
-#   for ( i in 1:N_id ) {
-#    p[i,i] = 0; 
-#    }
-#  }
-# }
+     for(k in 1:N_networktypes){
+      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
+      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
+     }
+
+    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
+    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
+    }  
+
+    for ( i in 1:N_id ) {
+        for ( j in 1:N_id ) {
+            if ( i != j ) {
+                // consider each possible state of true tie and compute prob of data
+                p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j]);
+            }
+        }//j
+    }//i
+
+  for ( i in 1:N_id ) {
+   p[i,i] = 0; 
+   }
+ }
+}
 
 
 
