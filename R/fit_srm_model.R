@@ -39,6 +39,7 @@ fit_social_relations_model = function(data=model_dat,
                                       target_regression,
                                       dyad_regression,
                                       mode="mcmc",
+                                      return_latent_network=FALSE,
                                       stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
                                       priors=NULL
@@ -105,7 +106,7 @@ fit_social_relations_model = function(data=model_dat,
     
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
-    data$export_network = 0
+    data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
     
     if(is.null(priors)){
       data$priors =  make_priors()
@@ -145,7 +146,7 @@ fit_social_relations_model = function(data=model_dat,
      stop("Must supply a legal mode value: mcmc, vb, or optim.")
     }
 
-    bob = list(data=data, fit=fit, return_latent_network=NA )
+    bob = list(data=data, fit=fit, return_latent_network=return_latent_network )
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "SRM"
