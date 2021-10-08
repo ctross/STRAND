@@ -13,6 +13,8 @@ data{
     real dyad_set[N_id, N_id, N_params[3]];
 
     matrix [22, 2] priors;
+    
+    int export_network;
 }
 
 transformed data{
