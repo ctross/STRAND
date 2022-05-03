@@ -19,7 +19,7 @@ Install by running on R:
 ```{r}
 ################################### Install and/or load
  library(devtools)
- install_github('ctross/STRAND')
+ install_github('ctross/STRAND', ref = "ctross-patch-1")
  library(STRAND)
 ```
 
