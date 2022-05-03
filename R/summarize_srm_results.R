@@ -16,7 +16,7 @@
 
 # Should change to allow users to specify HPDI intervals
 
-summarize_srm_results = function(input, include_samples=TRUE){
+summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_srm_results() requires a fitted object of class: STRAND Model Object. Please use fit_social_relations_model() to run your model.")
     }
@@ -73,13 +73,13 @@ summarize_srm_results = function(input, include_samples=TRUE){
 
 
     ###################################################### Create summary stats 
-     sum_stats = function(y, x){
+   sum_stats = function(y, x, z){
       bob = rep(NA, 6)
        dig = 3
       bob[1] = y
       bob[2] = round(median(x),dig)
-      bob[3] = round(HPDI(x, 0.9)[1],dig)
-      bob[4] = round(HPDI(x, 0.9)[2],dig)
+      bob[3] = round(HPDI(x, z)[1],dig)
+      bob[4] = round(HPDI(x, z)[2],dig)
       bob[5] = round(mean(x),dig)
       bob[6] = round(sd(x),dig)
 
@@ -97,39 +97,39 @@ summarize_srm_results = function(input, include_samples=TRUE){
      results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=6)
      results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=6)
 
-     results_srm_focal[1,] = sum_stats("focal effects sd", samples$srm_model_samples$focal_target_sd[,1])
+     results_srm_focal[1,] = sum_stats("focal effects sd", samples$srm_model_samples$focal_target_sd[,1], HPDI)
      if(Q1>0){
      coeff_names = colnames(input$data$focal_set)[-1]
         for(i in 1:Q1){
-     results_srm_focal[1+i,] = sum_stats(paste0("focal effects coeffs (out-degree), ", coeff_names[i] ), samples$srm_model_samples$focal_coeffs[,i])
+     results_srm_focal[1+i,] = sum_stats(paste0("focal effects coeffs (out-degree), ", coeff_names[i] ), samples$srm_model_samples$focal_coeffs[,i], HPDI)
         }
       }
 
       results_list[[1]] = results_srm_focal
 
-     results_srm_target[1,] = sum_stats("target effects sd", samples$srm_model_samples$focal_target_sd[,2])
+     results_srm_target[1,] = sum_stats("target effects sd", samples$srm_model_samples$focal_target_sd[,2], HPDI)
      if(Q2>0){
      coeff_names = colnames(input$data$target_set)[-1]
         for(i in 1:Q2){
-     results_srm_target[1+i,] = sum_stats(paste0("target effects coeffs (in-degree), ", coeff_names[i] ), samples$srm_model_samples$target_coeffs[,i])
+     results_srm_target[1+i,] = sum_stats(paste0("target effects coeffs (in-degree), ", coeff_names[i] ), samples$srm_model_samples$target_coeffs[,i], HPDI)
         }
       }
 
       results_list[[2]] = results_srm_target
 
-     results_srm_dyadic[1,] = sum_stats("dyadic effects sd", c(samples$srm_model_samples$dyadic_sd))
+     results_srm_dyadic[1,] = sum_stats("dyadic effects sd", c(samples$srm_model_samples$dyadic_sd), HPDI)
      if(Q3>0){
      coeff_names = dimnames(input$data$dyad_set)[[3]][-1]
         for(i in 1:Q3){
-     results_srm_dyadic[1+i,] = sum_stats(paste0("dyadic effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$dyadic_coeffs[,i])
+     results_srm_dyadic[1+i,] = sum_stats(paste0("dyadic effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$dyadic_coeffs[,i], HPDI)
         }
       }
      results_list[[3]] = results_srm_dyadic
 
      results_srm_base = matrix(NA, nrow=3, ncol=6)
-     results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1])
-     results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1])
-     results_srm_base[3,] = sum_stats("intercept, any to any", samples$srm_model_samples$block_parameters[,1,1])
+     results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
+     results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
+     results_srm_base[3,] = sum_stats("intercept, any to any", samples$srm_model_samples$block_parameters[,1,1], HPDI)
      
      results_list[[4]] = results_srm_base
 

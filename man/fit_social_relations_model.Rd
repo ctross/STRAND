@@ -10,9 +10,10 @@ fit_social_relations_model(
   target_regression,
   dyad_regression,
   mode = "mcmc",
+  return_latent_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
-  priors = make_priors()
+  priors = NULL
 )
 }
 \arguments{
@@ -36,7 +37,7 @@ users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdst
 A STRAND model object containing the data used, and the Stan results.
 }
 \description{
-This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian social relations model in Stan. The user must supply a STRAND data object,
+This function allows users to analyse empirical or simulated data using a Bayesian social relations model in Stan. The user must supply a STRAND data object,
 and a series of formulas following standard lm() style syntax.
 }
 \examples{

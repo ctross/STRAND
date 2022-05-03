@@ -4,7 +4,7 @@
 \alias{summarize_srm_results}
 \title{Organize Stan output and provide summaries of model parameters}
 \usage{
-summarize_srm_results(input, include_samples = TRUE)
+summarize_srm_results(input, include_samples = TRUE, HPDI = 0.9)
 }
 \arguments{
 \item{input}{A STRAND model object, obtained by fitting a social relations model.}

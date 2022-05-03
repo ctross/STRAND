@@ -9,6 +9,7 @@ fit_latent_network_plus_flows_model(
   fpr_regression,
   rtt_regression,
   theta_regression,
+  block_regression,
   focal_regression,
   target_regression,
   dyad_regression,
@@ -16,7 +17,7 @@ fit_latent_network_plus_flows_model(
   return_latent_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
-  priors = make_priors()
+  priors = NULL
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ fit_latent_network_plus_flows_model(
 \item{rtt_regression}{A formula for the predictors of the recall rate of true ties. Specified as in lm(), e.g.: ~ Age + Education}
 
 \item{theta_regression}{A formula for the predictors of theta, the probability that a given individual duplicates a response from layer 1 into layer 2. Specified as in lm(), e.g.: ~ 1}
+
+\item{block_regression}{A formula for the block-level predictors. This should be specified as in lm(), e.g.: ~ Ethnicity + Sex. Dont use interactions, however.}
 
 \item{focal_regression}{A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
@@ -48,7 +51,7 @@ users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdst
 A STRAND model object containing the data used, and the Stan results.
 }
 \description{
-This function allows a user to supply empirical or simulated data, and analyse it using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
+This function allows users to analyse empirical or simulated data using using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
 and a series of formulas following standard lm() style syntax. The self-report network data and 'true' flows (e.g., observations of exchanges or interactions) are jointly modelled.
 }
 \details{
@@ -60,6 +63,7 @@ fit = fit_latent_network_plus_flows_model( data=model_dat,
                                fpr_regression = ~ Age + Education,
                                rtt_regression = ~ Age + Education,
                                theta_regression = ~ 1,
+                               block_regression = ~ Ethnicity,
                                focal_regression = ~ Age * NoFood,
                                target_regression = ~ Age * NoFood,
                                dyad_regression = ~ Relatedness + Friends * SameSex,

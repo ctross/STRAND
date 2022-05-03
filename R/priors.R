@@ -27,18 +27,19 @@ make_priors = function(priors_to_change=NULL, include_rownames=FALSE){
                      "penalty",
                      "effect_max",
                      "effect_decay",
-                     "flow_rate"
+                     "flow_rate",
+                     "A"
                      )
    
  priors = matrix(0, nrow=22, ncol=2)
-  priors[1,1] = 1
-  priors[1,2] = 14
+  priors[1,1] = -3
+  priors[1,2] = 1.5
 
-  priors[2,1] = 14
-  priors[2,2] = 1
+  priors[2,1] = 3
+  priors[2,2] = 1.5
 
-  priors[3,1] = 3
-  priors[3,2] = 12
+  priors[3,1] = -1.5
+  priors[3,2] = 1
 
   priors[4,1] = 1
   priors[5,1] = 1

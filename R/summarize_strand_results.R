@@ -16,7 +16,7 @@
 
 # Should change to allow users to specify HPDI intervals
 
-summarize_strand_results = function(input, include_samples=TRUE){
+summarize_strand_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_strand_results() requires a fitted object of class: STRAND Model Object.")
     }
@@ -27,23 +27,23 @@ summarize_strand_results = function(input, include_samples=TRUE){
     }
 
     if(attributes(input)$model_type == "SRM"){
-       res = summarize_srm_results(input=input, include_samples=include_samples)
+       res = summarize_srm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
     if(attributes(input)$model_type == "SBM"){
-       res = summarize_bm_results(input=input, include_samples=include_samples)
+       res = summarize_bm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
     if(attributes(input)$model_type == "SRM+SBM"){
-       res = summarize_bsrm_results(input=input, include_samples=include_samples)
+       res = summarize_bsrm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
     if(attributes(input)$model_type == "LNM"){
-       res = summarize_lnm_results(input=input, include_samples=include_samples)
+       res = summarize_lnm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
     if(attributes(input)$model_type == "LNM+Flows"){
-       res = summarize_lnmf_results(input=input, include_samples=include_samples)
+       res = summarize_lnmf_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
     return(res)
