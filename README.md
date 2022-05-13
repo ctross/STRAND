@@ -33,4 +33,6 @@ Count outcomes: [**Poisson models**](https://github.com/ctross/STRAND/blob/ctros
 
 Double-sampled binary outcomes: [**Latent network models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/LatentNetwork_Example.R)
 
+An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/Interaction_Example.R)
+
 Note: each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it!
