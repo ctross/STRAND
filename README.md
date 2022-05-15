@@ -19,7 +19,7 @@ Install by running on R:
 ```{r}
 ################################### Install and/or load
  library(devtools)
- install_github('ctross/STRAND', ref = "major-update-ab1")
+ install_github('ctross/STRAND')
  library(STRAND)
 ```
 
