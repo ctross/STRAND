@@ -6,7 +6,10 @@
 #' @param 
 #' self_report A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
 #' and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
-#' represents i's reports of transfers from j to i.
+#' represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
+#' If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.
+#' @param
+#' outcome_mode Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.
 #' @param 
 #' ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
@@ -16,6 +19,8 @@
 #' individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
 #' @param 
 #' dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
+#' @param 
+#' exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
 #' @return A list of data formatted for use by STRAND models.
 #' @export
 #' @examples
@@ -24,24 +29,50 @@
 #' }
 #'
 
-make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, individual_covariates=NULL, dyadic_covariates=NULL){
+make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL){
 
          ############################################################################# Check inputs
+         ###################### Outcome mode
+         outcome_mode_numeric = NULL
+
+         if(outcome_mode=="bernoulli"){
+          outcome_mode_numeric = 1
+         }
+
+         if(outcome_mode=="binomial"){
+          outcome_mode_numeric = 2
+         }
+
+         if(outcome_mode=="poisson"){
+          outcome_mode_numeric = 3
+         }
+
+         if(is.null(outcome_mode_numeric)) stop("outcome_mode not supported")
+
          # Check self_report data
+         if(is.null(exposure)){
          if(is.null(self_report)) stop("self_report must be a list of matrices.")
          if(!is.list(self_report)) stop("self_report must be a list of matrices.")
          if(!length(self_report) %in% c(1,2)) stop("self_report must be a list length 1 or 2.")
-         for(i in 1:length(self_report))
-         if(!all(self_report[[i]] %in% c(0,1))) stop("self_report must be binary 0 or 1")
+         for(i in 1:length(self_report)){
+          if(outcome_mode=="bernoulli"){
+          if(!all(self_report[[i]] %in% c(0,1))) stop("self_report must be binary 0 or 1")
+          }
+         }
+         }
+
+         if(!is.null(exposure)){
+           if(length(self_report) != length(exposure)) stop("self_report and exposure must be lists of matrices equal in length.")
+         }
 
          # Check ground_truth data
          if(!is.null(ground_truth)){ 
          if(!is.list(ground_truth)) stop("ground_truth must be a list of matrices.")
          }
 
-         # Check group_ids data
-         if(!is.null(group_ids)){ 
-         if(!is.factor(group_ids)) stop("group_ids must be a factor.")
+         # Check block_covariates data
+         if(!is.null(block_covariates)){ 
+         if(!is.data.frame(block_covariates)) stop("block_covariates must be a data frame.")
          }
 
          # Check individual_covariates data
@@ -61,18 +92,42 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
          N_responses = length(self_report)
 
          outcomes = array(NA, c(N_id, N_id, N_responses))
-         
-         for(i in 1:length(self_report))
-         outcomes[,,i] = self_report[[i]]
 
-        if(is.null(group_ids)){
-         group_ids = rep(1, N_id)
-         N_groups = 1
+         if(is.null(exposure)){
+          exposure_on = 0
+          exposure_risk = array(0, c(N_id, N_id, N_responses))
+         } else{
+          exposure_on = 1
+          exposure_risk = array(NA, c(N_id, N_id, N_responses))
+          for(i in 1:length(exposure)){
+          exposure_risk[,,i] = exposure[[i]]
+          }
+         }
+         
+         for(i in 1:length(self_report)){
+          outcomes[,,i] = self_report[[i]]
+         }
+
+        if(is.null(block_covariates)){
+         block_covariates = rep(1, N_id)
+         N_groups_per_type = 1
+         N_block_types = 0
          group_ids_character = rep("Any", N_id)
+         group_ids = block_covariates
           } else{
-         group_ids_character = as.character(group_ids) 
-         group_ids = as.numeric(group_ids)
-         N_groups = max(as.numeric(group_ids)) 
+          
+         N_block_types = length(block_covariates[1,]) 
+         N_groups_per_type = rep(NA, N_block_types)
+         group_ids_character = array(NA, c(N_id, N_block_types))
+         group_ids = array(NA, c(N_id, N_block_types))
+
+         for(i in 1:N_block_types){
+          N_groups_per_type[i] = max(as.numeric(block_covariates[,i]))
+          group_ids_character[,i] = as.character(block_covariates[,i]) 
+          group_ids[,i] = as.numeric(block_covariates[,i])
+         }
+          group_ids = data.frame(group_ids)
+          colnames(group_ids) = colnames(block_covariates)
          }
  
         if(is.null(ground_truth)){
@@ -108,7 +163,7 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
          ############################################################################# Determine legal models
          if(N_responses==1){
-          if(N_groups>1){
+          if(max(N_groups_per_type)>1){
             supported_models = c("SRM", "SBM", "SRM+SBM")
             } else{
             supported_models = c("SRM")
@@ -126,22 +181,26 @@ make_strand_data = function(self_report, ground_truth=NULL, group_ids=NULL, indi
 
    model_dat = list(
      N_networktypes = N_networktypes,                                               
-     N_id = N_id,                                                         
-     N_groups = N_groups,                                                  
+     N_id = N_id,                                                                                                          
      N_responses = N_responses,  
      N_periods=N_periods,                                              
      N_individual_predictors = N_individual_predictors,                                       
-     N_dyadic_predictors =  N_dyadic_predictors,    
-     group_ids = group_ids,                                        
+     N_dyadic_predictors =  N_dyadic_predictors,                                           
      outcomes = outcomes,  
      flows=flows,                         
      individual_predictors = individual_predictors,      
-     dyadic_predictors = dyadic_predictors
+     dyadic_predictors = dyadic_predictors,
+     N_block_predictors = N_block_types,
+     N_groups_per_block_type = N_groups_per_type,
+     block_predictors = group_ids,
+     outcome_mode=outcome_mode_numeric,
+     exposure=exposure_risk
      )
 
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
-   attr(model_dat, "group_ids_character") = unique(group_ids_character)
+   attr(model_dat, "group_ids_character") = group_ids_character
+   colnames(attr(model_dat, "group_ids_character"))=colnames(model_dat$block_predictors)
    
   return(model_dat)
 }

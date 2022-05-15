@@ -6,31 +6,38 @@
 \usage{
 make_strand_data(
   self_report,
+  outcome_mode = "bernoulli",
   ground_truth = NULL,
-  group_ids = NULL,
+  block_covariates = NULL,
   individual_covariates = NULL,
-  dyadic_covariates = NULL
+  dyadic_covariates = NULL,
+  exposure = NULL
 )
 }
 \arguments{
 \item{self_report}{A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
 and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
-represents i's reports of transfers from j to i.}
+represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
+If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.}
+
+\item{outcome_mode}{Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.}
 
 \item{ground_truth}{A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.}
 
-\item{group_ids}{A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.}
-
 \item{individual_covariates}{An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.}
 
 \item{dyadic_covariates}{A list of N_id by N_id by N_dyadic_parameters matrices.}
+
+\item{exposure}{A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
+
+\item{group_ids}{A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.}
 }
 \value{
 A list of data formatted for use by STRAND models.
 }
 \description{
-This function will organize network data and covariates into a form that can be used by STRAND for model fitting. All 
+This function organizes network data and covariates into a form that can be used by STRAND for model fitting. All 
 STRAND model fitting functions require their data to be supplied in the format exported here.
 }
 \examples{

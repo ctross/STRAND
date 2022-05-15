@@ -4,12 +4,12 @@
 \alias{summarize_bm_results}
 \title{Organize Stan output and provide summaries of model parameters}
 \usage{
-summarize_bm_results(input, include_samples = TRUE)
+summarize_bm_results(input, include_samples = TRUE, HPDI = 0.9)
 }
 \arguments{
 \item{input}{A STRAND model object, obtained by fitting a stochastic block model.}
 
-\item{include_samples}{An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.}
+\item{include_samples}{An indicator for the user to specify whether raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.}
 }
 \value{
 A STRAND results object including summary table, a summary list, and samples.

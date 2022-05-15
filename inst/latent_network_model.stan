@@ -37,34 +37,39 @@ functions{
     }
 }
 
-data{
-    int N_networktypes;                                               
-    int N_id;                                                         
-    int N_groups;                                                     
-    int N_responses;        
+data{                                                                                                       
+  //# Array dimension variables                                   
+    int N_id;                                  //# Number of people                                                                                                   
+    int N_responses;                           //# Number of outcome networks
+    int N_params [6];                          //# Number of focal, target, and dyadic predictors
+    int N_networktypes;   
 
-    int N_params [6];                                          
+  //# Block predictor variables 
+    int N_group_vars;                          //# Number of block structure variables
+    int max_N_groups;                          //# Max number of group labels in any variable
+    int N_groups_per_var[N_group_vars];        //# Number of group labels, per variable type
+    int block_set[N_id, N_group_vars];         //# Dataframe holding the group ID codes for each person (rows) for each variable type (cols)
 
-    int group_ids[N_id];                                              
-    int outcomes[N_id,N_id,N_responses];                              
+  //# Focal, target, and dyadic predictor variables                                                                                                      
+    matrix[N_id, N_params[1]] focal_set;       //# Focal slash decider predictor variables    
+    matrix[N_id, N_params[2]] target_set;      //# Target slash alter predictor variables
+    matrix[N_id, N_params[3]] fpr_set;         //# False postive rate predictors
+    matrix[N_id, N_params[4]] rtt_set;         //# Recall rate of true ties predictors
+    matrix[N_id, N_params[5]] theta_set;       //# Question duplication bias preditors
 
-    matrix[N_id, N_params[1]] focal_set;
-    matrix[N_id, N_params[2]] target_set;
-    matrix[N_id, N_params[3]] fpr_set;
-    matrix[N_id, N_params[4]] rtt_set;
-    matrix[N_id, N_params[5]] theta_set;
+    real dyad_set[N_id, N_id, N_params[6]];    //# Dyadic predictor variables
 
-    real dyad_set[N_id, N_id, N_params[6]];
+  //# Outcome and exposure data
+    int outcomes[N_id,N_id,N_responses];       //# Outcome network of binary ties
 
-    matrix[22, 2] priors;
-
-    int export_network;
+  //# Accessory paramters 
+    matrix[22, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
+    int export_network;                        //# Controls export of predictions
 }
 
 transformed data{
  real S;
  real penalty;
- int N_per_group [N_groups];
 
  matrix[N_id, N_params[1]-1] focal_individual_predictors; 
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
@@ -74,28 +79,43 @@ transformed data{
 
  real dyad_individual_predictors[N_id, N_id, N_params[6]-1];
 
- //# By group Ns 
- for(k in 1: N_groups){
-  N_per_group[k] = 0;
-  }
+ //# Store some key indexes
+    int N_per_group [max_N_groups, N_group_vars];     //# Number of people in each block-type for each group variable
+    int block_indexes[N_group_vars+1];                //# The indexes of each block parameter when stored as a vector instead of ragged array
+    int block_param_size;                             //# Total number of block-level parameters
 
- for(i in 1:N_id){
-  N_per_group[group_ids[i]] += 1;
-  }
+ //# Get size of parameters for block model
+    block_param_size = 0;                             //# Start at zero
+    block_indexes[1] = 0;                             //# Start at zero for first index 
+    
+    for(q in 1: N_group_vars){
+     block_param_size += N_groups_per_var[q]*N_groups_per_var[q];                      //# Count up number of parameters in each K by K block matrix and add to total
+     block_indexes[1+q] = N_groups_per_var[q]*N_groups_per_var[q] + block_indexes[q];  //# Create cummulative sum of block indices, by adding new sum to old sum
+     }
 
+ //# First fill with scrap
+    for(q in 1: N_group_vars){
+    for(k in 1: max_N_groups){
+     N_per_group[k, q] = 0;   
+     }}
+
+ //# Now fill in real values
+    for(q in 1: N_group_vars){
+    for(i in 1:N_id){
+     N_per_group[block_set[i,q],q] += 1;
+     }}
 
  //# Make penalty terms
- S = 0;
- for(i in 1:N_id){
+   S = 0;
+   for(i in 1:N_id){
    for(j in 1:N_id){
      if(i != j)
    S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
- }}
+   }}
 
-  penalty = S^(1/priors[19,1]);
+   penalty = S^(1/priors[19,1]);
 
  //# Make pruned data
-  
   if(N_params[1]>1){
   for(i in 2:N_params[1]){
   focal_individual_predictors[ , i-1] = focal_set[,i];  
@@ -130,9 +150,9 @@ transformed data{
 parameters{
     //######################################################## Observation model
     //# Measurement model
-    vector<lower=0, upper=1>[N_networktypes] false_positive_rate;
-    vector<lower=0, upper=1>[N_networktypes] recall_of_true_ties;
-    real<lower=0, upper=1> theta_mean;
+    vector[N_networktypes] false_positive_rate;
+    vector[N_networktypes] recall_of_true_ties;
+    real theta_mean;
 
     vector<lower=0>[N_networktypes] fpr_sigma;
     vector<lower=0>[N_networktypes] rtt_sigma;
@@ -146,9 +166,9 @@ parameters{
     vector[N_params[4]-1] rtt_effects[N_networktypes]; 
     vector[N_params[5]-1] theta_effects;   
 
-    //########################################################### Latent Netowrk
-    //# SBM + SRM model
-    matrix[N_groups, N_groups] B;
+    //########################################################### Latent Network
+    //# Block effects, stored as a vector to save space
+    vector[block_param_size] block_effects;
 
     vector<lower=0>[2] sr_sigma;  //# Variation of sender-receiver effects
     cholesky_factor_corr[2] sr_L;
@@ -176,6 +196,9 @@ model{
   matrix[N_id, N_id] p;
   matrix[N_id, N_id] mixed_p;
 
+  matrix[max_N_groups, max_N_groups] B [N_group_vars];  //# Block effects, in array form
+  vector[N_group_vars] br;                              //# Sum of block effects per dyad 
+
     //# Priors on effects of covariates
      focal_effects ~ normal(priors[12,1], priors[12,2]);
      target_effects ~ normal(priors[13,1], priors[13,2]);
@@ -188,9 +211,9 @@ model{
     }
     
     //# Priors for measurement model
-    false_positive_rate ~ beta(priors[1,1], priors[1,2]);
-    recall_of_true_ties ~ beta(priors[2,1], priors[2,2]);
-    theta_mean ~ beta(priors[3,1], priors[3,2]);
+    false_positive_rate ~ normal(priors[1,1], priors[1,2]);
+    recall_of_true_ties ~ normal(priors[2,1], priors[2,2]);
+    theta_mean ~ normal(priors[3,1], priors[3,2]);
 
     fpr_sigma ~ exponential(priors[4,1]);
     rtt_sigma ~ exponential(priors[5,1]);
@@ -211,9 +234,9 @@ model{
       rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
      }
 
-    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
-    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
-    theta[i] = inv_logit(logit(theta_mean) + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    fpr[i] = false_positive_rate + fpr_sigma .* fpr_raw[i] + fpr_terms;
+    rtt[i] = recall_of_true_ties + rtt_sigma .* rtt_raw[i] + rtt_terms;
+    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
     }    
 
     //# Sender-receiver priors for social relations model
@@ -250,15 +273,22 @@ model{
      dr[i,i] = -99; //# ignore this :)
     }
 
-    //# priors for B
-    for ( i in 1:N_groups ){
-        for ( j in 1:N_groups ) {
+    //# The first step, is to transform the vector of block effects into a list of matrices
+    for(q in 1:N_group_vars){
+      B[q,1:N_groups_per_var[q], 1:N_groups_per_var[q]] = to_matrix(block_effects[(block_indexes[q]+1):(block_indexes[q+1])], N_groups_per_var[q], N_groups_per_var[q]);
+    }
+
+    //# Then put priors on B, which scale loosely with the block size
+    for ( q in 1:N_group_vars ){
+    for ( i in 1:N_groups_per_var[q] ){
+        for ( j in 1:N_groups_per_var[q] ) {
             if ( i==j ) {
-                B[i,j] ~ normal(logit(priors[10,1]/sqrt(N_per_group[i])), priors[10,2]);   //# transfers more likely within groups
+                B[q,i,j] ~ normal(logit(priors[10,1]/sqrt(N_per_group[i,q])), priors[10,2]);   //# transfers more likely within groups
             } else {
-                B[i,j] ~ normal(logit(priors[11,1]/sqrt(N_per_group[i]*0.5 + N_per_group[j]*0.5)), priors[11,2]); //# transfers less likely between groups
+                B[q,i,j] ~ normal(logit(priors[11,1]/sqrt(N_per_group[i,q]*0.5 + N_per_group[j,q]*0.5)), priors[11,2]); //# transfers less likely between groups
             }
         }}
+    }
 
     //# likelihood
     for ( i in 1:N_id ) {
@@ -270,8 +300,12 @@ model{
                 for(tie in 0:1) {
                   terms[tie+1] = prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
                 }
+
+                for(q in 1:N_group_vars){
+                 br[q] = B[q,block_set[i,q], block_set[j,q]]; //# Extract all of the block components for this dyad
+                 }
                 
-      p[i,j] = inv_logit( B[group_ids[i], group_ids[j]] + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
+      p[i,j] = inv_logit( sum(br) + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
       mixed_p[i,j] = log_mix( p[i,j] , terms[2] , terms[1] );  //# Model as a mixture distribution
       }
    }
@@ -284,7 +318,7 @@ model{
 
  target += sum(mixed_p);
 
- target += normal_lpdf(sum(p) | S, penalty);
+ target += normal_lpdf(sum(p) | S, penalty); //# Stop label switching by penalizing the distance between report density and outcome density
  }
 
 generated quantities{
@@ -301,6 +335,12 @@ generated quantities{
                 int tie;
                 vector[2] scrap;
                 matrix[N_id, N_id] p;
+                matrix[max_N_groups, max_N_groups] B[N_group_vars];
+
+    for(i in 1:N_group_vars){
+     B[i,1:N_groups_per_var[i], 1:N_groups_per_var[i]] = to_matrix(block_effects[(block_indexes[i]+1):(block_indexes[i+1])], N_groups_per_var[i], N_groups_per_var[i]);
+    }
+           
             
     for(i in 1:N_id){
      vector[2] sr_terms;
@@ -313,11 +353,20 @@ generated quantities{
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
+      vector[N_group_vars] br1;
+      vector[N_group_vars] br2;
+
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ])) + B[group_ids[i], group_ids[j]];
-     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ])) + B[group_ids[j], group_ids[i]];
+
+            for(q in 1:N_group_vars){
+        br1[q] = B[q,block_set[i,q], block_set[j,q]];
+        br2[q] = B[q,block_set[j,q], block_set[i,q]];
+         }
+
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ])) + sum(br1);
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ])) + sum(br2);
     }}
 
     for(i in 1:N_id){
@@ -333,9 +382,9 @@ generated quantities{
       rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
      }
 
-    fpr[i] = logit(false_positive_rate) + fpr_sigma .* fpr_raw[i] + fpr_terms;
-    rtt[i] = logit(recall_of_true_ties) + rtt_sigma .* rtt_raw[i] + rtt_terms;
-    theta[i] = inv_logit(logit(theta_mean) + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    fpr[i] = false_positive_rate + fpr_sigma .* fpr_raw[i] + fpr_terms;
+    rtt[i] = recall_of_true_ties + rtt_sigma .* rtt_raw[i] + rtt_terms;
+    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
     }  
 
     for ( i in 1:N_id ) {

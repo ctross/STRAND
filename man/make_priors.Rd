@@ -7,7 +7,7 @@
 make_priors(priors_to_change = NULL, include_rownames = FALSE)
 }
 \arguments{
-\item{priors_to_change}{A named vector of priors to change. To get paramter names, run: make_priors(include_rownames=TRUE). Values must be 2-vectors. If the prior has only one parameter, inlcude 0 as the second element.}
+\item{priors_to_change}{A named vector of priors to change. To get parameter names, run: make_priors(include_rownames=TRUE). Values must be 2-vectors. If the prior has only one parameter, inlcude 0 as the second element.}
 
 \item{include_rownames}{Should rownames be printed?}
 }
@@ -15,7 +15,7 @@ make_priors(priors_to_change = NULL, include_rownames = FALSE)
 A STRAND priors matrix.
 }
 \description{
-This function allows users to change the numerical values of priors (but not their distributions). You should only change these values if you read and understand the source code.
+This function allows users to change the numerical values of priors (but not their distributions). Users should only change these values if they have read and understood the source code.
 }
 \examples{
 \dontrun{

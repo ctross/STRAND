@@ -4,7 +4,7 @@
 \alias{summarize_strand_results}
 \title{Organize Stan output and provide summaries of model parameters}
 \usage{
-summarize_strand_results(input, include_samples = TRUE)
+summarize_strand_results(input, include_samples = TRUE, HPDI = 0.9)
 }
 \arguments{
 \item{input}{A STRAND model object, obtained by fitting a model using a STRAND function.}

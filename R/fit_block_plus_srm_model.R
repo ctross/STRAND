@@ -8,6 +8,8 @@
 #' @param 
 #' data A data object of class STRAND, prepared using the make_strand_data() function. The data object must include all covariates used in the formulas listed below.
 #' @param 
+#' block_regression A formula for the block-level predictors. This should be specified as in lm(), e.g.: ~ Ethnicity + Sex. Dont use interactions, however.
+#' @param 
 #' focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param 
 #' target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
@@ -28,6 +30,7 @@
 #' @examples
 #' \dontrun{
 #' fit = fit_block_plus_social_relations_model( data=model_dat,
+#'                                              block_regression = ~ Ethnicity,
 #'                                              focal_regression = ~ Age * NoFood,
 #'                                              target_regression = ~ Age * NoFood,
 #'                                              dyad_regression = ~ Relatedness + Friends * SameSex,
@@ -39,6 +42,7 @@
 #' 
 
 fit_block_plus_social_relations_model = function(data=model_dat,
+                                    block_regression,
                                     focal_regression,
                                     target_regression,
                                     dyad_regression,
@@ -68,6 +72,10 @@ fit_block_plus_social_relations_model = function(data=model_dat,
 
     if(data$N_dyadic_predictors==0 & dyad_regression != ~ 1){
         stop("No individual covariate data has been provided. dyad_regression must equal ~ 1 ")
+    }
+
+    if(data$N_block_predictors==0 & block_regression != ~ 1){
+        stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
     
     ############################################################################# Prepare data and parse formulas
@@ -110,6 +118,25 @@ fit_block_plus_social_relations_model = function(data=model_dat,
     
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
+    ################################################################ Block model matrix
+     if(data$N_block_predictors>0){
+      data$block_set = model.matrix( block_regression , data$block_predictors )
+     } else{
+      data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
+     }
+
+     data$N_group_vars = ncol(data$block_set) 
+     data$N_groups_per_var = rep(NA, data$N_group_vars)
+
+     for(i in 1:data$N_group_vars){
+      data$N_groups_per_var[i] = length(unique(data$block_set[,i]))  
+     }
+
+     data$N_groups_per_var = as.array(data$N_groups_per_var)
+  
+     data$max_N_groups = max(data$N_groups_per_var)
+
+    ############### Priors
     data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
 
     if(is.null(priors)){

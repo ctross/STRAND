@@ -4,7 +4,7 @@
 \alias{summarize_bsrm_results}
 \title{Organize Stan output and provide summaries of model parameters}
 \usage{
-summarize_bsrm_results(input, include_samples = TRUE)
+summarize_bsrm_results(input, include_samples = TRUE, HPDI = 0.9)
 }
 \arguments{
 \item{input}{A STRAND model object, obtained by fitting a combined stochastic block and social relations model.}
