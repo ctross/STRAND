@@ -25,14 +25,14 @@ Install by running on R:
 
 Example models, with test data, can be found here. 
 
-Binary outcomes: [**Bernoulli models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/Bernoulli_Example.R)
+Binary outcomes: [**Bernoulli models**](https://github.com/ctross/STRAND/tutorials/Bernoulli_Example.R)
 
-Binomial outcomes: [**Binomial models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/Binomial_Example.R)
+Binomial outcomes: [**Binomial models**](https://github.com/ctross/STRAND/tutorials/Binomial_Example.R)
 
-Count outcomes: [**Poisson models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/Poisson_Example.R)
+Count outcomes: [**Poisson models**](https://github.com/ctross/STRAND/tutorials/Poisson_Example.R)
 
-Double-sampled binary outcomes: [**Latent network models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/LatentNetwork_Example.R)
+Double-sampled binary outcomes: [**Latent network models**](https://github.com/ctross/STRAND/tutorials/LatentNetwork_Example.R)
 
-An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/ctross-patch-1/Interaction_Example.R)
+An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/tutorials/Interaction_Example.R)
 
 Note: each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it!
