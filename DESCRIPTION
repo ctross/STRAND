@@ -3,7 +3,7 @@ Title: An R package for simulating and analyzing social network data in R and St
 Version: 0.0.0.9000
 Authors@R:c(person(given = "Cody", family = "Ross", email = "ctross@ucdavis.edu", role = c("aut", "cre")),person(given = "Daniel",family = "Redhead", email = "daniel_redhead@eva.mpg.de", role = c("aut")))
 Description: An R package for simulating and analysing social network data using full Bayesian inference in Stan.
-Depends: rethinking,cmdstanr,igraph
+Depends: rethinking,cmdstanr,igraph,ggplot2
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
