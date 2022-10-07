@@ -6,6 +6,8 @@
 #' input A STRAND model object, obtained by fitting a stochastic block model.
 #' @param 
 #' include_samples An indicator for the user to specify whether raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
+#' @param 
+#' HPDI Highest Posterior Density Interval. Ranges in (0,1).
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples
@@ -45,7 +47,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
     block_indexes = c()
     block_indexes[1] = 0
     for(q in 1:input$data$N_group_vars){ 
-    block_indexes[1+q] = input$data$N_groups_per_var[q]*input$data$N_groups_per_var[q] + block_indexes[q];
+    block_indexes[1+q] = input$data$N_groups_per_var[q]*input$data$N_groups_per_var[q] + block_indexes[q]
     }
 
     ################### Convert the block-model effects into an array form
@@ -73,6 +75,10 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
     srm_samples$dyadic_coeffs = dyad_effects
 
     samples = list(srm_model_samples=srm_samples)
+
+    if(input$return_predicted_network == TRUE){
+        samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p 
+        }
 
     ###################################################### Create summary stats 
      sum_stats = function(y, x, z){
@@ -178,7 +184,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     print(results_list)
 
-    attr(res_final, "class") <- "STRAND Results Object"
+    attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
 

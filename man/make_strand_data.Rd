@@ -25,13 +25,13 @@ If an exposure variable is provided, self_report can take integer values and out
 \item{ground_truth}{A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.}
 
+\item{block_covariates}{A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.}
+
 \item{individual_covariates}{An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.}
 
 \item{dyadic_covariates}{A list of N_id by N_id by N_dyadic_parameters matrices.}
 
 \item{exposure}{A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
-
-\item{group_ids}{A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.}
 }
 \value{
 A list of data formatted for use by STRAND models.

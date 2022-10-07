@@ -14,7 +14,7 @@
 #' ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
 #' @param 
-#' group_ids A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
+#' block_covariates A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
 #' @param 
 #' individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
 #' @param 
