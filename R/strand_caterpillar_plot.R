@@ -6,7 +6,7 @@
 #' @param 
 #' results The results object from summarize_strand_results.
 #' @param
-#' submodels Which submodels to plot? Supported: "False positive rate", "Recall of true ties", "Theta: question-order effects", "Focal efffects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates"
+#' submodels Which submodels to plot? Supported: "False positive rate", "Recall of true ties", "Theta: question-order effects", "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates"
 #' @param 
 #' normalized Should effects be normalized? Do not use for correlations and variance terms.
 #' @param 
@@ -21,7 +21,7 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' vis = strand_caterpillar_plot(res, submodel=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="XY", only_technicals=TRUE, export_as_table=FALSE)
+#' vis = strand_caterpillar_plot(res, submodel=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="XY", only_technicals=TRUE, export_as_table=FALSE)
 #' }
 #'
 
@@ -45,7 +45,7 @@ colnames(df) = c("Variable", "Median", "LI", "HI", "Mean","SD", "SubModel")
 
 df$Submodel = factor(df$SubModel)
 df$Submodel = factor(df$SubModel, levels=c("False positive rate", "Recall of true ties","Theta: question-order effects",
-                                           "Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects", "Other estimates" ))
+                                           "Focal effects: Out-degree","Target effects: In-degree","Dyadic effects", "Other estimates" ))
 
 if(only_slopes==TRUE){
 exclude=c("false positive rate intercept, layer 1",               
@@ -117,7 +117,7 @@ df$Variable[which(df$Variable=="dyadic effects rho (dyadic recipocity)")] = "dya
 
 df$Submodel = factor(df$SubModel)
 df$Submodel = factor(df$SubModel, levels=c("False positive rate", "Recall of true ties","Theta: question-order effects",
-                                           "Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects", "Other estimates" ))
+                                           "Focal effects: Out-degree","Target effects: In-degree","Dyadic effects", "Other estimates" ))
 
 p <- ggplot(df,aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
      geom_linerange(size=1)+
