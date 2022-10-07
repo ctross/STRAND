@@ -18,7 +18,7 @@ nets = list(Lick = round(Bat_Data$Lick/60,0))
 
 # Dyadic variables
 dyad = list(Relatedness = Bat_Data$Relatedness, 
-            NoOppertunity = Bat_Data$NoOppertunity
+            NoOpportunity = Bat_Data$NoOpportunity
               )
 
 # Block variables
@@ -36,7 +36,7 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             block_regression = ~ Sex ,
                                             focal_regression = ~ 1,
                                             target_regression = ~ 1,
-                                            dyad_regression = ~ NoOppertunity + Relatedness,
+                                            dyad_regression = ~ NoOpportunity + Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
