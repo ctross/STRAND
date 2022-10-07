@@ -32,15 +32,15 @@ Quickstart guides for these packages can be found [**here, for cmdstanr**](https
 Use:
 --------------
 
-Example models, with test data, can be found here. 
+Example models, with test data, can be found here. Note that analysis of large network data sets can be quite slow using MCMC. 
 
-Binary outcomes: [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
+Binary outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
 
-Binomial outcomes: [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
+Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
 
-Count outcomes: [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
+Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
 
-Double-sampled binary outcomes: [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
+Double-sampled binary outcomes (find out for yourself): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
 
 An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
