@@ -14,6 +14,7 @@ library(STRAND)
 data(Baboon_Data)
 
 # Number of grooming event and a sample-size measure
+# Here, the term "exposure" relates to the number of trials for a binomial distribution
 nets = list(Grooming = Baboon_Data$Grooming)
 exposure_nets = list(Exposure = Baboon_Data$Exposure)
 
@@ -44,11 +45,11 @@ res = summarize_strand_results(fit)
 
 
 ############################### Plots
-vis_1 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="HP", only_slopes=TRUE)
+vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="HP", only_slopes=TRUE)
 vis_1
 #ggsave("Baboon_slopes.pdf", vis_1, width=7, height=2.5)
 
-vis_2 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
+vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Baboon_corr.pdf", vis_2, width=6, height=2.5)
 

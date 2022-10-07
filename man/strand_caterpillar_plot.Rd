@@ -38,7 +38,14 @@ STRAND model fitting functions require their data to be supplied in the format e
 }
 \examples{
 \dontrun{
-vis = strand_caterpillar_plot(res, submodel=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="XY", only_technicals=TRUE, export_as_table=FALSE)
+vis = strand_caterpillar_plot(res, submodel=c("Focal efffects: Out-degree",
+                                              "Target effects: In-degree",
+                                              "Dyadic effects","Other estimates"), 
+                                   normalized=TRUE, 
+                                   site="XY", 
+                                   only_technicals=TRUE, 
+                                   export_as_table=FALSE
+                                    )
 }
 
 }

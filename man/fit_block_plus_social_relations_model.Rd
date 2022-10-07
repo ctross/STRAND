@@ -5,13 +5,13 @@
 \title{A function to run combined stochastic block and social relations models using the STRAND framework}
 \usage{
 fit_block_plus_social_relations_model(
-  data = model_dat,
+  data,
   block_regression,
   focal_regression,
   target_regression,
   dyad_regression,
   mode = "mcmc",
-  return_latent_network = FALSE,
+  return_predicted_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
   priors = NULL
@@ -32,7 +32,7 @@ fit_block_plus_social_relations_model(
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.}
 
-\item{return_latent_network}{An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.}
+\item{return_predicted_network}{Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.}
 
 \item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)}
 
@@ -50,14 +50,16 @@ It is important to note that all individuals' block (or group) assignment must b
 }
 \examples{
 \dontrun{
-fit = fit_block_plus_social_relations_model( data=model_dat,
-                                             block_regression = ~ Ethnicity,
-                                             focal_regression = ~ Age * NoFood,
-                                             target_regression = ~ Age * NoFood,
-                                             dyad_regression = ~ Relatedness + Friends * SameSex,
-                                             mode="mcmc",
-                                             stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 100,
-                                                                         iter_sampling = 100, max_treedepth = NULL, adapt_delta = NULL)
+fit = fit_block_plus_social_relations_model(data=model_dat,
+                                            block_regression = ~ Ethnicity,
+                                            focal_regression = ~ Age * NoFood,
+                                            target_regression = ~ Age * NoFood,
+                                            dyad_regression = ~ Relatedness + Friends * SameSex,
+                                            mode="mcmc",
+                                            stan_mcmc_parameters = list(seed = 1, chains = 1, 
+                                              parallel_chains = 1, refresh = 1, 
+                                              iter_warmup = 100, iter_sampling = 100,
+                                              max_treedepth = NULL, adapt_delta = NULL)
                                              )
 }
 

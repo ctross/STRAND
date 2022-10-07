@@ -13,7 +13,7 @@ STRAND
   
 [**STRAND**](https://github.com/ctross/STRAND) is part of an ecosystem of tools for modern social network analysis. [**DieTryin**](https://github.com/ctross/DieTryin) is a companion package designed to facilitate the collection of roster-based network data, and to run network-structured economic games. **ResolveR** (currently under development) is a package for semi-supervised data cleaning, de-duplication, and record linkage.
 
-Use:
+Install:
 --------------
 Install by running on R:
 ```{r}
@@ -23,16 +23,27 @@ Install by running on R:
  library(STRAND)
 ```
 
-Example models, with test data, can be found here. 
+You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) and [**rstan**](https://mc-stan.org/users/interfaces/rstan) installed.
 
-Binary outcomes: [**Bernoulli models**](https://github.com/ctross/STRAND/tutorials/Bernoulli_Example.R)
+Quickstart guides for these packages can be found [**here, for cmdstanr**](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) and [**here, for rstan**](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started). 
 
-Binomial outcomes: [**Binomial models**](https://github.com/ctross/STRAND/tutorials/Binomial_Example.R)
+**STRAND** calls **Stan** models in the background, so you will need a C++ compiler in your toolchain. Users frequently rely on [**RTools**](https://cran.r-project.org/bin/windows/Rtools/).
 
-Count outcomes: [**Poisson models**](https://github.com/ctross/STRAND/tutorials/Poisson_Example.R)
+Finally, we note that some users will see a warning message: "Declaration of arrays by placing brackets after a variable name is deprecated and will be removed in Stan 2.32.0." This message is ignorable, we will update the Stan code inside STRAND once deprication occurs at Stan 2.32.0.
 
-Double-sampled binary outcomes: [**Latent network models**](https://github.com/ctross/STRAND/tutorials/LatentNetwork_Example.R)
+Use:
+--------------
 
-An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/tutorials/Interaction_Example.R)
+Example models, with test data, can be found here. Note that analysis of large network data sets can be quite slow using MCMC. 
+
+Binary outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
+
+Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
+
+Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
+
+Double-sampled binary outcomes (find out for yourself): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
+
+An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
 Note: each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it!

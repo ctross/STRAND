@@ -6,6 +6,8 @@
 #' input A STRAND model object, obtained by fitting a model using a STRAND function.
 #' @param 
 #' include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
+#' @param 
+#' HPDI Highest Posterior Density Interval. Ranges in (0,1).
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples

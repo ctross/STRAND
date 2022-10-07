@@ -6,13 +6,14 @@
 \usage{
 simulate_srm_network(
   N_id = 99,
-  B = 0.01,
+  B = -4,
   sr_mu = c(0, 0),
   sr_sigma = c(0.3, 1.5),
   sr_rho = 0.6,
   dr_mu = c(0, 0),
   dr_sigma = 1,
   dr_rho = 0.7,
+  mode = "bernoulli",
   individual_predictors = NULL,
   dyadic_predictors = NULL,
   individual_effects = NULL,
@@ -22,7 +23,7 @@ simulate_srm_network(
 \arguments{
 \item{N_id}{Number of individuals.}
 
-\item{B}{Intercept tie probability.}
+\item{B}{Intercept tie log-odds.}
 
 \item{sr_mu}{Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).}
 
@@ -36,6 +37,8 @@ simulate_srm_network(
 
 \item{dr_rho}{Correlation of dyad effects: aka. dyadic reciprocity.}
 
+\item{mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
 \item{dyadic_predictors}{An N_id by N_id by N_dyadic_parameters array of covariates.}
@@ -46,8 +49,8 @@ The second row gives effects of target characteristics (on in-degree).}
 \item{dyadic_effects}{An N_dyadic_parameters vector of slopes.}
 }
 \value{
-A list of 5 objects: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
-group_ids (a vector of length N_id, giving the group of each individual), individual_predictors (the supplied covariate data is saved along with the network data), 
+A list of objects including: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
+individual_predictors (the supplied covariate data is saved along with the network data), 
 and dyadic_predictors (the supplied covariate data is saved along with the network data).
 }
 \description{
@@ -56,7 +59,15 @@ is essentially a social relations model.
 }
 \examples{
 \dontrun{
-A = simulate_srm_network(N_id = 100, B=0.002, individual_predictor=matrix(rnorm(100, 0, 1), nrow=100,ncol=1), individual_effects=matrix(c(1.2, 0.5),ncol=1,nrow=2))
+library(igraph)
+N_id = 100
+A = simulate_srm_network(N_id = N_id, B=-7, 
+                         individual_predictor=matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1), 
+                         individual_effects=matrix(c(1.2, 1.5), ncol=1, nrow=2),
+                         sr_sigma = c(1.4, 0.8), sr_rho = 0.5,
+                         dr_sigma = 1.2, dr_rho = 0.8,
+                         mode="bernoulli"
+                         )
 Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
 
 plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
