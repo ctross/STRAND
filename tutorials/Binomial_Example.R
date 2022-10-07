@@ -14,6 +14,7 @@ library(STRAND)
 data(Baboon_Data)
 
 # Number of grooming event and a sample-size measure
+# Here, the term "exposure" relates to the number of trials for a binomial distribution
 nets = list(Grooming = Baboon_Data$Grooming)
 exposure_nets = list(Exposure = Baboon_Data$Exposure)
 
