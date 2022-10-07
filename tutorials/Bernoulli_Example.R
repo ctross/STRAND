@@ -49,11 +49,11 @@ fit = fit_block_plus_social_relations_model(data=dat,
 
 res = summarize_strand_results(fit)
 
-vis_1 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, only_slopes=TRUE)
+vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, only_slopes=TRUE)
 vis_1
 #ggsave("Colombia_slopes.pdf", vis_1, width=10, height=5.5)
 
-vis_2 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE,  only_technicals=TRUE, only_slopes=FALSE)
+vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE,  only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Colombia_corr.pdf", vis_2, width=6, height=2.5)
 
