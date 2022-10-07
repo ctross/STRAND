@@ -55,7 +55,7 @@ fit = fit_latent_network_model(data=dat,
 
 res = summarize_strand_results(fit)
 
-vis_1 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects"), normalized=TRUE)
+vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects"), normalized=TRUE)
 vis_1
  # ggsave("Colombia_slopes_latent.pdf", vis_1, width=8, height=8)
 

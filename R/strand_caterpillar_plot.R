@@ -21,12 +21,20 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' vis = strand_caterpillar_plot(res, submodel=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="XY", only_technicals=TRUE, export_as_table=FALSE)
+#' vis = strand_caterpillar_plot(res, submodel=c("Focal efffects: Out-degree",
+#'                                               "Target effects: In-degree",
+#'                                               "Dyadic effects","Other estimates"), 
+#'                                    normalized=TRUE, 
+#'                                    site="XY", 
+#'                                    only_technicals=TRUE, 
+#'                                    export_as_table=FALSE
+#'                                     )
 #' }
 #'
 
 #plotting results
 strand_caterpillar_plot = function(results, submodels=NULL, normalized=FALSE, only_slopes=FALSE, only_technicals=FALSE, site="BOB", export_as_table=FALSE){
+  Variable = Median = LI = HI = NULL
   dat = vector("list",length(results$summary_list))
 
   for(k in 1:length(results$summary_list)){
@@ -119,25 +127,37 @@ df$Submodel = factor(df$SubModel)
 df$Submodel = factor(df$SubModel, levels=c("False positive rate", "Recall of true ties","Theta: question-order effects",
                                            "Focal effects: Out-degree","Target effects: In-degree","Dyadic effects", "Other estimates" ))
 
-p <- ggplot(df,aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
-     geom_linerange(size=1)+
-     geom_point(size=2)+
-     facet_grid( Submodel ~ ., scales = "free", space='free')+
+p = ggplot2::ggplot(df, ggplot2::aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
+     ggplot2::geom_linerange(size=1)+
+     ggplot2::geom_point(size=2)+
+     ggplot2::facet_grid( Submodel ~ ., scales = "free", space='free')+
        #facet_wrap(vars(SubModel), ncol=1,scales = "free")+
-       geom_hline(aes(yintercept=0),color="black",linetype="dashed")+
-     labs(y="Regression parameters", x="") + theme(strip.text.x = element_text(size=12,face="bold"), 
-     strip.text.y = element_text(size=12,face="bold"),axis.text=element_text(size=12),axis.title.y=element_text(size=14,
-     face="bold"), axis.title.x=element_blank())+theme(strip.text.y = element_text(angle = 360)) + coord_flip() + theme(panel.spacing = unit(1, "lines")) 
+     ggplot2::geom_hline(ggplot2::aes(yintercept=0),color="black",linetype="dashed")+
+     ggplot2::labs(y="Regression parameters", x="") + 
+     ggplot2::theme(strip.text.x = ggplot2::element_text(size=12,face="bold"), 
+      strip.text.y = ggplot2::element_text(size=12,face="bold"),
+      axis.text = ggplot2::element_text(size=12),
+      axis.title.y = ggplot2::element_text(size=14, face="bold"), 
+      axis.title.x = ggplot2::element_blank())+
+     ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
+     ggplot2::coord_flip() + 
+     ggplot2::theme(panel.spacing = unit(1, "lines")) 
 
-p2 <- ggplot(df,aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
-     geom_linerange(size=1)+
-     geom_point(size=2)+
-     facet_grid( SubModel2~., scales = "free")+
+p2 = ggplot2::ggplot(df, ggplot2::aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
+     ggplot2::geom_linerange(size=1)+
+     ggplot2::geom_point(size=2)+
+     ggplot2::facet_grid( SubModel2~., scales = "free")+
        #facet_wrap(vars(SubModel), ncol=1,scales = "free")+
-       geom_hline(aes(yintercept=0),color="black",linetype="dashed")+
-     labs(y="Regression parameters", x="") + theme(strip.text.x = element_text(size=12,face="bold"), 
-     strip.text.y = element_text(size=12,face="bold"),axis.text=element_text(size=12),axis.title.y=element_text(size=14,
-     face="bold"), axis.title.x=element_blank())+theme(strip.text.y = element_text(angle = 360)) + coord_flip() + theme(panel.spacing = unit(1, "lines")) 
+     ggplot2::geom_hline(ggplot2::aes(yintercept=0),color="black",linetype="dashed")+
+     ggplot2::labs(y="Regression parameters", x="") + 
+     ggplot2::theme(strip.text.x = ggplot2::element_text(size=12,face="bold"), 
+      strip.text.y = ggplot2::element_text(size=12,face="bold"),
+      axis.text=ggplot2::element_text(size=12),
+      axis.title.y=ggplot2::element_text(size=14, face="bold"), 
+      axis.title.x=ggplot2::element_blank())+
+     ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
+     ggplot2::coord_flip() + 
+     ggplot2::theme(panel.spacing = unit(1, "lines")) 
 
 if(export_as_table==FALSE){
 if(only_technicals==TRUE){

@@ -6,6 +6,11 @@
 \usage{
 .onAttach(libname = NULL, pkgname = "STRAND")
 }
+\arguments{
+\item{libname}{Library name.}
+
+\item{pkgname}{Package name.}
+}
 \description{
 A function to load some data when the package opens.
 }

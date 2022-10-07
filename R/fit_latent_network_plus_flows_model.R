@@ -26,7 +26,7 @@
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
-#' return_latent_network An indicator for the user to specify whether latent tie probablities shoul be returned. Warning: for large networks, this option may require substantial memory.
+#' return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' @param 
@@ -44,13 +44,15 @@
 #'                                target_regression = ~ Age * NoFood,
 #'                                dyad_regression = ~ Relatedness + Friends * SameSex,
 #'                                mode="mcmc",
-#'                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 100,
-#'                                                            iter_sampling = 100, max_treedepth = NULL, adapt_delta = NULL)
+#'                                stan_mcmc_parameters = list(seed = 1, chains = 1, 
+#'                                 parallel_chains = 1, 
+#'                                 refresh = 1, iter_warmup = 100, iter_sampling = 100,
+#'                                 max_treedepth = NULL, adapt_delta = NULL)
 #'                                )
 #' }
 #' 
 
-fit_latent_network_plus_flows_model = function(data=model_dat,
+fit_latent_network_plus_flows_model = function(data,
                                     fpr_regression,
                                     rtt_regression,
                                     theta_regression,
@@ -59,7 +61,7 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
                                     target_regression,
                                     dyad_regression,
                                     mode="mcmc",
-                                    return_latent_network=FALSE,
+                                    return_predicted_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
                                     priors=NULL
@@ -166,7 +168,7 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
      data$max_N_groups = max(data$N_groups_per_var)
 
     ############### Priors
-    data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
+    data$export_network = ifelse(return_predicted_network==TRUE, 1, 0)
 
     if(is.null(priors)){
       data$priors =  make_priors()
@@ -177,7 +179,7 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
 
     ############################################################################# Fit model
     
-    model = cmdstan_model(paste0(path.package("STRAND"),"/","latent_network_model_flows.stan"))
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","latent_network_model_flows.stan"))
 
     if(mode=="mcmc"){
       fit = model$sample(
@@ -207,7 +209,7 @@ fit_latent_network_plus_flows_model = function(data=model_dat,
      stop("Must supply a legal mode value: mcmc, vb, or optim.")
     }
 
-    bob = list(data=data, fit=fit, return_latent_network=return_latent_network )
+    bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network )
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "LNM+Flows"

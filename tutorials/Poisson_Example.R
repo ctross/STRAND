@@ -45,11 +45,11 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
 
 res = summarize_strand_results(fit)
 
-vis_1 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE,  only_slopes=TRUE)
+vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE,  only_slopes=TRUE)
 vis_1
 #ggsave("Bat_slopes.pdf", vis_1, width=7, height=2.5)
 
-vis_2 = strand_caterpillar_plot(res, submodels=c("Focal efffects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
+vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Bat_corr.pdf", vis_2, width=6, height=2.5)
 

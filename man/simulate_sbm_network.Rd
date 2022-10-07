@@ -5,18 +5,11 @@
 \title{A function to simulate single layer directed networks with a stochastic block structure}
 \usage{
 simulate_sbm_network(
-  N_id = 90,
-  N_groups = 3,
-  group_probs = c(0.2, 0.5, 0.3),
+  N_id = 100,
   B = NULL,
-  in_block = 0.02,
-  out_block = 0.01,
-  sr_mu = c(0, 0),
-  sr_sigma = c(1, 1),
-  sr_rho = 0.3,
-  dr_mu = c(0, 0),
-  dr_sigma = 1,
-  dr_rho = 0.7,
+  V = 3,
+  groups = NULL,
+  mode = "bernoulli",
   individual_predictors = NULL,
   dyadic_predictors = NULL,
   individual_effects = NULL,
@@ -26,15 +19,13 @@ simulate_sbm_network(
 \arguments{
 \item{N_id}{Number of individuals.}
 
-\item{N_groups}{Number of groups (i.e., blocks).}
+\item{B}{List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.}
 
-\item{group_probs}{A vector of the probabilities of individuals being in each group.}
+\item{V}{Number of blocking variables in B.}
 
-\item{B}{Tie probabilities between group blocks. If B is null, then in_block and out_block can be specified to create B.}
+\item{groups}{Dataframe of the block IDs of each individual for each variable in B.}
 
-\item{in_block}{Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.}
-
-\item{out_block}{Tie probabilities between memebers of different groups. This is overridden by a non-NULL B parameter.}
+\item{mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -46,7 +37,7 @@ The second row gives effects of target characteristics (on in-degree).}
 \item{dyadic_effects}{An N_dyadic_parameters vector of slopes.}
 }
 \value{
-A list of 5 objects: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
+A list of objects including: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
 group_ids (a vector of length N_id, giving the group of each individual), individual_predictors (the supplied covariate data is saved along with the network data), 
 and dyadic_predictors (the supplied covariate data is saved along with the network data).
 }
@@ -55,14 +46,26 @@ This is a function to simulate single layer network data with a stochastic block
 }
 \examples{
 \dontrun{
-B = diag(3)*0.04
-B[1,3] = 0.010
-B[3,2] = 0.007
-B[1,1] = 0.07
+library(igraph)
+V = 1            # One blocking variable
+G = 3            # Three categories in this variable
+N_id = 100       # Number of people
 
-A = simulate_sbm_network(N_id = 100, B=B, individual_predictor=matrix(rnorm(100, 0, 1), nrow=100,ncol=1), individual_effects=matrix(c(1.2, 0.5),ncol=1,nrow=2))
+clique = sample(1:3, N_id, replace=TRUE)
+B = matrix(-6, nrow=G, ncol=G)
+diag(B) = -1.5 # Block matrix
+
+B[1,3] = -5
+B[3,2] = -4
+
+A = simulate_sbm_network(N_id = N_id, B=list(B=B), V=V, groups = data.frame(clique=factor(clique)),
+                         individual_predictor=matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1), 
+                         individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
+                         mode="bernoulli"
+                               )
+
 Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
-V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids]
+V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids$clique]
 
 plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 }
