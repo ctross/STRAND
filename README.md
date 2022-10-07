@@ -13,7 +13,7 @@ STRAND
   
 [**STRAND**](https://github.com/ctross/STRAND) is part of an ecosystem of tools for modern social network analysis. [**DieTryin**](https://github.com/ctross/DieTryin) is a companion package designed to facilitate the collection of roster-based network data, and to run network-structured economic games. **ResolveR** (currently under development) is a package for semi-supervised data cleaning, de-duplication, and record linkage.
 
-Use:
+Install:
 --------------
 Install by running on R:
 ```{r}
@@ -22,6 +22,15 @@ Install by running on R:
  install_github('ctross/STRAND')
  library(STRAND)
 ```
+
+You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) and [**rstan**](https://mc-stan.org/users/interfaces/rstan) installed.
+
+Quickstart guides for these packages can be found [**here, for cmdstanr**](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) and [**here, for rstan**](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started). 
+
+**STRAND** calls **Stan** models in the background, so you will need a C++ compiler in your toolchain. Users frequently rely on [**RTools**](https://cran.r-project.org/bin/windows/Rtools/).
+
+Use:
+--------------
 
 Example models, with test data, can be found here. 
 

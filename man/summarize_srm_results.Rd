@@ -10,6 +10,8 @@ summarize_srm_results(input, include_samples = TRUE, HPDI = 0.9)
 \item{input}{A STRAND model object, obtained by fitting a social relations model.}
 
 \item{include_samples}{An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.}
+
+\item{HPDI}{Highest Posterior Density Interval. Ranges in (0,1).}
 }
 \value{
 A STRAND results object including summary table, a summary list, and samples.

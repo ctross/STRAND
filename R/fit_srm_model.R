@@ -16,6 +16,8 @@
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
+#' return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
+#' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' @param 
 #' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
@@ -28,18 +30,20 @@
 #'                                   target_regression = ~ Age * NoFood,
 #'                                   dyad_regression = ~ Relatedness + Friends * SameSex,
 #'                                   mode="mcmc",
-#'                                   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 100,
-#'                                                  iter_sampling = 100, max_treedepth = NULL, adapt_delta = NULL)
+#'                                   stan_mcmc_parameters = list(seed = 1, 
+#'                                   chains = 1, parallel_chains = 1, 
+#'                                   refresh = 1, iter_warmup = 100, iter_sampling = 100,
+#'                                   max_treedepth = NULL, adapt_delta = NULL)
 #'                      )
 #' }
 #' 
 
-fit_social_relations_model = function(data=model_dat,
+fit_social_relations_model = function(data,
                                       focal_regression,
                                       target_regression,
                                       dyad_regression,
                                       mode="mcmc",
-                                      return_latent_network=FALSE,
+                                      return_predicted_network=FALSE,
                                       stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
                                       priors=NULL
@@ -106,7 +110,7 @@ fit_social_relations_model = function(data=model_dat,
     
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
-    data$export_network = ifelse(return_latent_network==TRUE, 1, 0)
+    data$export_network = ifelse(return_predicted_network==TRUE, 1, 0)
     
     if(is.null(priors)){
       data$priors =  make_priors()
@@ -116,7 +120,7 @@ fit_social_relations_model = function(data=model_dat,
 
     ############################################################################# Fit model
     
-    model = cmdstan_model(paste0(path.package("STRAND"),"/","social_relations_model.stan"))
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","social_relations_model.stan"))
 
     if(mode=="mcmc"){
       fit = model$sample(
@@ -146,7 +150,7 @@ fit_social_relations_model = function(data=model_dat,
      stop("Must supply a legal mode value: mcmc, vb, or optim.")
     }
 
-    bob = list(data=data, fit=fit, return_latent_network=return_latent_network )
+    bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network )
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "SRM"

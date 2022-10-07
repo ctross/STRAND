@@ -7,15 +7,11 @@
 #' @param 
 #' N_id Number of individuals.
 #' @param 
-#' N_groups Number of groups.
+#' B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
 #' @param 
-#' group_probs A vector of the probabilities of individuals being in each group.
+#' V Number of blocking variables in B.
 #' @param 
-#' B Tie probabilities between group blocks.  If B is null, then in_block and out_block can be specified to create B.
-#' @param 
-#' in_block Tie probabilities between members of the same group. This is overridden by a non-NULL B parameter.
-#' @param 
-#' out_block Tie probabilities between members of different groups. This is overridden by a non-NULL B parameter. 
+#' groups Dataframe of the block IDs of each individual for each variable in B.
 #' @param 
 #' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
 #' @param 
@@ -72,26 +68,65 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' B = diag(3)*0.01
-#' B[1,3] = 0.001
-#' B[3,2] = 0.002
-#' B[1,1] = 0.02
+#' library(igraph)
+#' V = 1            # One blocking variable
+#' G = 3            # Three categories in this variable
+#' N_id = 100       # Number of people
+#'
+#' clique = sample(1:3, N_id, replace=TRUE)
+#' B = matrix(-8, nrow=G, ncol=G)
+#' diag(B) = -4.5 # Block matrix
+#'
+#' B[1,3] = -5.9
+#' B[3,2] = -6.9
 #' 
-#' A = simulate_selfreport_network(N_id = 100, B=B, individual_predictor=matrix(rnorm(100, 0, 1), nrow=100,ncol=1), individual_effects=matrix(c(1.2, 0.5),ncol=1,nrow=2))
-#' Net = graph_from_adjacency_matrix(A$reporting_network[,,1], mode = c("directed"))
-#' V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids]
+#' A = simulate_selfreport_network(N_id = N_id, B=list(B=B), V=V, 
+#'                          groups=data.frame(clique=factor(clique)),
+#'                          individual_predictor=matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1), 
+#'                          individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
+#'                          sr_sigma = c(1.4, 0.8), sr_rho = 0.5,
+#'                          dr_sigma = 1.2, dr_rho = 0.8,
+#'                          false_positive_rate = c(0.00, 0.00, 0.00), 
+#'                          recall_of_true_ties = c(0.7, 0.3, 0.99),
+#'                          theta_mean = 0.0, 
+#'                          fpr_sigma = c(0.0, 0.0, 0.0), 
+#'                          rtt_sigma = c(0.5, 0.2, 0.0),
+#'                          theta_sigma = 0.0,
+#'                          N_responses = 2,
+#'                          N_periods = 1, 
+#'                          flow_rate = rbeta(1, 3, 30),
+#'                          decay_curve = rep(0,1)
+#'                          )
+#'
+#' par(mfrow=c(1,3))
+#'
+#' # True Network
+#' Net = graph_from_adjacency_matrix(A$true_network, mode = c("directed"))
+#' V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids$clique]
 #' 
 #' plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
-#' }
+#'
+#'
+#' # Reported - out transfers
+#' Net = graph_from_adjacency_matrix(A$reporting_network[,,1], mode = c("directed"))
+#' V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids$clique]
+#' 
+#' plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
+#'
+#'
+#' # Reported - in transfers
+#' Net = graph_from_adjacency_matrix(A$reporting_network[,,2], mode = c("directed"))
+#' V(Net)$color = c("turquoise4","gray13", "goldenrod3")[A$group_ids$clique]
+#' 
+#' plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
+#'}
 #'
 
 ###########################################################################################
 simulate_selfreport_network = function(  N_id = 99,                        # Number of respondents
-                                         N_groups = 3,                     # Number of block, aka social groups
-                                         group_probs = c(0.2, 0.5, 0.3),   # Density of each group in overall network
-                                         B = NULL,                         # Block tie probabilities
-                                         in_block = 0.02,                  # Tie probability wthin groups  
-                                         out_block = 0.01,                 # Tie probability between groups
+                                         B = NULL,                         # Tie probabilities
+                                         V = 3,                            # Blocking variables
+                                         groups=NULL,                      # Group IDs
                                          sr_mu = c(0,0),                   # Average sender (cell 1) and reciever (cell 2) effect log odds
                                          sr_sigma = c(1,1),                # Sender (cell 1) and reciever (cell 2) effect variances 
                                          sr_rho = 0.6,                     # Correlation of sender and reciever effects
@@ -123,14 +158,14 @@ statement_flows = array( NA , dim=c( N_id , N_id ,  N_responses ) )
 goods_flows = array( NA , dim=c( N_id , N_id , N_periods ) )
 
 # y_true is a true network of directed giving ties from ego to alter
-G_net = simulate_sbm_plus_srm_network(N_id = N_id, N_groups = N_groups, group_probs = group_probs, B=B,
-                                      in_block = in_block, out_block = out_block,
+G_net = simulate_sbm_plus_srm_network(N_id = N_id, B=B, V=V, groups=groups,
                                       sr_mu = sr_mu,  sr_sigma = sr_sigma, sr_rho = sr_rho,
                                       dr_mu = dr_mu,  dr_sigma = dr_sigma, dr_rho = dr_rho,
                                       individual_predictors = individual_predictors,   
                                       dyadic_predictors = dyadic_predictors,        
                                       individual_effects = individual_effects,        
-                                      dyadic_effects = dyadic_effects
+                                      dyadic_effects = dyadic_effects,
+                                      mode="bernoulli"
                                       )
 
 group_id = G_net$group_ids
@@ -213,9 +248,9 @@ for ( i in 1:N_id ){
         weighted_offset_ji = sum(decay_curve[which(goods_flows[j, i, ]==1)])
 
         statement_flows[i, j, 2] = rbern(1, 
-                                               inv_logit(fpr_rev[i])*(1-y_true[j,i]) + 
-                                 inv_logit(rtt_rev[i] + weighted_offset_ji)*y_true[j,i])
-
+                                      inv_logit(fpr_rev[i])*(1-y_true[j,i]) + 
+                                      inv_logit(rtt_rev[i] + weighted_offset_ji)*y_true[j,i]
+                                      )
 
      # Question contaminiation bias. That is a bias to over-represent reciprical relations, even when not true
       if(statement_flows[i, j, 1]==1 & statement_flows[i, j, 2]==0)
@@ -238,8 +273,14 @@ for(i in 1:N_id){
 
 
 return(list(true_network=y_true, transfer_network=goods_flows, reporting_network=statement_flows, group_ids=group_id, N_id = N_id,
-            N_groups = N_groups, N_periods=N_periods, N_responses=N_responses, sr = G_net$sr, dr=G_net$dr, 
+            N_periods=N_periods, N_responses=N_responses, sr = G_net$sr, dr=G_net$dr, 
             fpr=fpr_out, rtt=rtt_out, theta=theta ))
 }
 
 
+
+
+ 
+
+
+ 

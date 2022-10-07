@@ -59,7 +59,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
     block_indexes = c()
     block_indexes[1] = 0
     for(q in 1:input$data$N_group_vars){ 
-    block_indexes[1+q] = input$data$N_groups_per_var[q]*input$data$N_groups_per_var[q] + block_indexes[q];
+    block_indexes[1+q] = input$data$N_groups_per_var[q]*input$data$N_groups_per_var[q] + block_indexes[q]
     }
 
     ################### Convert the block-model effects into an array form
@@ -94,6 +94,10 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
     srm_samples$dyadic_coeffs = dyad_effects
 
     samples = list(srm_model_samples=srm_samples)
+
+    if(input$return_predicted_network == TRUE){
+        samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p  
+        }
 
 
     ###################################################### Create summary stats 
@@ -200,7 +204,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
    print(results_list)
 
-    attr(res_final, "class") <- "STRAND Results Object"
+    attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
 
