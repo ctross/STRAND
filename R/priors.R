@@ -27,8 +27,7 @@ make_priors = function(priors_to_change=NULL, include_rownames=FALSE){
                      "penalty",
                      "effect_max",
                      "effect_decay",
-                     "flow_rate",
-                     "A"
+                     "flow_rate"
                      )
    
  priors = matrix(0, nrow=22, ncol=2)
