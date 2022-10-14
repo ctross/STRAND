@@ -86,7 +86,12 @@ make_priors = function(priors_to_change=NULL, include_rownames=FALSE){
 
   if(!is.null(priors_to_change)){
   for(i in 1:length(priors_to_change)){
-   priors[which(parameter_names==names(priors_to_change)[i] )] = priors_to_change[[i]]
+    if(length(priors_to_change[[i]])==1){
+   priors[which(parameter_names==names(priors_to_change)[i] ),1] = priors_to_change[[i]]
+    }
+   if(length(priors_to_change[[i]])==2){
+   priors[which(parameter_names==names(priors_to_change)[i] ),1:2] = priors_to_change[[i]]
+    }
   }}
 
   if(include_rownames == TRUE){
