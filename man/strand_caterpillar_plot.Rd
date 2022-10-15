@@ -17,7 +17,7 @@ strand_caterpillar_plot(
 \arguments{
 \item{results}{The results object from summarize_strand_results.}
 
-\item{submodels}{Which submodels to plot? Supported: "False positive rate", "Recall of true ties", "Theta: question-order effects", "Focal efffects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates"}
+\item{submodels}{Which submodels to plot? Supported: "False positive rate", "Recall of true ties", "Theta: question-order effects", "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates"}
 
 \item{normalized}{Should effects be normalized? Do not use for correlations and variance terms.}
 
