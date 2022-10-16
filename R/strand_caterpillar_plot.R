@@ -141,7 +141,7 @@ p = ggplot2::ggplot(df, ggplot2::aes(x=Variable,y=Median,ymin=LI,ymax=HI))+
       axis.title.x = ggplot2::element_blank())+
      ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
      ggplot2::coord_flip() + 
-     ggplot2::theme(panel.spacing = unit(1, "lines")) 
+     ggplot2::theme(panel.spacing = grid::unit(1, "lines")) 
 
 p2 = ggplot2::ggplot(df, ggplot2::aes(x=Variable,y=Median,ymin=LI,ymax=HI))+ 
      ggplot2::geom_linerange(size=1)+
@@ -157,7 +157,7 @@ p2 = ggplot2::ggplot(df, ggplot2::aes(x=Variable,y=Median,ymin=LI,ymax=HI))+
       axis.title.x=ggplot2::element_blank())+
      ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
      ggplot2::coord_flip() + 
-     ggplot2::theme(panel.spacing = unit(1, "lines")) 
+     ggplot2::theme(panel.spacing = grid::unit(1, "lines")) 
 
 if(export_as_table==FALSE){
 if(only_technicals==TRUE){
