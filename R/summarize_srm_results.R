@@ -142,7 +142,7 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
      for(i in 1:4)
      colnames(results_list[[i]]) = c("Variable", "Median", "HPDI:0.05","HPDI:0.95","Mean","SD") 
 
-     names(results_list) = c( "Focal efffects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
+     names(results_list) = c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
           
    results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base)
    
