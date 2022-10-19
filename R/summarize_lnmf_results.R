@@ -321,7 +321,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
      for(i in 1:8)
      colnames(results_list[[i]]) = c("Variable", "Median", "HPDI:0.05","HPDI:0.95","Mean","SD") 
 
-     names(results_list) = c("False positive rate", "Recall of true ties", "Flow effects", "Theta: question-order effects", "Focal efffects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
+     names(results_list) = c("False positive rate", "Recall of true ties", "Flow effects", "Theta: question-order effects", "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
           
    results_out = rbind(measurement_results, results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base)
    
