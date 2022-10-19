@@ -90,7 +90,7 @@ plot_0 = ggplot2::ggplot(tab0, ggplot2::aes(x = Variable, y = Median,
         face = "bold"), axis.text = ggplot2::element_text(size = 12), 
         axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
         axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
-        ggplot2::coord_flip() + ggplot2::theme(panel.spacing = unit(1, 
+        ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
         "lines")) + ggplot2::theme(legend.position="bottom") + ggplot2::scale_color_manual(values=c("#E69F00", "black"))
 
 
