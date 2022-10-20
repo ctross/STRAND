@@ -48,7 +48,7 @@ fit = fit_latent_network_model(data=dat,
                                 rtt_regression = ~ Age + GoodsValues + Depressed,
                                 theta_regression = ~ 1,
                                 mode="mcmc",
-                                return_latent_network = TRUE,
+                                return_predicted_network = TRUE,
                                 stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 1000,
                                 iter_sampling = 1000, max_treedepth = NULL, adapt_delta = NULL)
                                               )
