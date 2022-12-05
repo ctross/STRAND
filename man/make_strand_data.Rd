@@ -11,6 +11,9 @@ make_strand_data(
   block_covariates = NULL,
   individual_covariates = NULL,
   dyadic_covariates = NULL,
+  hh_ID = NULL,
+  hh_individual_covariates = NULL,
+  hh_dyadic_covariates = NULL,
   exposure = NULL
 )
 }

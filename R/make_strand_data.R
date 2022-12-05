@@ -29,7 +29,10 @@
 #' }
 #'
 
-make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL){
+make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=NULL, 
+                            block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
+                            hh_ID=NULL, hh_individual_covariates=NULL, hh_dyadic_covariates=NULL, 
+                            exposure=NULL){
 
          ############################################################################# Check inputs
          ###################### Outcome mode
@@ -80,15 +83,32 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          if(!is.data.frame(individual_covariates)) stop("individual_covariates must be a data frame.")
          }
 
-         # Check self_report data
+         # Check dyadic data
          if(!is.null(dyadic_covariates)){ 
          if(!is.list(dyadic_covariates)) stop("dyadic_covariates must be a list of matrices.")
          } 
+
+         # Check hh_individual_covariates data
+         if(!is.null(hh_individual_covariates)){ 
+         if(!is.data.frame(hh_individual_covariates)) stop("hh_individual_covariates must be a data frame.")
+         }
+
+         # Check hh_dyadic data
+         if(!is.null(hh_dyadic_covariates)){ 
+         if(!is.list(hh_dyadic_covariates)) stop("hh_dyadic_covariates must be a list of matrices.")
+         } 
+
+         # Check hh_ID data
+         if(!is.null(hh_ID)){ 
+         if(!is.numeric(hh_ID)) stop("hh_ID must be numeric, and index the row of the household of individuals.")
+         } 
+          
           
           # need to add checks that rownames and colnames of all data types match
 
          ############################################################################# Process data
          N_id =  dim(self_report[[1]])[1]
+         N_hh =  max(hh_ID)
          N_responses = length(self_report)
 
          outcomes = array(NA, c(N_id, N_id, N_responses))
@@ -161,7 +181,25 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
           dyadic_predictors = dyadic_covariates
          }
 
+        if(is.null(hh_individual_covariates)){
+          N_individual_predictors_hh = 0
+          hh_individual_predictors = 0
+         } else{
+          N_individual_predictors_hh = dim(hh_individual_covariates)[2]  
+          hh_individual_predictors = hh_individual_covariates
+         }
+
+        if(is.null(hh_dyadic_covariates)){
+          N_dyadic_predictors_hh = 0
+          hh_dyadic_predictors = 0
+         } else{
+          N_dyadic_predictors_hh = length(hh_dyadic_covariates)
+          hh_dyadic_predictors = hh_dyadic_covariates
+         }
+
          ############################################################################# Determine legal models
+         if(is.null(hh_ID)){
+         # Single level models 
          if(N_responses==1){
           if(max(N_groups_per_type)>1){
             supported_models = c("SRM", "SBM", "SRM+SBM")
@@ -177,19 +215,44 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          if(N_responses==2 & N_networktypes==3){
           supported_models = c("LNM","LNM+Flows")
          }
+         } else{
+        # Household slash multilevel models
+          if(N_responses==1){
+          if(max(N_groups_per_type)>1){
+            supported_models = c("HH_SRM", "HH_SBM", "HH_SRM+SBM")
+            } else{
+            supported_models = c("HH_SRM")
+            }
+         } 
+
+         if(N_responses==2 & N_networktypes==2){
+          supported_models = c("HH_LNM")
+         }
+
+         if(N_responses==2 & N_networktypes==3){
+          supported_models = c("HH_LNM","HH_LNM+Flows")
+         }
+
+         }
 
 
    model_dat = list(
      N_networktypes = N_networktypes,                                               
-     N_id = N_id,                                                                                                          
+     N_id = N_id,
+     N_hh = N_hh,                                                                                                          
      N_responses = N_responses,  
      N_periods=N_periods,                                              
      N_individual_predictors = N_individual_predictors,                                       
-     N_dyadic_predictors =  N_dyadic_predictors,                                           
+     N_dyadic_predictors =  N_dyadic_predictors, 
+     N_individual_predictors_hh = N_individual_predictors_hh,                                       
+     N_dyadic_predictors_hh =  N_dyadic_predictors_hh,                                            
      outcomes = outcomes,  
      flows=flows,                         
      individual_predictors = individual_predictors,      
      dyadic_predictors = dyadic_predictors,
+     hh_individual_predictors = hh_individual_predictors,      
+     hh_dyadic_predictors = hh_dyadic_predictors,
+     HH = hh_ID,
      N_block_predictors = N_block_types,
      N_groups_per_block_type = N_groups_per_type,
      block_predictors = group_ids,

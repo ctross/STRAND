@@ -1,4 +1,4 @@
-#####################################
+########################################
 #
 #   Binomial Analyses - Simulated data  
 #
@@ -57,7 +57,7 @@ groups = data.frame(Intercept=as.numeric(factor(groups_1)), Merica=as.numeric(fa
 groups_f = data.frame(Intercept=factor(groups_1), Merica=factor(groups_2), Quantum=factor(groups_3))
 
 #################################################### Simulate SBM + SRM network
-G = simulate_sbm_plus_srm_network(N_id = N_id, 
+G = simulate_sbm_plus_srm_network_bpb(N_id = N_id, 
                          B = B, 
                          V=3,
                          groups=groups,                  
@@ -76,11 +76,11 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
 
 ################################################### Organize for model fitting
 model_dat = make_strand_data(self_report=list(G$network),  block_covariates=groups_f, individual_covariates=data.frame(Mass=Mass), 
-                           dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  outcome_mode = "binomial", exposure=list(G$samps))
+	                         dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  outcome_mode = "binomial", exposure=list(G$samps))
 
 # Model the data with STRAND
 fit =  fit_block_plus_social_relations_model(data=model_dat,
-                            block_regression = ~ Merica + Quantum,
+	                          block_regression = ~ Merica + Quantum,
                               focal_regression = ~ Mass,
                               target_regression = ~ Mass,
                               dyad_regression = ~ Kinship*Dominant,
@@ -93,21 +93,4 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
 # Check parameter recovery
 res = summarize_strand_results(fit)
 
-############################### Plots
-vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="HP", only_slopes=TRUE)
-vis_1
 
-
-vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
-vis_2
-
-##### Check all of the block parameters
-B_2_Pred = matrix(res$summary_list$`Other estimates`[4:12,2], nrow=3, ncol=3, byrow=TRUE) # Blue, Red, White
-plot(B_2_Pred~B_2)
-
-B_3_Pred = matrix(res$summary_list$`Other estimates`[13:16,2], nrow=2, ncol=2, byrow=TRUE) # Charm, Strange
-plot(B_3_Pred~B_3)
-
-# NOTE: The block offsets are only identified relative to one-another. Calculate contrasts to look for differences between parameters.
-
- 
