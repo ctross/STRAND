@@ -40,6 +40,10 @@ summarize_strand_results = function(input, include_samples=TRUE, HPDI=0.9){
        res = summarize_bsrm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
+    if(attributes(input)$model_type == "HH_SRM+SBM"){
+       res = summarize_bsrm_hh_results(input=input, include_samples=include_samples, HPDI=HPDI)
+      }
+
     if(attributes(input)$model_type == "LNM"){
        res = summarize_lnm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }

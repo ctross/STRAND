@@ -245,7 +245,7 @@ fit_block_plus_social_relations_hh_model = function(data,
     bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network )
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
-    attr(bob, "model_type") = "SRM+SBM+HH"
+    attr(bob, "model_type") = "HH_SRM+SBM"
     
     return(bob)
 }
