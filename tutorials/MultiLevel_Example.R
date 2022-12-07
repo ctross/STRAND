@@ -127,11 +127,11 @@ df$Type = c("SD", "Slope","Slope", "Slope","SD", "Slope","Slope", "Slope","SD", 
             "Offset", "SD","Slope", "Slope","SD", "Slope","Slope", "SD","Slope", "Slope","Rho","Rho")
 
 df$Category = c("Deviation", "Sender","Sender", "Sender","Deviation", "Receiver","Receiver", "Receiver","Deviation", "Dyadic", "Dyadic","Correlation", 
-            "Correlation","Offset", "Offset", "Offset", "Offset","Offset", "Offset", "Offset", "Offset","Offset", 
-            "Offset", "Deviation","Sender", "Sender","Deviation", "Receiver","Receiver", "Deviation","Dyadic", "Dyadic","Correlation","Correlation")
+            "Correlation","Block", "Block", "Block", "Block","Block", "Block", "Block", "Block","Block", 
+            "Block", "Deviation","Sender", "Sender","Deviation", "Receiver","Receiver", "Deviation","Dyadic", "Dyadic","Correlation","Correlation")
 
 df$Category = factor(df$Category)
-df$Category = factor(df$Category, levels=c("Offset", "Sender", "Receiver", "Dyadic", "Correlation", "Deviation"))
+df$Category = factor(df$Category, levels=c("Block", "Sender", "Receiver", "Dyadic", "Correlation", "Deviation"))
 
 colnames(df) = c("Variable",  "Median",  "L",  "H",    "Mean",    "SD", "Type","Category")
 
@@ -142,8 +142,8 @@ df$H = as.numeric(as.character(df$H))
 # To test model fit, check that generative parameters are recovered
 Offset = -7.5   # The data had no intercept parameter, but the model does, so we have to shift these data points
 Shrinkage = 0.7 # Shrinkage priors scale everything twoards zero, so scale the data a bit to see comparable points
-df$True = c(1.9, 1.7, -1.1, 1.2, 0.8, -2.3, 0.99, 2.4, 3.2, 1.3, -0.8, -0.5, 0.7, NA, B[1,1]-K, B[1,2]-K, B[1,3]-Offset, 
-B[2,1]-K, B[2,2]-K, B[2,3]-K, B[3,1]-K,B[3,2]-K, B[3,3]-K, 1.2, 1.2,  2.5, 1.8, -1.3, 2.5, 2.9, -2.3, 1.8, 0.5,0.7)*Shrinkage
+df$True = c(1.9, 1.7, -1.1, 1.2, 0.8, -2.3, 0.99, 2.4, 3.2, 1.3, -0.8, -0.5, 0.7, NA, B[1,1]-Offset, B[1,2]-Offset, B[1,3]-Offset, 
+B[2,1]-Offset, B[2,2]-Offset, B[2,3]-Offset, B[3,1]-Offset, B[3,2]-Offset, B[3,3]-Offset, 1.2, 1.2,  2.5, 1.8, -1.3, 2.5, 2.9, -2.3, 1.8, 0.5,0.7)*Shrinkage
 
 testfit = ggplot(df,aes(x=Variable,y=Median,ymin=L,ymax=H, group=Type, color=Type))+ 
      geom_linerange(size=1.25, position = position_dodge(width = 0.5))+
@@ -159,4 +159,7 @@ testfit = ggplot(df,aes(x=Variable,y=Median,ymin=L,ymax=H, group=Type, color=Typ
 testfit
 
 ggsave("TestFit_HH_SRM.pdf",testfit, width=10, height=8)
+
+
+print(xtable(df[order(df$Category),c(8,1,2,3,4)]),include.rownames=FALSE)
 
