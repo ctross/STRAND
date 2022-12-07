@@ -197,8 +197,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ######### Calculate all block effects
      results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=6)
-     results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
-     results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
+     results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
+     results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
  
 
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
@@ -267,8 +267,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ######## Other hh effects
      hh_results_srm_base = matrix(NA, nrow=2, ncol=6)
-     hh_results_srm_base[1,] = sum_stats("household focal-target effects rho (generalized recipocity)", samples$srm_model_samples$hh_focal_target_L[,2,1], HPDI)
-     hh_results_srm_base[2,] = sum_stats("household dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$hh_dyadic_L[,2,1], HPDI)
+     hh_results_srm_base[1,] = sum_stats("household focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$hh_focal_target_L[,2,1], HPDI)
+     hh_results_srm_base[2,] = sum_stats("household dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$hh_dyadic_L[,2,1], HPDI)
      
      results_list[[8]] = hh_results_srm_base
 
