@@ -46,6 +46,8 @@ Double-sampled binary outcomes (find out for yourself): [**Latent network models
 
 An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
+An example on both simulating and fitting multi-level networks: [**Multi-level models**](https://github.com/ctross/STRAND/blob/main/tutorials/MultiLevel_Example.R)
+
 An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
 Note: each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it!
