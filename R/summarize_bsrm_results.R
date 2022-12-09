@@ -162,17 +162,18 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
  
-
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
      
      colnames(group_ids_character_df)[1] = "(Intercept)"
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
      group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs)]
+
+     group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
      
      ticker = 0
      for(q in 1:input$data$N_group_vars){
-      group_ids_character = levels(as.factor(group_ids_character_df[,q]))
+      group_ids_character = group_id_levels[[q]]
 
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
