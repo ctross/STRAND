@@ -85,7 +85,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          if(!is.list(dyadic_covariates)) stop("dyadic_covariates must be a list of matrices.")
          } 
           
-          # need to add checks that rownames and colnames of all data types match
+         # need to add checks that rownames and colnames of all data types match
 
          ############################################################################# Process data
          N_id =  dim(self_report[[1]])[1]
@@ -120,11 +120,13 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          N_groups_per_type = rep(NA, N_block_types)
          group_ids_character = array(NA, c(N_id, N_block_types))
          group_ids = array(NA, c(N_id, N_block_types))
+         group_ids_levels = vector("list", N_block_types)
 
          for(i in 1:N_block_types){
           N_groups_per_type[i] = max(as.numeric(block_covariates[,i]))
           group_ids_character[,i] = as.character(block_covariates[,i]) 
           group_ids[,i] = as.numeric(block_covariates[,i])
+          group_ids_levels[[i]] = levels(block_covariates[,i])
          }
           group_ids = data.frame(group_ids)
           colnames(group_ids) = colnames(block_covariates)
@@ -200,6 +202,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
    attr(model_dat, "group_ids_character") = group_ids_character
+   attr(model_dat, "group_ids_levels") = group_ids_levels
    colnames(attr(model_dat, "group_ids_character"))=colnames(model_dat$block_predictors)
    
   return(model_dat)
