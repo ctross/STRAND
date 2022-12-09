@@ -108,7 +108,8 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
 
          ############################################################################# Process data
          N_id =  dim(self_report[[1]])[1]
-         N_hh =  max(hh_ID)
+         N_hh =  0
+         hh_ID_numeric = rep(0, N_id)
          N_responses = length(self_report)
 
          outcomes = array(NA, c(N_id, N_id, N_responses))
@@ -140,11 +141,13 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          N_groups_per_type = rep(NA, N_block_types)
          group_ids_character = array(NA, c(N_id, N_block_types))
          group_ids = array(NA, c(N_id, N_block_types))
+         group_ids_levels = vector("list", N_block_types)
 
          for(i in 1:N_block_types){
           N_groups_per_type[i] = max(as.numeric(block_covariates[,i]))
           group_ids_character[,i] = as.character(block_covariates[,i]) 
           group_ids[,i] = as.numeric(block_covariates[,i])
+          group_ids_levels[[i]] = levels(block_covariates[,i])
          }
           group_ids = data.frame(group_ids)
           colnames(group_ids) = colnames(block_covariates)
@@ -217,6 +220,9 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          }
          } else{
         # Household slash multilevel models
+          N_hh =  max(hh_ID)
+          hh_ID_numeric = hh_ID
+
           if(N_responses==1){
           if(max(N_groups_per_type)>1){
             supported_models = c("HH_SRM", "HH_SBM", "HH_SRM+SBM")
@@ -252,7 +258,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
      dyadic_predictors = dyadic_predictors,
      hh_individual_predictors = hh_individual_predictors,      
      hh_dyadic_predictors = hh_dyadic_predictors,
-     HH = hh_ID,
+     HH = hh_ID_numeric,
      N_block_predictors = N_block_types,
      N_groups_per_block_type = N_groups_per_type,
      block_predictors = group_ids,
@@ -263,6 +269,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
    attr(model_dat, "group_ids_character") = group_ids_character
+   attr(model_dat, "group_ids_levels") = group_ids_levels
    colnames(attr(model_dat, "group_ids_character"))=colnames(model_dat$block_predictors)
    
   return(model_dat)
