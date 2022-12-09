@@ -3,6 +3,7 @@
  library(igraph)
  library(ggplot2)
  library(xtable)
+ library(GGally)
 
  set.seed(1)
  V = 1            # One blocking variable
