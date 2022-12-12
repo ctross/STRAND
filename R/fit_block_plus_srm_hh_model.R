@@ -158,7 +158,7 @@ fit_block_plus_social_relations_hh_model = function(data,
      dimnames(dyad_dat_out_hh)[[3]] = colnames(dyad_model_matrix_hh)
      data$hh_dyad_set = dyad_dat_out_hh
      } else{
-      data$hh_dyad_set = array(1, c(data$N_id, data$N_id, 1))
+      data$hh_dyad_set = array(1, c(data$N_hh, data$N_hh, 1))
      }
 
      ################################################################ Individual model matrix
