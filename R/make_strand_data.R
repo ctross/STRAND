@@ -274,3 +274,4 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
    
   return(model_dat)
 }
+

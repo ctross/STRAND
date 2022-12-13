@@ -88,6 +88,7 @@ simulate_sbm_plus_srm_hh_network = function( N_id = 99,                        #
                                              hh_dr_mu = c(0,0),                # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                              hh_dr_sigma = 1,                  # Variance of dyad effects 
                                              hh_dr_rho = 0.7,                  # Correlation of i to j dyad effect and j to i dyad effect
+                                             hh_diag_offset = 2,               # Log odds offset for within-household ties
                                              mode="bernoulli",                 # outcome mode
                                              individual_predictors = NULL,     # A matrix of covariates
                                              dyadic_predictors = NULL,         # An array of covariates
@@ -186,7 +187,7 @@ for( i in 1:N_hh){
  }}
 
  for( i in 1:N_hh){
-  hh_dr[i,i] = rnorm(1, hh_dr_mu[1], hh_dr_sigma)
+  hh_dr[i,i] = hh_diag_offset + rnorm(1, hh_dr_mu[1], hh_dr_sigma)
  }
 
 # Build true network
@@ -246,7 +247,7 @@ for ( i in 1:N_id ){
     dr[i,i] = 0
  }
 
-return(list(network=y_true, tie_strength=p,  group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors,
+return(list(network=y_true, tie_strength=p,  group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, hh_ids=HH,
             hh_individual_predictors=hh_individual_predictors, hh_dyadic_predictors=hh_dyadic_predictors, sr=sr, dr=dr, hh_sr=hh_sr, hh_dr=hh_dr, samps=samps))
 }
 

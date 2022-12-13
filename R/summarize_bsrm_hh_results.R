@@ -41,6 +41,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
     dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
     dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw  
+
+    hh_dr_within_hh_offset = rstan::extract(stanfit, pars="hh_dr_within_hh_offset")$hh_dr_within_hh_offset 
     
     if(dim(input$data$block_set)[2]>0)
     block_effects = rstan::extract(stanfit, pars="block_effects")$block_effects  
@@ -107,7 +109,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
             hh_dyadic_sd = hh_dr_sigma,
             hh_dyadic_L = hh_dr_L,
-            hh_dyadic_random_effects=hh_dr_raw
+            hh_dyadic_random_effects = hh_dr_raw,
+            hh_dr_within_hh_offset = hh_dr_within_hh_offset
         )
 
     #### indiv covars
@@ -268,10 +271,11 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_list[[7]] = hh_results_srm_dyadic
 
     ######## Other hh effects
-     hh_results_srm_base = matrix(NA, nrow=2, ncol=6)
+     hh_results_srm_base = matrix(NA, nrow=3, ncol=6)
      hh_results_srm_base[1,] = sum_stats("household focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$hh_focal_target_L[,2,1], HPDI)
      hh_results_srm_base[2,] = sum_stats("household dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$hh_dyadic_L[,2,1], HPDI)
-     
+     hh_results_srm_base[3,] = sum_stats("household dyadic effects offset (within-hh ties)", c(samples$srm_model_samples$hh_dr_within_hh_offset), HPDI)
+                                                                    
      results_list[[8]] = hh_results_srm_base
 
    ############# Finally, merge all effects into a list
