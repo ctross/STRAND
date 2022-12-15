@@ -26,6 +26,8 @@
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param 
+#' model Should the slower unit-level random effect model be run? Or should STRAND use the faster bivariate Bernoulli outcome model? Options are "ulre" or "fast_bb"
+#' @param 
 #' return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
@@ -61,6 +63,7 @@ fit_block_plus_social_relations_hh_model = function(data,
                                     hh_target_regression,
                                     hh_dyad_regression,
                                     mode="mcmc",
+                                    model="ulre",
                                     return_predicted_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
@@ -102,6 +105,10 @@ fit_block_plus_social_relations_hh_model = function(data,
 
     if(data$N_dyadic_predictors_hh==0 & hh_dyad_regression != ~ 1){
         stop("No household covariate data has been provided. hh_dyad_regression must equal ~ 1 ")
+    }
+
+    if(model=="fast_bb" & data$outcome_mode !=  1){
+        stop("The faster bivariate Bernoulli model is only avaible for Bernoulli outcome models.")
     }
 
 
@@ -211,8 +218,14 @@ fit_block_plus_social_relations_hh_model = function(data,
       }
 
     ############################################################################# Fit model
-
+   if(model=="ulre"){
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh.stan"))
+   }
+
+   if(model=="fast_bb"){
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh_fast.stan"))
+   }
+
 
     if(mode=="mcmc"){
       fit = model$sample(
