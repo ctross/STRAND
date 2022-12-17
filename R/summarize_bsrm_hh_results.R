@@ -217,7 +217,10 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
      } 
      if(attributes(input)$model_version == "fast_bb"){
        results_srm_dyadic[1,] = sum_stats("dyadic effects cross-ratio", c(samples$srm_model_samples$dyadic_cross_ratio), HPDI)
-     } 
+     }
+     if(attributes(input)$model_version == "no_dr"){
+       results_srm_dyadic[1,] = sum_stats_miss("dyadic effects sd", c(0), HPDI)
+     }  
 
      
      if(Q3>0){
@@ -237,6 +240,10 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
        results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
      } 
      if(attributes(input)$model_version == "fast_bb"){
+       results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
+       results_srm_base[2,] = sum_stats_miss("dyadic effects rho (dyadic reciprocity)", c(0), HPDI)
+     } 
+     if(attributes(input)$model_version == "no_dr"){
        results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
        results_srm_base[2,] = sum_stats_miss("dyadic effects rho (dyadic reciprocity)", c(0), HPDI)
      } 

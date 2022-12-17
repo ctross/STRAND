@@ -111,6 +111,10 @@ fit_block_plus_social_relations_hh_model = function(data,
         stop("The faster bivariate Bernoulli model is only avaible for Bernoulli outcome models.")
     }
 
+    if(model_version=="no_dr" & data$outcome_mode !=  1){
+        stop("The faster no dyadic reciprocity model is only avaible for Bernoulli outcome models.")
+    }
+
 
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)
@@ -224,6 +228,10 @@ fit_block_plus_social_relations_hh_model = function(data,
 
    if(model_version=="fast_bb"){
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh_fast.stan"))
+   }
+
+   if(model_version=="no_dr"){
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh_nodr.stan"))
    }
 
 
