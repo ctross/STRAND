@@ -1,24 +1,24 @@
 functions{
   //# Custom probability mass function: A Logit Model for Bivariate Binary Responses. Purhadi and Fathurahman.
      real bivariate_bernoulli_lpmf(int [] Y, real p, real q, real rho) {
-       real mass; 
        real a = 1 + (p + q)*(rho-1);
        real b = 4*rho*(1-rho)*p*q;
        real y11 = (a - sqrt(a^2 + b))*0.5*(rho-1)^(-1);
-       real y01 = q - y11;
-       real y10 = p - y11;
-       real y00 = 1 - p - q + y11;
+       //# real y01 = q - y11;
+       //# real y10 = p - y11;
+       //# real y00 = 1 - p - q + y11;
 
-       if(Y[1] == 0 && Y[2] == 0)  
-       mass = y00;
-       if(Y[1] == 0 && Y[2] == 1)  
-       mass = y01;
-       if(Y[1] == 1 && Y[2] == 0)  
-       mass = y10;
        if(Y[1] == 1 && Y[2] == 1)  
-       mass = y11;
-       
-       return log(mass);
+        return log(y11);
+
+       if(Y[1] == 0 && Y[2] == 1)  
+        return log(q - y11);
+
+       if(Y[1] == 1 && Y[2] == 0)  
+        return log(p - y11);
+
+       if(Y[1] == 0 && Y[2] == 0)     
+        return log(1 - p - q + y11);
    }
 }
 
