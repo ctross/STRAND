@@ -243,8 +243,8 @@ model{
           br_ji[q] = B[q,block_set[j,q], block_set[i,q]]; //# Extract all of the block components for this dyad
          }
 
-        outcomes[i,j,1] = bernoulli_logit(sum(br_ij) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
-        outcomes[j,i,1] = bernoulli_logit(sum(br_ji) + sr[j,1] + sr[i,2] + dr[j,i] + hh_sr[HH[j],1] + hh_sr[HH[i],2] + hh_dr[HH[j],HH[i]]);  //# Then model the outcomes
+        outcomes[i,j,1] ~ bernoulli_logit(sum(br_ij) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
+        outcomes[j,i,1] ~ bernoulli_logit(sum(br_ji) + sr[j,1] + sr[i,2] + dr[j,i] + hh_sr[HH[j],1] + hh_sr[HH[i],2] + hh_dr[HH[j],HH[i]]);  //# Then model the outcomes
        
       }}
 
