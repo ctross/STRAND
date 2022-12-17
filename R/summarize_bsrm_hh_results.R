@@ -38,9 +38,17 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     sr_L = rstan::extract(stanfit, pars="sr_L")$sr_L  
     sr_raw = rstan::extract(stanfit, pars="sr_raw")$sr_raw  
 
-    dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
-    dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
-    dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw  
+
+    if(attributes(input)$model_version == "fast_bb"){
+     dr_cross = rstan::extract(stanfit, pars="dr_cross")$dr_cross  
+     }
+    
+
+    if(attributes(input)$model_version == "ulre"){
+     dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
+     dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw 
+     dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
+     } 
 
     hh_dr_within_hh_offset = rstan::extract(stanfit, pars="hh_dr_within_hh_offset")$hh_dr_within_hh_offset 
     
@@ -99,10 +107,6 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
             focal_target_L=sr_L,
             focal_target_random_effects=sr_raw,
 
-            dyadic_sd = dr_sigma,
-            dyadic_L = dr_L,
-            dyadic_random_effects=dr_raw,
-
             hh_focal_target_sd=hh_sr_sigma,
             hh_focal_target_L=hh_sr_L,
             hh_focal_target_random_effects=hh_sr_raw,
@@ -112,6 +116,16 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
             hh_dyadic_random_effects = hh_dr_raw,
             hh_dr_within_hh_offset = hh_dr_within_hh_offset
         )
+
+    if(attributes(input)$model_version == "ulre"){
+      srm_samples$dyadic_L = dr_L
+      srm_samples$dyadic_random_effects=dr_raw,
+      srm_samples$dyadic_sd = dr_sigma
+     } 
+
+    if(attributes(input)$model_version == "fast_bb"){
+      srm_samples$dyadic_cross_ratio = dr_cross
+     } 
 
     #### indiv covars
     if(dim(input$data$focal_set)[2]>1)
@@ -137,6 +151,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     if(input$return_predicted_network == TRUE){
         samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p  
+        samples$predicted_hh_sample = rstan::extract(stanfit, pars="hh_dr")$hh_dr 
         }
 
 
@@ -151,6 +166,14 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
       bob[5] = round(mean(x),dig)
       bob[6] = round(sd(x),dig)
 
+      return(bob)
+      }
+
+     sum_stats_miss = function(y, x, z){
+      bob = rep(NA, 6)
+       dig = 3
+      bob[1] = y
+   
       return(bob)
       }
      
@@ -189,7 +212,14 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
       results_list[[2]] = results_srm_target
 
     ######### Calculate all dyad effects
-     results_srm_dyadic[1,] = sum_stats("dyadic effects sd", c(samples$srm_model_samples$dyadic_sd), HPDI)
+     if(attributes(input)$model_version == "ulre"){
+       results_srm_dyadic[1,] = sum_stats("dyadic effects sd", c(samples$srm_model_samples$dyadic_sd), HPDI)
+     } 
+     if(attributes(input)$model_version == "fast_bb"){
+       results_srm_dyadic[1,] = sum_stats("dyadic effects cross-ratio", c(samples$srm_model_samples$dyadic_cross_ratio), HPDI)
+     } 
+
+     
      if(Q3>0){
      coeff_names = dimnames(input$data$dyad_set)[[3]][-1]
         for(i in 1:Q3){
@@ -200,8 +230,16 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ######### Calculate all block effects
      results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=6)
-     results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
-     results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
+
+
+     if(attributes(input)$model_version == "ulre"){
+       results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
+       results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
+     } 
+     if(attributes(input)$model_version == "fast_bb"){
+       results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
+       results_srm_base[2,] = sum_stats_miss("dyadic effects rho (dyadic reciprocity)", c(0), HPDI)
+     } 
  
 
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
