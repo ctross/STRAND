@@ -8,6 +8,9 @@ functions{
        //# real y10 = p - y11;
        //# real y00 = 1 - p - q + y11;
 
+       if(Y[1] == 0 && Y[2] == 0)     
+        return log(1 - p - q + y11);
+
        if(Y[1] == 1 && Y[2] == 1)  
         return log(y11);
 
@@ -17,8 +20,7 @@ functions{
        if(Y[1] == 1 && Y[2] == 0)  
         return log(p - y11);
 
-       if(Y[1] == 0 && Y[2] == 0)     
-        return log(1 - p - q + y11);
+        return log(0);
    }
 }
 
