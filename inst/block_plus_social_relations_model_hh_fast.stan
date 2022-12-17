@@ -139,7 +139,7 @@ parameters{
     vector[2] sr_raw[N_id];
 
     //# Dyadic reciprocity term on log odds scale
-    real<lower=0> dr_sigma;       
+    real<lower=0> dr_cross;       
 
     //# Effects of covariate
     vector[N_params[1]-1] focal_effects;
@@ -235,7 +235,7 @@ model{
      }
 
     //# Dyadic priors for social relations model
-    dr_sigma ~ exponential(priors[16,1]);
+    dr_cross ~ exponential(priors[16,1]);
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
@@ -283,7 +283,7 @@ model{
         pred_data[1] = inv_logit(sum(br_ij) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
         pred_data[2] = inv_logit(sum(br_ji) + sr[j,1] + sr[i,2] + dr[j,i] + hh_sr[HH[j],1] + hh_sr[HH[i],2] + hh_dr[HH[j],HH[i]]);  //# Then model the outcomes
        
-        outcome_data ~ bivariate_bernoulli(pred_data[1], pred_data[2], dr_sigma);
+        outcome_data ~ bivariate_bernoulli(pred_data[1], pred_data[2], dr_cross);
 
       }}
 
