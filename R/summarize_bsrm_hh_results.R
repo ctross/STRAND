@@ -119,7 +119,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     if(attributes(input)$model_version == "ulre"){
       srm_samples$dyadic_L = dr_L
-      srm_samples$dyadic_random_effects=dr_raw,
+      srm_samples$dyadic_random_effects=dr_raw
       srm_samples$dyadic_sd = dr_sigma
      } 
 
