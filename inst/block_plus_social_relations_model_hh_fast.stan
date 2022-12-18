@@ -280,8 +280,8 @@ model{
         outcome_data[1] = outcomes[i,j,1];
         outcome_data[2] = outcomes[j,i,1];
 
-        pred_data[1] = inv_logit(sum(br_ij) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
-        pred_data[2] = inv_logit(sum(br_ji) + sr[j,1] + sr[i,2] + dr[j,i] + hh_sr[HH[j],1] + hh_sr[HH[i],2] + hh_dr[HH[j],HH[i]]);  //# Then model the outcomes
+        pred_data[1] = Phi_approx(sum(br_ij) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
+        pred_data[2] = Phi_approx(sum(br_ji) + sr[j,1] + sr[i,2] + dr[j,i] + hh_sr[HH[j],1] + hh_sr[HH[i],2] + hh_dr[HH[j],HH[i]]);  //# Then model the outcomes
        
         outcome_data ~ bivariate_bernoulli(pred_data[1], pred_data[2], dr_cross);
 
@@ -364,7 +364,7 @@ generated quantities{
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
             if ( i != j ) {
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);
+       p[i,j] = Phi_approx( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);
             }
         }
     }
