@@ -24,13 +24,13 @@ data{
     int HH[N_id];                                    //# Househould ID
 
   //# Outcome and exposure data
-    int outcomes[N_id,N_id,N_responses];       //# Outcome network of binary ties
-    int exposure[N_id,N_id,N_responses];       //# Exposure for each outcome
+    int outcomes[N_id,N_id,N_responses];             //# Outcome network of binary ties
+    int exposure[N_id,N_id,N_responses];             //# Exposure for each outcome
 
   //# Accessory paramters 
-    matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
-    int export_network;                         //# Controls export of predictions
-    int outcome_mode;                           //# Are outcomes binomial
+    matrix[22, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
+    int export_network;                              //# Controls export of predictions
+    int outcome_mode;                                //# Are outcomes binomial
 }
 
 transformed data{
@@ -128,6 +128,7 @@ parameters{
     vector[2] hh_sr_raw[N_hh];
 
     //# Variation of HH dyadic effects
+    real hh_dr_within_hh_offset;    
     real<lower=0> hh_dr_sigma;       
     cholesky_factor_corr[2] hh_dr_L;
     matrix[N_hh, N_hh] hh_dr_raw; 
@@ -195,6 +196,7 @@ model{
     hh_sr_raw[i] ~ normal(0,1);
     hh_sr_sigma ~ exponential(priors[15,1]);
     hh_sr_L ~ lkj_corr_cholesky(priors[17,1]);
+    hh_dr_within_hh_offset ~ normal(0, 1);
 
     for(i in 1:N_hh){
      vector[2] hh_sr_terms;
@@ -238,7 +240,7 @@ model{
      }}
 
     for(i in 1:N_hh){
-     hh_dr[i,i] = hh_dr_sigma*hh_dr_raw[i,i];
+     hh_dr[i,i] = hh_dr_within_hh_offset + hh_dr_sigma*hh_dr_raw[i,i];
     }
 
     //# likelihood
@@ -323,7 +325,7 @@ generated quantities{
     }}
 
     for(i in 1:N_id){
-      dr[i,i] = -99; //# ignore this :)
+      dr[i,i] = dr_raw[i,i]*dr_sigma; 
     }
 
     for(i in 1:(N_hh-1)){
@@ -339,7 +341,7 @@ generated quantities{
     }}
 
     for(i in 1:N_hh){
-      hh_dr[i,i] = -99; //# ignore this :)
+      hh_dr[i,i] = hh_dr_within_hh_offset + hh_dr_sigma*hh_dr_raw[i,i];
     }
 
 
