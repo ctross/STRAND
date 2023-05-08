@@ -147,6 +147,8 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
      group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs)]
+     
+     group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
 
      group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
 

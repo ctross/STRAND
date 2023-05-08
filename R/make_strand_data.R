@@ -104,7 +104,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          } 
           
           
-          # need to add checks that rownames and colnames of all data types match
+         # need to add checks that rownames and colnames of all data types match
 
          ############################################################################# Process data
          N_id =  dim(self_report[[1]])[1]
@@ -135,6 +135,7 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          N_block_types = 0
          group_ids_character = rep("Any", N_id)
          group_ids = block_covariates
+         group_ids_levels = "No Blocks"
           } else{
           
          N_block_types = length(block_covariates[1,]) 

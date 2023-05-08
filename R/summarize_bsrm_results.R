@@ -162,7 +162,6 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
  
-
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
      
      colnames(group_ids_character_df)[1] = "(Intercept)"
