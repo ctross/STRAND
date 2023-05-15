@@ -133,6 +133,7 @@ parameters{
     vector<lower=0>[3] hh_sr_sigma;  
     cholesky_factor_corr[3] hh_sr_L;
     vector[3] hh_sr_raw[N_hh];
+    real hh_within_mu;
 
     //# Variation of HH dyadic effects 
     real<lower=0> hh_dr_sigma; 
@@ -250,7 +251,7 @@ model{
      }}
 
     for(i in 1:N_hh){
-     hh_dr[i,i] = hh_sr[i,3];
+     hh_dr[i,i] = hh_within_mu + hh_sr[i,3];
     }
 
     //# likelihood
@@ -352,7 +353,7 @@ generated quantities{
     }}
 
     for(i in 1:N_hh){
-      hh_dr[i,i] = hh_sr[i,3];
+      hh_dr[i,i] = hh_within_mu + hh_sr[i,3];
     }
 
     for ( i in 1:N_id ) {
