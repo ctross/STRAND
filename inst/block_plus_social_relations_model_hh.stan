@@ -1,26 +1,27 @@
 data{   
   //# Array dimension variables                                   
-    int N_id;                                  //# Number of people
-    int N_hh;                                  //# Number of households                                                                                                   
-    int N_responses;                           //# Number of outcome networks
-    int N_params[3];                           //# Number of focal, target, and dyadic predictors
-    int N_params_hh[3];                        //# Number of HH focal, target, and dyadic predictors
+    int N_id;                                        //# Number of people
+    int N_hh;                                        //# Number of households                                                                                                   
+    int N_responses;                                 //# Number of outcome networks
+    int N_params[3];                                 //# Number of focal, target, and dyadic predictors
+    int N_params_hh[4];                              //# Number of HH focal, target, and within and between HH dyadic predictors
 
   //# Block predictor variables 
-    int N_group_vars;                          //# Number of block structure variables
-    int max_N_groups;                          //# Max number of group labels in any variable
-    int N_groups_per_var[N_group_vars];        //# Number of group labels, per variable type
-    int block_set[N_id, N_group_vars];         //# Dataframe holding the group ID codes for each person (rows) for each variable type (cols)
+    int N_group_vars;                                //# Number of block structure variables
+    int max_N_groups;                                //# Max number of group labels in any variable
+    int N_groups_per_var[N_group_vars];              //# Number of group labels, per variable type
+    int block_set[N_id, N_group_vars];               //# Dataframe holding the group ID codes for each person (rows) for each variable type (cols)
 
   //# Focal, target, and dyadic predictor variables                                                                                                      
-    matrix[N_id, N_params[1]] focal_set;       //# Focal slash decider predictor variables    
-    matrix[N_id, N_params[2]] target_set;      //# Target slash alter predictor variables
-    real dyad_set[N_id, N_id, N_params[3]];    //# Dyadic predictor variables
+    matrix[N_id, N_params[1]] focal_set;             //# Focal slash decider predictor variables    
+    matrix[N_id, N_params[2]] target_set;            //# Target slash alter predictor variables
+    real dyad_set[N_id, N_id, N_params[3]];          //# Dyadic predictor variables
 
   //# HH Focal, target, and dyadic predictor variables                                                                                                      
     matrix[N_hh, N_params_hh[1]] hh_focal_set;       //# Focal slash decider predictor variables    
     matrix[N_hh, N_params_hh[2]] hh_target_set;      //# Target slash alter predictor variables
-    real hh_dyad_set[N_hh, N_hh, N_params_hh[3]];    //# Dyadic predictor variables
+    matrix[N_hh, N_params_hh[3]] hh_within_set;      //# Within hh tie predictor variables
+    real hh_between_set[N_hh, N_hh, N_params_hh[4]]; //# Dyadic predictor variables
     int HH[N_id];                                    //# Househould ID
 
   //# Outcome and exposure data
@@ -34,24 +35,25 @@ data{
 }
 
 transformed data{
-  //# Refactor to the first predictor slot, becuase it is unity
-    matrix[N_id, N_params[1]-1] focal_predictors;     //# Same as focal_set without first column
-    matrix[N_id, N_params[2]-1] target_predictors;    //# Same as target_set without first column
-    real dyad_predictors[N_id, N_id, N_params[3]-1];  //# Same as dyad_set without first shelf
+  //# Refactor to omit the first predictor slot, because it is unity
+    matrix[N_id, N_params[1]-1] focal_predictors;              //# Same as focal_set without first column
+    matrix[N_id, N_params[2]-1] target_predictors;             //# Same as target_set without first column
+    real dyad_predictors[N_id, N_id, N_params[3]-1];           //# Same as dyad_set without first shelf
 
-    //# Refactor to the first predictor slot, becuase it is unity
-    matrix[N_hh, N_params_hh[1]-1] hh_focal_predictors;     //# Same as focal_set without first column
-    matrix[N_hh, N_params_hh[2]-1] hh_target_predictors;    //# Same as target_set without first column
-    real hh_dyad_predictors[N_hh, N_hh, N_params_hh[3]-1];  //# Same as dyad_set without first shelf
+    //# Refactor to omit the first predictor slot, because it is unity
+    matrix[N_hh, N_params_hh[1]-1] hh_focal_predictors;        //# Same as focal_set without first column
+    matrix[N_hh, N_params_hh[2]-1] hh_target_predictors;       //# Same as target_set without first column
+    matrix[N_hh, N_params_hh[3]-1] hh_within_predictors;       //# Same as within_set without first column
+    real hh_between_predictors[N_hh, N_hh, N_params_hh[4]-1];  //# Same as dyad_set without first shelf
 
   //# Store some key indexes
-    int N_per_group [max_N_groups, N_group_vars];     //# Number of people in each block-type for each group variable
-    int block_indexes[N_group_vars+1];                //# The indexes of each block parameter when stored as a vector instead of ragged array
-    int block_param_size;                             //# Total number of block-level parameters
+    int N_per_group [max_N_groups, N_group_vars];              //# Number of people in each block-type for each group variable
+    int block_indexes[N_group_vars+1];                         //# The indexes of each block parameter when stored as a vector instead of ragged array
+    int block_param_size;                                      //# Total number of block-level parameters
 
   //# Get size of parameters for block model
-    block_param_size = 0;                             //# Start at zero
-    block_indexes[1] = 0;                             //# Start at zero for first index 
+    block_param_size = 0;      //# Start at zero
+    block_indexes[1] = 0;      //# Start at zero for first index 
     
     for(q in 1: N_group_vars){
      block_param_size += N_groups_per_var[q]*N_groups_per_var[q];                      //# Count up number of parameters in each K by K block matrix and add to total
@@ -99,7 +101,12 @@ transformed data{
 
     if(N_params_hh[3]>1){
      for(i in 2:N_params_hh[3]){
-     hh_dyad_predictors[ , , i-1] = hh_dyad_set[,,i];  
+     hh_within_predictors[ , i-1] = hh_within_set[,i];  
+     }}
+
+    if(N_params_hh[4]>1){
+     for(i in 2:N_params_hh[4]){
+     hh_between_predictors[ , , i-1] = hh_between_set[,,i];  
      }}
 }
 
@@ -122,27 +129,27 @@ parameters{
     vector[N_params[2]-1] target_effects;
     vector[N_params[3]-1] dyad_effects;   
 
-    //# Variation of HH sender-receiver effects
-    vector<lower=0>[2] hh_sr_sigma;  
-    cholesky_factor_corr[2] hh_sr_L;
-    vector[2] hh_sr_raw[N_hh];
+    //# Variation of HH sender-receiver-within_hh effects
+    vector<lower=0>[3] hh_sr_sigma;  
+    cholesky_factor_corr[3] hh_sr_L;
+    vector[3] hh_sr_raw[N_hh];
 
-    //# Variation of HH dyadic effects
-    real hh_dr_within_hh_offset;    
-    real<lower=0> hh_dr_sigma;       
+    //# Variation of HH dyadic effects 
+    real<lower=0> hh_dr_sigma; 
     cholesky_factor_corr[2] hh_dr_L;
     matrix[N_hh, N_hh] hh_dr_raw; 
 
     //# Effects of HH covariate
     vector[N_params_hh[1]-1] hh_focal_effects;
     vector[N_params_hh[2]-1] hh_target_effects;
-    vector[N_params_hh[3]-1] hh_dyad_effects;   
+    vector[N_params_hh[3]-1] hh_within_effects;
+    vector[N_params_hh[4]-1] hh_between_effects;    
 }
 
 model{
   //# Local storage to make code more readable
     vector[2] sr[N_id];                                   //# Sender and receiver effects
-    vector[2] hh_sr[N_hh];                                //# HH Sender and receiver effects
+    vector[3] hh_sr[N_hh];                                //# HH Sender and receiver effects
     matrix[N_id, N_id] dr;                                //# Dyadic effects
     matrix[N_hh, N_hh] hh_dr;                             //# HH Dyadic effects
     matrix[max_N_groups, max_N_groups] B [N_group_vars];  //# Block effects, in array form
@@ -174,7 +181,8 @@ model{
     //# Priors on effects of hh covariates
      hh_focal_effects ~ normal(priors[12,1], priors[12,2]);
      hh_target_effects ~ normal(priors[13,1], priors[13,2]);
-     hh_dyad_effects ~ normal(priors[14,1], priors[14,2]);
+     hh_within_effects ~ normal(priors[14,1], priors[14,2]);
+     hh_between_effects ~ normal(priors[14,1], priors[14,2]);
 
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
@@ -192,17 +200,19 @@ model{
      }
 
     //# HH Sender-receiver priors for social relations model
-    for(i in 1:N_hh)
-    hh_sr_raw[i] ~ normal(0,1);
-    hh_sr_sigma ~ exponential(priors[15,1]);
-    hh_sr_L ~ lkj_corr_cholesky(priors[17,1]);
-    hh_dr_within_hh_offset ~ normal(0, 1);
+    for(i in 1:N_hh){
+     hh_sr_raw[i] ~ normal(0,1);
+     }
+     
+     hh_sr_sigma ~ exponential(priors[15,1]);
+     hh_sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     for(i in 1:N_hh){
-     vector[2] hh_sr_terms;
+     vector[3] hh_sr_terms;
 
      hh_sr_terms[1] = dot_product(hh_focal_effects,  to_vector(hh_focal_predictors[i]));
      hh_sr_terms[2] = dot_product(hh_target_effects,  to_vector(hh_target_predictors[i]));  
+     hh_sr_terms[3] = dot_product(hh_within_effects,  to_vector(hh_within_predictors[i]));  
 
      hh_sr[i] = diag_pre_multiply(hh_sr_sigma, hh_sr_L) * hh_sr_raw[i] + hh_sr_terms;
      }
@@ -235,12 +245,12 @@ model{
      scrap[1] = hh_dr_raw[i,j];
      scrap[2] = hh_dr_raw[j,i];
      scrap = rep_vector(hh_dr_sigma, 2) .* (hh_dr_L*scrap);
-     hh_dr[i,j] = scrap[1] + dot_product(hh_dyad_effects,  to_vector(hh_dyad_predictors[i, j, ]));
-     hh_dr[j,i] = scrap[2] + dot_product(hh_dyad_effects,  to_vector(hh_dyad_predictors[j, i, ]));
+     hh_dr[i,j] = scrap[1] + dot_product(hh_between_effects,  to_vector(hh_between_predictors[i, j, ]));
+     hh_dr[j,i] = scrap[2] + dot_product(hh_between_effects,  to_vector(hh_between_predictors[j, i, ]));
      }}
 
     for(i in 1:N_hh){
-     hh_dr[i,i] = hh_dr_within_hh_offset + hh_dr_sigma*hh_dr_raw[i,i];
+     hh_dr[i,i] = hh_sr[i,3];
     }
 
     //# likelihood
@@ -253,13 +263,13 @@ model{
          }
 
       if(outcome_mode==1){
-      outcomes[i,j,1] ~ bernoulli_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
+      outcomes[i,j,1] ~ bernoulli_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );  //# Then model the outcomes
        }
       if(outcome_mode==2){
-      outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
+      outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );  //# Then model the outcomes
        }
       if(outcome_mode==3){
-      outcomes[i,j,1] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  //# Then model the outcomes
+      outcomes[i,j,1] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );  //# Then model the outcomes
        }
 
        }
@@ -297,10 +307,11 @@ generated quantities{
      }
 
     for(i in 1:N_hh){
-     vector[2] hh_sr_terms;
+     vector[3] hh_sr_terms;
 
      hh_sr_terms[1] = dot_product(hh_focal_effects,  to_vector(hh_focal_predictors[i]));
-     hh_sr_terms[2] = dot_product(hh_target_effects,  to_vector(hh_target_predictors[i]));  
+     hh_sr_terms[2] = dot_product(hh_target_effects,  to_vector(hh_target_predictors[i])); 
+     hh_sr_terms[3] = dot_product(hh_within_effects,  to_vector(hh_within_predictors[i]));  
 
      hh_sr[i] = diag_pre_multiply(hh_sr_sigma, hh_sr_L) * hh_sr_raw[i] + hh_sr_terms;
      }
@@ -336,27 +347,26 @@ generated quantities{
       scrap[2] = hh_dr_raw[j,i];
       scrap = rep_vector(hh_dr_sigma, 2) .* (hh_dr_L*scrap);
 
-      hh_dr[i,j] = scrap[1] + dot_product(hh_dyad_effects,  to_vector(hh_dyad_predictors[i, j, ]));
-      hh_dr[j,i] = scrap[2] + dot_product(hh_dyad_effects,  to_vector(hh_dyad_predictors[j, i, ]));
+      hh_dr[i,j] = scrap[1] + dot_product(hh_between_effects,  to_vector(hh_between_predictors[i, j, ]));
+      hh_dr[j,i] = scrap[2] + dot_product(hh_between_effects,  to_vector(hh_between_predictors[j, i, ]));
     }}
 
     for(i in 1:N_hh){
-      hh_dr[i,i] = hh_dr_within_hh_offset + hh_dr_sigma*hh_dr_raw[i,i];
+      hh_dr[i,i] = hh_sr[i,3];
     }
-
 
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
             if ( i != j ) {
       // consider each possible state of true tie and compute prob of data
       if(outcome_mode==1){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);
+       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );
        }
       if(outcome_mode==2){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);
+       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j] + hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );
        }
       if(outcome_mode==3){
-       p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]+ hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]]);  
+       p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]+ hh_sr[HH[i],1] + hh_sr[HH[j],2] + hh_dr[HH[i],HH[j]] );  
        }
             }
         }//j
