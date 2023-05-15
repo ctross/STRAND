@@ -207,6 +207,7 @@ model{
      
      hh_sr_sigma ~ exponential(priors[15,1]);
      hh_sr_L ~ lkj_corr_cholesky(priors[17,1]);
+     hh_within_mu ~ normal(priors[14,1], priors[14,2]);
 
     for(i in 1:N_hh){
      vector[3] hh_sr_terms;
