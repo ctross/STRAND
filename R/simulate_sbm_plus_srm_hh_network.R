@@ -82,21 +82,22 @@ simulate_sbm_plus_srm_hh_network = function( N_id = 99,                        #
                                              dr_mu = c(0,0),                   # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                              dr_sigma = 1,                     # Variance of dyad effects 
                                              dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
-                                             hh_sr_mu = c(0,0),                # Average sender (cell 1) and reciever (cell 2) effect log odds
-                                             hh_sr_sigma = c(0.3, 1.5),        # Sender (cell 1) and reciever (cell 2) effect variances 
-                                             hh_sr_rho = 0.6,                  # Correlation of sender and reciever effects
+                                             hh_sr_mu = c(0,0,0),              # Average sender (cell 1), reciever (cell 2), and within hh (cell 3) effect log odds
+                                             hh_sr_sigma = c(0.3, 1.5, 1.2),   # Sender (cell 1), reciever (cell 2), and within HH effect variances 
+                                             hh_sr_rho = structure(c(1, -0.25, 
+                                         0.25, -0.25, 1, 0.65, 0.25, 0.65, 1), 
+                                             dim = c(3L, 3L)),                 # Correlation of sender, reciever, and within effects
                                              hh_dr_mu = c(0,0),                # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                              hh_dr_sigma = 1,                  # Variance of dyad effects 
                                              hh_dr_rho = 0.7,                  # Correlation of i to j dyad effect and j to i dyad effect
-                                             hh_diag_offset = 2,               # Log odds offset for within-household ties
                                              mode="bernoulli",                 # outcome mode
                                              individual_predictors = NULL,     # A matrix of covariates
                                              dyadic_predictors = NULL,         # An array of covariates
-                                             individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
+                                             individual_effects = NULL,        # The effects of predictors on sender effects (row 1), receiver effects (row 2), and witin effects (row3)
                                              dyadic_effects = NULL,            # The effects of predictors on dyadic ties
                                              hh_individual_predictors = NULL,  # A matrix of covariates
                                              hh_dyadic_predictors = NULL,      # An array of covariates
-                                             hh_individual_effects = NULL,     # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
+                                             hh_individual_effects = NULL,     # The effects of predictors on sender effects (row 1), receiver effects (row 2), and witin effects (row3)
                                              hh_dyadic_effects = NULL          # The effects of predictors on dyadic ties
                                          )
 {
@@ -130,8 +131,8 @@ simulate_sbm_plus_srm_hh_network = function( N_id = 99,                        #
     stop("The number of columns of hh_individual_effects must match that of hh_individual_predictors.")
    }
 
-   if(nrow(hh_individual_effects) != 2 ){
-    stop("The number of rows of hh_individual_effects must be 2: one for sender effects, the other for receiver. Un-needed slopes can be set to 0.")
+   if(nrow(hh_individual_effects) != 3 ){
+    stop("The number of rows of hh_individual_effects must be 3: one for sender effects, one for receiver effects, and one for within hh effects. Un-needed slopes can be set to 0.")
    }
 
    if(nrow(hh_individual_predictors) != N_hh ){
@@ -145,9 +146,9 @@ Rho_sr[1,2] = Rho_sr[2,1] = sr_rho
 Rho_dr[1,2] = Rho_dr[2,1] = dr_rho
 
 # Create hh-level correlation matrices (aka matrixes)
-hh_Rho_sr = hh_Rho_dr = diag(c(1,1))
-hh_Rho_sr[1,2] = hh_Rho_sr[2,1] = hh_sr_rho
+hh_Rho_dr = diag(c(1,1))
 hh_Rho_dr[1,2] = hh_Rho_dr[2,1] = hh_dr_rho
+hh_Rho_sr = hh_sr_rho
 
 # Varying effects on individuals
 sr = matrix(NA, nrow=N_id, ncol=2)
@@ -161,13 +162,14 @@ for( i in 1:N_id){
  }
 
 # Varying effects on households
-hh_sr = matrix(NA, nrow=N_hh, ncol=2)
+hh_sr = matrix(NA, nrow=N_hh, ncol=3)
 for( i in 1:N_hh){
  hh_sr[i,] = rmvnorm2(1 , Mu=hh_sr_mu, sigma=hh_sr_sigma, Rho=hh_Rho_sr ) 
 
  if(!is.null(hh_individual_predictors)){
   hh_sr[i,1] = hh_sr[i,1] + sum(hh_individual_effects[1,]*hh_individual_predictors[i,]) 
   hh_sr[i,2] = hh_sr[i,2] + sum(hh_individual_effects[2,]*hh_individual_predictors[i,]) 
+  hh_sr[i,3] = hh_sr[i,3] + sum(hh_individual_effects[3,]*hh_individual_predictors[i,]) 
   }
  }
 
@@ -187,7 +189,7 @@ for( i in 1:N_hh){
  }}
 
  for( i in 1:N_hh){
-  hh_dr[i,i] = hh_diag_offset + rnorm(1, hh_dr_mu[1], hh_dr_sigma)
+  hh_dr[i,i] = hh_sr[i,3] 
  }
 
 # Build true network

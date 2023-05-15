@@ -16,11 +16,13 @@
 #' @param 
 #' dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
 #' @param 
-#' hh_focal_regression A formula for the household-level predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
+#' hh_focal_regression A formula for the household-level predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Wealth 
 #' @param 
-#' hh_target_regression A formula for the household-level predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
+#' hh_target_regression A formula for the household-level predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Wealth * Residents
 #' @param 
-#' hh_dyad_regression A formula for the household-level predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
+#' hh_within_regression A formula for the household-level predictors of within HH relationships. This should be specified as in lm(), e.g.: ~ Wealth
+#' @param 
+#' hh_between_regression A formula for the household-level predictors of between HH relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
 #' @param 
 #' mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
@@ -44,7 +46,8 @@
 #'                                                dyad_regression = ~ Relatedness + Friends,
 #'                                                hh_focal_regression = ~ Wealth,
 #'                                                hh_target_regression = ~ Wealth,
-#'                                                hh_dyad_regression = ~ Distance,
+#'                                                hh_within_regression = ~ Wealth,
+#'                                                hh_between_regression = ~ Distance,
 #'                                                mode="mcmc",
 #'                                                stan_mcmc_parameters = list(seed = 1, chains = 1, 
 #'                                                parallel_chains = 1, refresh = 1, 
@@ -61,7 +64,8 @@ fit_block_plus_social_relations_hh_model = function(data,
                                     dyad_regression,
                                     hh_focal_regression,
                                     hh_target_regression,
-                                    hh_dyad_regression,
+                                    hh_within_regression,
+                                    hh_between_regression,
                                     mode="mcmc",
                                     model_version="ulre",
                                     return_predicted_network=FALSE,
@@ -103,8 +107,12 @@ fit_block_plus_social_relations_hh_model = function(data,
         stop("No household covariate data has been provided. hh_target_regression must equal ~ 1 ")
     }
 
-    if(data$N_dyadic_predictors_hh==0 & hh_dyad_regression != ~ 1){
-        stop("No household covariate data has been provided. hh_dyad_regression must equal ~ 1 ")
+    if(data$N_individual_predictors_hh==0 & hh_within_regression != ~ 1){
+        stop("No household covariate data has been provided. hh_within_regression must equal ~ 1 ")
+    }
+
+    if(data$N_dyadic_predictors_hh==0 & hh_between_regression != ~ 1){
+        stop("No household covariate data has been provided. hh_between_regression must equal ~ 1 ")
     }
 
     if(model_version=="fast_bb" & data$outcome_mode !=  1){
@@ -159,7 +167,7 @@ fit_block_plus_social_relations_hh_model = function(data,
 
      dyad_dat_hh = as.data.frame(do.call(cbind, dyad_dat_hh))
      colnames(dyad_dat_hh) = dyad_names_hh
-     dyad_model_matrix_hh = model.matrix( hh_dyad_regression , dyad_dat_hh )
+     dyad_model_matrix_hh = model.matrix( hh_between_regression , dyad_dat_hh )
 
      dyad_dat_out_hh = array(NA, c(dyad_dims_hh[1], dyad_dims_hh[2], ncol(dyad_model_matrix_hh)))
      for(i in 1:ncol(dyad_model_matrix_hh)){
@@ -167,9 +175,9 @@ fit_block_plus_social_relations_hh_model = function(data,
      }
 
      dimnames(dyad_dat_out_hh)[[3]] = colnames(dyad_model_matrix_hh)
-     data$hh_dyad_set = dyad_dat_out_hh
+     data$hh_between_set = dyad_dat_out_hh
      } else{
-      data$hh_dyad_set = array(1, c(data$N_hh, data$N_hh, 1))
+      data$hh_between_set = array(1, c(data$N_hh, data$N_hh, 1))
      }
 
      ################################################################ Individual model matrix
@@ -187,12 +195,14 @@ fit_block_plus_social_relations_hh_model = function(data,
      if(data$N_individual_predictors_hh>0){
       data$hh_focal_set = model.matrix( hh_focal_regression , data$hh_individual_predictors )
       data$hh_target_set = model.matrix( hh_target_regression , data$hh_individual_predictors )
+      data$hh_within_set = model.matrix( hh_within_regression , data$hh_individual_predictors )
      } else{
       data$hh_focal_set = matrix(1,nrow=data$N_hh, ncol=1)
       data$hh_target_set = matrix(1,nrow=data$N_hh, ncol=1)
+      data$hh_within_set = matrix(1,nrow=data$N_hh, ncol=1)
      }
     
-    data$N_params_hh = c(ncol(data$hh_focal_set), ncol(data$hh_target_set), dim(data$hh_dyad_set)[3])
+    data$N_params_hh = c(ncol(data$hh_focal_set), ncol(data$hh_target_set), ncol(data$hh_within_set), dim(data$hh_between_set)[3])
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){

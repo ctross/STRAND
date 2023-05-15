@@ -38,20 +38,10 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     sr_L = rstan::extract(stanfit, pars="sr_L")$sr_L  
     sr_raw = rstan::extract(stanfit, pars="sr_raw")$sr_raw  
 
+    dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
+    dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw 
+    dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma
 
-    if(attributes(input)$model_version == "fast_bb"){
-     dr_cross = rstan::extract(stanfit, pars="dr_cross")$dr_cross  
-     }
-    
-
-    if(attributes(input)$model_version == "ulre"){
-     dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
-     dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw 
-     dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
-     } 
-
-    hh_dr_within_hh_offset = rstan::extract(stanfit, pars="hh_dr_within_hh_offset")$hh_dr_within_hh_offset 
-    
     if(dim(input$data$block_set)[2]>0)
     block_effects = rstan::extract(stanfit, pars="block_effects")$block_effects  
 
@@ -79,8 +69,11 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(dim(input$data$hh_target_set)[2]>1)
     hh_target_effects = rstan::extract(stanfit, pars="hh_target_effects")$hh_target_effects  
 
-    if(dim(input$data$hh_dyad_set)[3]>1)
-    hh_dyad_effects = rstan::extract(stanfit, pars="hh_dyad_effects")$hh_dyad_effects  
+    if(dim(input$data$hh_within_set)[2]>1)
+    hh_within_effects = rstan::extract(stanfit, pars="hh_within_effects")$hh_within_effects  
+
+    if(dim(input$data$hh_between_set)[3]>1)
+    hh_between_effects = rstan::extract(stanfit, pars="hh_between_effects")$hh_between_effects  
 
 
     ################### Get index data for block-model samples
@@ -113,18 +106,13 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
             hh_dyadic_sd = hh_dr_sigma,
             hh_dyadic_L = hh_dr_L,
-            hh_dyadic_random_effects = hh_dr_raw,
-            hh_dr_within_hh_offset = hh_dr_within_hh_offset
+            hh_dyadic_random_effects = hh_dr_raw
         )
 
     if(attributes(input)$model_version == "ulre"){
       srm_samples$dyadic_L = dr_L
       srm_samples$dyadic_random_effects=dr_raw
       srm_samples$dyadic_sd = dr_sigma
-     } 
-
-    if(attributes(input)$model_version == "fast_bb"){
-      srm_samples$dyadic_cross_ratio = dr_cross
      } 
 
     #### indiv covars
@@ -144,8 +132,11 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(dim(input$data$hh_target_set)[2]>1)
     srm_samples$hh_target_coeffs = hh_target_effects
 
-    if(dim(input$data$hh_dyad_set)[3]>1)
-    srm_samples$hh_dyadic_coeffs = hh_dyad_effects
+    if(dim(input$data$hh_within_set)[2]>1)
+    srm_samples$hh_within_coeffs = hh_within_effects
+
+    if(dim(input$data$hh_between_set)[3]>1)
+    srm_samples$hh_between_coeffs = hh_between_effects
 
     samples = list(srm_model_samples=srm_samples)
 
@@ -239,10 +230,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
        results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
        results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
      } 
-     if(attributes(input)$model_version == "fast_bb"){
-       results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
-       results_srm_base[2,] = sum_stats_miss("dyadic effects rho (dyadic reciprocity)", c(0), HPDI)
-     } 
+
      if(attributes(input)$model_version == "no_dr"){
        results_srm_base[1,] = sum_stats("focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
        results_srm_base[2,] = sum_stats_miss("dyadic effects rho (dyadic reciprocity)", c(0), HPDI)
@@ -273,15 +261,17 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
      
      results_list[[4]] = results_srm_base
 
-     ############################################################# HH
+    ############################################################# HH
     ################### SRM model
      hh_Q1 = dim(input$data$hh_focal_set)[2]-1
      hh_Q2 = dim(input$data$hh_target_set)[2]-1
-     hh_Q3 = dim(input$data$hh_dyad_set)[3]-1
+     hh_Q3 = dim(input$data$hh_within_set)[2]-1
+     hh_Q4 = dim(input$data$hh_between_set)[3]-1
 
      hh_results_srm_focal = matrix(NA, nrow=(1+hh_Q1) , ncol=6)
      hh_results_srm_target = matrix(NA, nrow=(1+hh_Q2) , ncol=6)
-     hh_results_srm_dyadic = matrix(NA, nrow=(1+hh_Q3) , ncol=6)
+     hh_results_srm_within = matrix(NA, nrow=(1+hh_Q3) , ncol=6)
+     hh_results_srm_between = matrix(NA, nrow=(1+hh_Q4) , ncol=6)
 
     ######### Calculate all hh focal effects
      hh_results_srm_focal[1,] = sum_stats("household focal effects sd", samples$srm_model_samples$hh_focal_target_sd[,1], HPDI)
@@ -305,34 +295,55 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
       results_list[[6]] = hh_results_srm_target
 
-    ######### Calculate all hh dyad effects
-     hh_results_srm_dyadic[1,] = sum_stats("household dyadic effects sd", c(samples$srm_model_samples$hh_dyadic_sd), HPDI)
+    ######### Calculate all hh within effects
+     hh_results_srm_within[1,] = sum_stats("household within effects sd", samples$srm_model_samples$hh_focal_target_sd[,3], HPDI)
      if(hh_Q3>0){
-     coeff_names = dimnames(input$data$hh_dyad_set)[[3]][-1]
+     coeff_names = colnames(input$data$hh_within_set)[-1]
         for(i in 1:hh_Q3){
-     hh_results_srm_dyadic[1+i,] = sum_stats(paste0("household dyadic effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$hh_dyadic_coeffs[,i], HPDI)
+     hh_results_srm_within[1+i,] = sum_stats(paste0("household within effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$hh_within_coeffs[,i], HPDI)
         }
       }
-     results_list[[7]] = hh_results_srm_dyadic
 
+      results_list[[7]] = hh_results_srm_within
+
+    ######### Calculate all hh dyad effects
+     hh_results_srm_between[1,] = sum_stats("household between effects sd", c(samples$srm_model_samples$hh_dyadic_sd), HPDI)
+     if(hh_Q4>0){
+     coeff_names = dimnames(input$data$hh_between_set)[[3]][-1]
+        for(i in 1:hh_Q4){
+     hh_results_srm_between[1+i,] = sum_stats(paste0("household between effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$hh_between_coeffs[,i], HPDI)
+        }
+      }
+     results_list[[8]] = hh_results_srm_between
+
+### LEFT OFF HERE
     ######## Other hh effects
-     hh_results_srm_base = matrix(NA, nrow=3, ncol=6)
-     hh_results_srm_base[1,] = sum_stats("household focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$hh_focal_target_L[,2,1], HPDI)
-     hh_results_srm_base[2,] = sum_stats("household dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$hh_dyadic_L[,2,1], HPDI)
-     hh_results_srm_base[3,] = sum_stats("household dyadic effects offset (within-hh ties)", c(samples$srm_model_samples$hh_dr_within_hh_offset), HPDI)
+
+    samples$srm_model_samples$hh_focal_target_Corr = samples$srm_model_samples$hh_focal_target_L
+
+    for(i in 1: dim(samples$srm_model_samples$hh_focal_target_Corr)[1]){
+     samples$srm_model_samples$hh_focal_target_Corr[i,,] = samples$srm_model_samples$hh_focal_target_L[i,,] %*% t(samples$srm_model_samples$hh_focal_target_L[i,,])  
+    }
+
+     hh_results_srm_base = matrix(NA, nrow=4, ncol=6)
+     hh_results_srm_base[1,] = sum_stats("household focal-target effects rho (generalized reciprocity)", samples$srm_model_samples$hh_focal_target_Corr[,2,1], HPDI)
+     hh_results_srm_base[2,] = sum_stats("household focal-within effects rho", samples$srm_model_samples$hh_focal_target_Corr[,3,1], HPDI)
+     hh_results_srm_base[3,] = sum_stats("household target-within effects rho", samples$srm_model_samples$hh_focal_target_Corr[,3,2], HPDI)
+     hh_results_srm_base[4,] = sum_stats("household dyadic effects rho (dyadic reciprocity)", samples$srm_model_samples$hh_dyadic_L[,2,1], HPDI)
+
                                                                     
-     results_list[[8]] = hh_results_srm_base
+     results_list[[9]] = hh_results_srm_base
 
    ############# Finally, merge all effects into a list
-     for(i in 1:8)
+     for(i in 1:9)
      colnames(results_list[[i]]) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 
 
      names(results_list) = c(c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates"),
-                             c( "Household: Focal effects/Out-degree", "Household: Target effects/In-degree", "Household: Dyadic effects", "Household: Other estimates")
+                             c( "Household: Focal effects/Out-degree", "Household: Target effects/In-degree", "Household: Within effects","Household: Between effects", "Household: Other estimates")
                              )
           
    results_out = rbind( results_srm_focal, results_srm_target, results_srm_dyadic, results_srm_base,
-                        hh_results_srm_focal, hh_results_srm_target, hh_results_srm_dyadic, hh_results_srm_base)
+                        hh_results_srm_focal, hh_results_srm_target, hh_results_srm_within, hh_results_srm_between, hh_results_srm_base)
    
    df = data.frame(results_out)
    colnames(df) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 
