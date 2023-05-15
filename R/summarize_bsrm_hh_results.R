@@ -58,6 +58,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     hh_sr_sigma = rstan::extract(stanfit, pars="hh_sr_sigma")$hh_sr_sigma  
     hh_sr_L = rstan::extract(stanfit, pars="hh_sr_L")$hh_sr_L  
     hh_sr_raw = rstan::extract(stanfit, pars="hh_sr_raw")$hh_sr_raw  
+    hh_within_mu = rstan::extract(stanfit, pars="hh_within_mu")$hh_within_mu  
 
     hh_dr_sigma = rstan::extract(stanfit, pars="hh_dr_sigma")$hh_dr_sigma  
     hh_dr_L = rstan::extract(stanfit, pars="hh_dr_L")$hh_dr_L  
@@ -103,6 +104,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
             hh_focal_target_sd=hh_sr_sigma,
             hh_focal_target_L=hh_sr_L,
             hh_focal_target_random_effects=hh_sr_raw,
+            hh_within_mu = hh_within_mu,
 
             hh_dyadic_sd = hh_dr_sigma,
             hh_dyadic_L = hh_dr_L,
@@ -297,10 +299,12 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ######### Calculate all hh within effects
      hh_results_srm_within[1,] = sum_stats("household within effects sd", samples$srm_model_samples$hh_focal_target_sd[,3], HPDI)
+     hh_results_srm_within[2,] = sum_stats("household within effects mu", samples$srm_model_samples$hh_within_mu, HPDI)
+
      if(hh_Q3>0){
      coeff_names = colnames(input$data$hh_within_set)[-1]
         for(i in 1:hh_Q3){
-     hh_results_srm_within[1+i,] = sum_stats(paste0("household within effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$hh_within_coeffs[,i], HPDI)
+     hh_results_srm_within[2+i,] = sum_stats(paste0("household within effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$hh_within_coeffs[,i], HPDI)
         }
       }
 
@@ -316,7 +320,6 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
       }
      results_list[[8]] = hh_results_srm_between
 
-### LEFT OFF HERE
     ######## Other hh effects
 
     samples$srm_model_samples$hh_focal_target_Corr = samples$srm_model_samples$hh_focal_target_L
