@@ -272,7 +272,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
      hh_results_srm_focal = matrix(NA, nrow=(1+hh_Q1) , ncol=6)
      hh_results_srm_target = matrix(NA, nrow=(1+hh_Q2) , ncol=6)
-     hh_results_srm_within = matrix(NA, nrow=(1+hh_Q3) , ncol=6)
+     hh_results_srm_within = matrix(NA, nrow=(2+hh_Q3) , ncol=6)
      hh_results_srm_between = matrix(NA, nrow=(1+hh_Q4) , ncol=6)
 
     ######### Calculate all hh focal effects
