@@ -299,7 +299,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ######### Calculate all hh within effects
      hh_results_srm_within[1,] = sum_stats("household within effects sd", samples$srm_model_samples$hh_focal_target_sd[,3], HPDI)
-     hh_results_srm_within[2,] = sum_stats("household within effects mu", samples$srm_model_samples$hh_within_mu, HPDI)
+     hh_results_srm_within[2,] = sum_stats("household within effects mu", c(samples$srm_model_samples$hh_within_mu), HPDI)
 
      if(hh_Q3>0){
      coeff_names = colnames(input$data$hh_within_set)[-1]
