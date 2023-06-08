@@ -267,7 +267,7 @@ fit_block_plus_social_relations_hh_model = function(data,
         }
 
     if(engine=="rstan"){
-       fit = sampling(model, data = unclass(model_dat),
+       fit = rstan::sampling(model, data = unclass(model_dat),
           seed = stan_mcmc_parameters$seed,
           chains = stan_mcmc_parameters$chain,
           warmup = stan_mcmc_parameters$iter_warmup,
