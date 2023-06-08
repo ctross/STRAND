@@ -67,7 +67,6 @@ fit_block_plus_social_relations_hh_model = function(data,
                                     hh_within_regression,
                                     hh_between_regression,
                                     mode="mcmc",
-                                    engine="rstan",
                                     model_version="ulre",
                                     return_predicted_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
@@ -234,12 +233,7 @@ fit_block_plus_social_relations_hh_model = function(data,
 
     ############################################################################# Fit model
    if(model_version=="ulre"){
-     if(engine=="cmdstanr"){
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh.stan"))
-      }
-     if(engine=="rstan"){
-    model = rstan::stan_model(file=paste0(path.package("STRAND"),"/","block_plus_social_relations_model_hh.stan"))
-      }
    }
 
    if(model_version=="fast_bb"){
@@ -252,7 +246,6 @@ fit_block_plus_social_relations_hh_model = function(data,
 
 
     if(mode=="mcmc"){
-        if(engine=="cmdstanr"){
       fit = model$sample(
         data = unclass(data),
         seed = stan_mcmc_parameters$seed,
@@ -264,22 +257,7 @@ fit_block_plus_social_relations_hh_model = function(data,
         max_treedepth = stan_mcmc_parameters$max_treedepth,
         adapt_delta = stan_mcmc_parameters$adapt_delta
         )
-        }
-
-    if(engine=="rstan"){
-       fit = rstan::sampling(model, data = unclass(model_dat),
-          seed = stan_mcmc_parameters$seed,
-          chains = stan_mcmc_parameters$chain,
-          warmup = stan_mcmc_parameters$iter_warmup,
-          iter = (stan_mcmc_parameters$iter_sampling + stan_mcmc_parameters$iter_warmup),
-          refresh = stan_mcmc_parameters$refresh,
-          control = list(
-           max_treedepth = stan_mcmc_parameters$max_treedepth,
-           adapt_delta = stan_mcmc_parameters$adapt_delta
-           )
-         )
        }
-    }
 
     if(mode=="vb"){
      print("Variational inference is fast, but not always dependable. We recommend using vb only for test runs.")   
@@ -300,7 +278,6 @@ fit_block_plus_social_relations_hh_model = function(data,
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "HH_SRM+SBM"
     attr(bob, "model_version") = model_version
-    attr(bob, "engine") = engine
     
     return(bob)
 }
