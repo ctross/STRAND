@@ -19,7 +19,7 @@
 
 
 
-summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
+summarize_bsrm_hh_results2 = function(input, include_samples=TRUE, HPDI=0.9){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_hh_results() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_hh_model() to run your model.")
     }
@@ -30,51 +30,50 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     ###################################################### Create samples 
-    fit = input$fit
-    stanfit = rstan::read_stan_csv(fit$output_files())
-
+    stanfit = posterior::as_draws_rvars(input$fit$draws())
+    
     ################### Network model parameters - Indiv
-    sr_sigma = rstan::extract(stanfit, pars="sr_sigma")$sr_sigma  
-    sr_L = rstan::extract(stanfit, pars="sr_L")$sr_L  
-    sr_raw = rstan::extract(stanfit, pars="sr_raw")$sr_raw  
+    sr_sigma = draws_of(stanfit$"sr_sigma")
+    sr_L = draws_of(stanfit$"sr_L") 
+    sr_raw = draws_of(stanfit$"sr_raw")
 
-    dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
-    dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw 
-    dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma
+    dr_L = draws_of(stanfit$"dr_L")
+    dr_raw = draws_of(stanfit$"dr_raw") 
+    dr_sigma = draws_of(stanfit$"dr_sigma")
 
     if(dim(input$data$block_set)[2]>0)
-    block_effects = rstan::extract(stanfit, pars="block_effects")$block_effects  
+    block_effects = draws_of(stanfit$"block_effects")
 
     if(dim(input$data$focal_set)[2]>1)
-    focal_effects = rstan::extract(stanfit, pars="focal_effects")$focal_effects 
+    focal_effects = draws_of(stanfit$"focal_effects")
 
     if(dim(input$data$target_set)[2]>1)
-    target_effects = rstan::extract(stanfit, pars="target_effects")$target_effects  
+    target_effects = draws_of(stanfit$"target_effects") 
 
     if(dim(input$data$dyad_set)[3]>1)
-    dyad_effects = rstan::extract(stanfit, pars="dyad_effects")$dyad_effects  
+    dyad_effects = draws_of(stanfit$"dyad_effects")
 
     ################### Network model parameters - HH
-    hh_sr_sigma = rstan::extract(stanfit, pars="hh_sr_sigma")$hh_sr_sigma  
-    hh_sr_L = rstan::extract(stanfit, pars="hh_sr_L")$hh_sr_L  
-    hh_sr_raw = rstan::extract(stanfit, pars="hh_sr_raw")$hh_sr_raw  
-    hh_within_mu = rstan::extract(stanfit, pars="hh_within_mu")$hh_within_mu  
+    hh_sr_sigma = draws_of(stanfit$"hh_sr_sigma")
+    hh_sr_L = draws_of(stanfit$"hh_sr_L") 
+    hh_sr_raw = draws_of(stanfit$"hh_sr_raw") 
+    hh_within_mu = draws_of(stanfit$"hh_within_mu")
 
-    hh_dr_sigma = rstan::extract(stanfit, pars="hh_dr_sigma")$hh_dr_sigma  
-    hh_dr_L = rstan::extract(stanfit, pars="hh_dr_L")$hh_dr_L  
-    hh_dr_raw = rstan::extract(stanfit, pars="hh_dr_raw")$hh_dr_raw  
+    hh_dr_sigma = draws_of(stanfit$"hh_dr_sigma")
+    hh_dr_L = draws_of(stanfit$"hh_dr_L") 
+    hh_dr_raw = draws_of(stanfit$"hh_dr_raw") 
     
     if(dim(input$data$hh_focal_set)[2]>1)
-    hh_focal_effects = rstan::extract(stanfit, pars="hh_focal_effects")$hh_focal_effects 
+    hh_focal_effects = draws_of(stanfit$"hh_focal_effects")
 
     if(dim(input$data$hh_target_set)[2]>1)
-    hh_target_effects = rstan::extract(stanfit, pars="hh_target_effects")$hh_target_effects  
+    hh_target_effects = draws_of(stanfit$"hh_target_effects")
 
     if(dim(input$data$hh_within_set)[2]>1)
-    hh_within_effects = rstan::extract(stanfit, pars="hh_within_effects")$hh_within_effects  
+    hh_within_effects = draws_of(stanfit$"hh_within_effects")
 
     if(dim(input$data$hh_between_set)[3]>1)
-    hh_between_effects = rstan::extract(stanfit, pars="hh_between_effects")$hh_between_effects  
+    hh_between_effects = draws_of(stanfit$"hh_between_effects")
 
 
     ################### Get index data for block-model samples
@@ -143,8 +142,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     samples = list(srm_model_samples=srm_samples)
 
     if(input$return_predicted_network == TRUE){
-        samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p  
-        samples$predicted_hh_sample = rstan::extract(stanfit, pars="hh_dr")$hh_dr 
+        samples$predicted_network_sample = draws_of(stanfit$"p")
+        samples$predicted_hh_sample = draws_of(stanfit$"hh_dr")
         }
 
 
