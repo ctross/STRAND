@@ -19,7 +19,7 @@
 
 
 
-summarize_bsrm_hh_results2 = function(input, include_samples=TRUE, HPDI=0.9){
+summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_hh_results() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_hh_model() to run your model.")
     }
