@@ -30,14 +30,8 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     ###################################################### Create samples 
-    if(attributes(input)$engine == "cmdstanr"){
     fit = input$fit
     stanfit = rstan::read_stan_csv(fit$output_files())
-        }
-    
-     if(attributes(input)$engine == "rstan"){
-         stanfit = input$fit
-         }
 
     ################### Network model parameters - Indiv
     sr_sigma = rstan::extract(stanfit, pars="sr_sigma")$sr_sigma  
@@ -368,6 +362,5 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
-
 
 
