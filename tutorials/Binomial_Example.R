@@ -19,22 +19,27 @@ nets = list(Grooming = Baboon_Data$Grooming)
 exposure_nets = list(Exposure = Baboon_Data$Exposure)
 
 # Dyadic variable: transpose of Presenting
-dyad = list(Presenting = t(Baboon_Data$Presenting))
+dyad = list(Presenting = t(Baboon_Data$Presenting),
+            Threatening = t(Baboon_Data$Threatening))
 
+block = data.frame(Sex = as.factor(Baboon_Data$Sex))
+
+indiv =  data.frame(Age = Baboon_Data$Age)
 
 model_dat = make_strand_data(self_report = nets,
-                             individual_covariates = NULL, 
-                             block_covariates = NULL,
+                             individual_covariates = indiv, 
+                             block_covariates = block,
                              dyadic_covariates = dyad,
                              outcome_mode = "binomial",
                              exposure = exposure_nets
                              )
 
-#model
-fit =  fit_social_relations_model(data=model_dat,
-                              focal_regression = ~ 1,
-                              target_regression = ~ 1,
-                              dyad_regression = ~  Presenting,
+# model
+fit =  fit_block_plus_social_relations_model(data=model_dat,
+                              block_regression = ~ Sex,
+                              focal_regression = ~ Age,
+                              target_regression = ~ Age,
+                              dyad_regression = ~  Presenting + Threatening,
                               mode="mcmc",
                               stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                           iter_warmup = 1000, iter_sampling = 1000,
@@ -52,5 +57,6 @@ vis_1
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Baboon_corr.pdf", vis_2, width=6, height=2.5)
+
 
 
