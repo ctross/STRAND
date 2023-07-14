@@ -29,34 +29,33 @@ summarize_lnm_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     ###################################################### Create samples 
-    fit = input$fit
-    stanfit = rstan::read_stan_csv(fit$output_files())
+    stanfit = posterior::as_draws_rvars(input$fit$draws())
 
     ################### Measurement model
-    false_positive_rate = rstan::extract(stanfit, pars="false_positive_rate")$false_positive_rate
-    recall_of_true_ties = rstan::extract(stanfit, pars="recall_of_true_ties")$recall_of_true_ties
-    theta_mean = rstan::extract(stanfit, pars="theta_mean")$theta_mean
+    false_positive_rate = posterior::draws_of(stanfit$"false_positive_rate")
+    recall_of_true_ties = posterior::draws_of(stanfit$"recall_of_true_ties")
+    theta_mean = posterior::draws_of(stanfit$"theta_mean")
 
-    fpr_sigma = rstan::extract(stanfit, pars="fpr_sigma")$fpr_sigma
-    rtt_sigma = rstan::extract(stanfit, pars="rtt_sigma")$rtt_sigma
-    theta_sigma = rstan::extract(stanfit, pars="theta_sigma")$theta_sigma
+    fpr_sigma = posterior::draws_of(stanfit$"fpr_sigma")
+    rtt_sigma = posterior::draws_of(stanfit$"rtt_sigma")
+    theta_sigma = posterior::draws_of(stanfit$"theta_sigma")
 
-    fpr_raw = rstan::extract(stanfit, pars="fpr_raw")$fpr_raw
-    rtt_raw = rstan::extract(stanfit, pars="rtt_raw")$rtt_raw
-    theta_raw = rstan::extract(stanfit, pars="theta_raw")$theta_raw
+    fpr_raw = posterior::draws_of(stanfit$"fpr_raw")
+    rtt_raw = posterior::draws_of(stanfit$"rtt_raw")
+    theta_raw = posterior::draws_of(stanfit$"theta_raw")
      
 
     if(dim(input$data$fpr_set)[2]>1)
-    fpr_effects = rstan::extract(stanfit, pars="fpr_effects")$fpr_effects
+    fpr_effects = posterior::draws_of(stanfit$"fpr_effects")
 
     if(dim(input$data$rtt_set)[2]>1)
-    rtt_effects = rstan::extract(stanfit, pars="rtt_effects")$rtt_effects
+    rtt_effects = posterior::draws_of(stanfit$"rtt_effects")
 
     if(dim(input$data$theta_set)[2]>1)
-    theta_effects = rstan::extract(stanfit, pars="theta_effects")$theta_effects  
+    theta_effects = posterior::draws_of(stanfit$"theta_effects") 
 
     if(dim(input$data$block_set)[2]>0)
-    block_effects = rstan::extract(stanfit, pars="block_effects")$block_effects  
+    block_effects = posterior::draws_of(stanfit$"block_effects") 
 
     ################### Get index data for block-model samples
     block_indexes = c()
@@ -76,20 +75,20 @@ summarize_lnm_results = function(input, include_samples=TRUE, HPDI=0.9){
     }   
 
     ################### Network model
-    sr_sigma = rstan::extract(stanfit, pars="sr_sigma")$sr_sigma  
-    sr_L = rstan::extract(stanfit, pars="sr_L")$sr_L  
-    sr_raw = rstan::extract(stanfit, pars="sr_raw")$sr_raw  
+    sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
+    sr_L = posterior::draws_of(stanfit$"sr_L") 
+    sr_raw = posterior::draws_of(stanfit$"sr_raw")
 
-    dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
-    dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
-    dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw  
+    dr_L = posterior::draws_of(stanfit$"dr_L")
+    dr_raw = posterior::draws_of(stanfit$"dr_raw") 
+    dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
     
     if(dim(input$data$focal_set)[2]>1)
-    focal_effects = rstan::extract(stanfit, pars="focal_effects")$focal_effects  
+    focal_effects = posterior::draws_of(stanfit$"focal_effects")   
     if(dim(input$data$target_set)[2]>1)
-    target_effects = rstan::extract(stanfit, pars="target_effects")$target_effects  
+    target_effects = posterior::draws_of(stanfit$"target_effects")  
     if(dim(input$data$dyad_set)[3]>1)
-    dyad_effects = rstan::extract(stanfit, pars="dyad_effects")$dyad_effects  
+    dyad_effects = posterior::draws_of(stanfit$"dyad_effects") 
 
     measurement_samples = list(
             false_positive_rate_intercept=false_positive_rate,
@@ -141,7 +140,7 @@ summarize_lnm_results = function(input, include_samples=TRUE, HPDI=0.9){
     samples = list(measurement_model_samples=measurement_samples, srm_model_samples=srm_samples)
 
     if(input$return_predicted_network == TRUE){
-        samples$predicted_network_sample = rstan::extract(stanfit, pars="p_tie_out")$p_tie_out  
+        samples$predicted_network_sample = posterior::draws_of(stanfit$"p_tie_out") 
         }
 
     ###################################################### Create summary stats 
