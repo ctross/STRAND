@@ -27,21 +27,20 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     ###################################################### Create samples 
-    fit = input$fit
-    stanfit = rstan::read_stan_csv(fit$output_files())
+    stanfit = posterior::as_draws_rvars(input$fit$draws())
 
     ################### Extract effects from sample set
     if(dim(input$data$block_set)[2]>0)
-    block_effects = rstan::extract(stanfit, pars="block_effects")$block_effects  
+    block_effects = posterior::draws_of(stanfit$"block_effects")
 
     if(dim(input$data$focal_set)[2]>1)
-    focal_effects = rstan::extract(stanfit, pars="focal_effects")$focal_effects  
+    focal_effects = posterior::draws_of(stanfit$"focal_effects")
 
     if(dim(input$data$target_set)[2]>1)
-    target_effects = rstan::extract(stanfit, pars="target_effects")$target_effects  
+    target_effects = posterior::draws_of(stanfit$"target_effects") 
 
     if(dim(input$data$dyad_set)[3]>1)
-    dyad_effects = rstan::extract(stanfit, pars="dyad_effects")$dyad_effects  
+    dyad_effects = posterior::draws_of(stanfit$"dyad_effects")
 
     ################### Get index data for block-model samples
     block_indexes = c()
@@ -77,7 +76,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
     samples = list(srm_model_samples=srm_samples)
 
     if(input$return_predicted_network == TRUE){
-        samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p 
+        samples$predicted_network_sample = posterior::draws_of(stanfit$"p")
         }
 
     ###################################################### Create summary stats 

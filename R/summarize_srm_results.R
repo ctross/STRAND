@@ -29,26 +29,29 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     ###################################################### Create samples 
-    fit = input$fit
-    stanfit = rstan::read_stan_csv(fit$output_files())
+    stanfit = posterior::as_draws_rvars(input$fit$draws())
 
     ################### Network model
-    B = rstan::extract(stanfit, pars="B")$B  
+    sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
+    sr_L = posterior::draws_of(stanfit$"sr_L") 
+    sr_raw = posterior::draws_of(stanfit$"sr_raw")
 
-    sr_sigma = rstan::extract(stanfit, pars="sr_sigma")$sr_sigma  
-    sr_L = rstan::extract(stanfit, pars="sr_L")$sr_L  
-    sr_raw = rstan::extract(stanfit, pars="sr_raw")$sr_raw  
+    dr_L = posterior::draws_of(stanfit$"dr_L")
+    dr_raw = posterior::draws_of(stanfit$"dr_raw") 
+    dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
 
-    dr_sigma = rstan::extract(stanfit, pars="dr_sigma")$dr_sigma  
-    dr_L = rstan::extract(stanfit, pars="dr_L")$dr_L  
-    dr_raw = rstan::extract(stanfit, pars="dr_raw")$dr_raw  
+    B = posterior::draws_of(stanfit$"B")
     
+
     if(dim(input$data$focal_set)[2]>1)
-    focal_effects = rstan::extract(stanfit, pars="focal_effects")$focal_effects  
+    focal_effects = posterior::draws_of(stanfit$"focal_effects") 
+
     if(dim(input$data$target_set)[2]>1)
-    target_effects = rstan::extract(stanfit, pars="target_effects")$target_effects  
+    target_effects = posterior::draws_of(stanfit$"target_effects")  
+
     if(dim(input$data$dyad_set)[3]>1)
-    dyad_effects = rstan::extract(stanfit, pars="dyad_effects")$dyad_effects  
+    dyad_effects = posterior::draws_of(stanfit$"dyad_effects")
+    
 
     srm_samples = list(
             block_parameters=B,
@@ -74,7 +77,7 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
     samples = list(srm_model_samples=srm_samples)
 
    if(input$return_predicted_network == TRUE){
-        samples$predicted_network_sample = rstan::extract(stanfit, pars="p")$p  
+         samples$predicted_network_sample = posterior::draws_of(stanfit$"p")
         }
 
 
