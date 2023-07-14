@@ -9,6 +9,7 @@ rm(list = ls())
 
 # Load libraries
 library(STRAND)
+library(ggplot2)
 
 #Load package data
 data(Colombia_Data)
@@ -29,7 +30,7 @@ indiv =  data.frame(Age = Colombia_Data$Age,
                     PA = Colombia_Data$PA
                      )
 
-dat = make_strand_data(self_report = outcome,
+dat = make_strand_data(outcome = outcome,
                        block_covariates = groups, 
                        individual_covariates = indiv, 
                        dyadic_covariates = dyad)

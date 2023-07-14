@@ -9,6 +9,7 @@ rm(list = ls())
 
 # Load libraries
 library(STRAND)
+library(ggplot2)
 
 #Load package data
 data(FoodSharing_Data)
@@ -33,7 +34,7 @@ indiv =  data.frame(Age = FoodSharing_Data$Age,
                     Depressed = FoodSharing_Data$Depressed
                      )
 
-dat = make_strand_data(self_report = outcome,
+dat = make_strand_data(outcome = outcome,
                        block_covariates = groups, 
                        individual_covariates = indiv, 
                        dyadic_covariates = dyad)

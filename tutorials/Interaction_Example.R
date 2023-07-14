@@ -10,6 +10,7 @@ set.seed(1)
 # Load libraries
 library(STRAND)
 library(rethinking)
+library(ggplot2)
 
 
 # Make data
@@ -75,7 +76,7 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
                          )        
 
 ################################################### Organize for model fitting
-model_dat = make_strand_data(self_report=list(G$network),  block_covariates=groups_f, individual_covariates=data.frame(Mass=Mass), 
+model_dat = make_strand_data(outcome=list(G$network),  block_covariates=groups_f, individual_covariates=data.frame(Mass=Mass), 
                            dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  outcome_mode = "binomial", exposure=list(G$samps))
 
 # Model the data with STRAND

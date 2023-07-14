@@ -9,6 +9,7 @@ rm(list = ls())
 
 # Load libraries
 library(STRAND)
+library(ggplot2)
 
 # Load data
 data(Bat_Data)
@@ -24,7 +25,7 @@ dyad = list(Relatedness = Bat_Data$Relatedness,
 # Block variables
 group_ids = data.frame(Sex = as.factor(Bat_Data$Sex))
 
-model_dat = make_strand_data(self_report = nets,
+model_dat = make_strand_data(outcome = nets,
                               block_covariates = group_ids, 
                               individual_covariates = NULL, 
                               dyadic_covariates = dyad,
@@ -36,7 +37,7 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             block_regression = ~ Sex ,
                                             focal_regression = ~ 1,
                                             target_regression = ~ 1,
-                                            dyad_regression = ~ NoOpportunity + Relatedness,
+                                            dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
@@ -49,7 +50,7 @@ fit2 = fit_block_plus_social_relations_model(data=model_dat,
                                             block_regression = ~ Sex ,
                                             focal_regression = ~ 1,
                                             target_regression = ~ 1,
-                                            dyad_regression = ~ NoOpportunity + Relatedness,
+                                            dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
@@ -61,8 +62,8 @@ fit2 = fit_block_plus_social_relations_model(data=model_dat,
                                                "focal_effects"=c(0, 10), 
                                                "target_effects"=c(0, 10), 
                                                "dyad_effects"=c(0, 10),
-                                               "sr_sigma"=c(5), 
-                                               "dr_sigma"=c(5) 
+                                               "sr_sigma"=c(0.1), 
+                                               "dr_sigma"=c(0.1) 
                                              )
                                            )
                                           )
