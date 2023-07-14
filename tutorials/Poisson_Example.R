@@ -9,6 +9,7 @@ rm(list = ls())
 
 # Load libraries
 library(STRAND)
+library(ggplot2)
 
 # Load data
 data(Bat_Data)
@@ -24,7 +25,7 @@ dyad = list(Relatedness = Bat_Data$Relatedness,
 # Block variables
 group_ids = data.frame(Sex = as.factor(Bat_Data$Sex))
 
-model_dat = make_strand_data(self_report = nets,
+model_dat = make_strand_data(outcome = nets,
                               block_covariates = group_ids, 
                               individual_covariates = NULL, 
                               dyadic_covariates = dyad,
@@ -36,7 +37,7 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             block_regression = ~ Sex ,
                                             focal_regression = ~ 1,
                                             target_regression = ~ 1,
-                                            dyad_regression = ~ NoOpportunity + Relatedness,
+                                            dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,

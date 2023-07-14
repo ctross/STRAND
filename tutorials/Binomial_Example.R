@@ -9,6 +9,7 @@ rm(list = ls())
 
 # Load libraries
 library(STRAND)
+library(ggplot2)
 
 # Import data
 data(Baboon_Data)
@@ -26,7 +27,7 @@ block = data.frame(Sex = as.factor(Baboon_Data$Sex))
 
 indiv =  data.frame(Age = Baboon_Data$Age)
 
-model_dat = make_strand_data(self_report = nets,
+model_dat = make_strand_data(outcome = nets,
                              individual_covariates = indiv, 
                              block_covariates = block,
                              dyadic_covariates = dyad,

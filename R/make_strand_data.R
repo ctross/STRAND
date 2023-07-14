@@ -29,7 +29,7 @@
 #' }
 #'
 
-make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL){
+make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL){
 
          ############################################################################# Check inputs
          ###################### Outcome mode
@@ -48,6 +48,11 @@ make_strand_data = function(self_report, outcome_mode="bernoulli", ground_truth=
          }
 
          if(is.null(outcome_mode_numeric)) stop("outcome_mode not supported")
+
+         # Renames self-report if needed
+         if(is.null(self_report)){
+          self_report = outcome
+         }
 
          # Check self_report data
          if(is.null(exposure)){
