@@ -267,10 +267,18 @@ summarize_lnm_results = function(input, include_samples=TRUE, HPDI=0.9){
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
      group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs)]
+
+     group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
+     names(group_id_levels)[1]= "(Intercept)"
      
      ticker = 0
      for(q in 1:input$data$N_group_vars){
-      group_ids_character = levels(as.factor(group_ids_character_df[,q]))
+      group_ids_character = levels(factor(group_ids_character_df[,q]))
+      test_sorting = group_id_levels[[which(names(group_id_levels) == colnames(group_ids_character_df)[q])]]
+      if(all(group_ids_character==test_sorting)==FALSE){
+        error("Factors not sorted correctly.")
+      }
+
 
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
