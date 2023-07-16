@@ -78,6 +78,9 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          # Check block_covariates data
          if(!is.null(block_covariates)){ 
          if(!is.data.frame(block_covariates)) stop("block_covariates must be a data frame.")
+             for(i in 1:dim(block_covariates)[2]){
+                 if(!is.factor(block_covariates[,i])) stop("block_covariates must be factor variables.")
+             }     
          }
 
          # Check individual_covariates data
