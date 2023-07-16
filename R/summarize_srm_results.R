@@ -138,7 +138,7 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_srm_base = matrix(NA, nrow=3, ncol=6)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
-     results_srm_base[3,] = sum_stats("intercept, any to any", samples$srm_model_samples$block_parameters[,1], HPDI)
+     results_srm_base[3,] = sum_stats("intercept, any to any", samples$srm_model_samples$block_parameters[,1,1], HPDI)
      
      results_list[[4]] = results_srm_base
 
