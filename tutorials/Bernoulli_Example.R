@@ -26,8 +26,7 @@ groups = data.frame(Ethnicity = as.factor(Colombia_Data$Ethnicity),
                     )
 
 indiv =  data.frame(Age = Colombia_Data$Age, 
-                    BMI = Colombia_Data$BMI,  
-                    PA = Colombia_Data$PA
+                    BMI = Colombia_Data$BMI
                      )
 
 dat = make_strand_data(outcome = outcome,
@@ -39,8 +38,8 @@ dat = make_strand_data(outcome = outcome,
 #model
 fit = fit_block_plus_social_relations_model(data=dat,
                                             block_regression = ~ Sex + Ethnicity,
-                                            focal_regression = ~ Age + BMI + PA,
-                                            target_regression = ~ Age + BMI + PA,
+                                            focal_regression = ~ Age + BMI,
+                                            target_regression = ~ Age + BMI,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
