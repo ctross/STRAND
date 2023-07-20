@@ -130,7 +130,7 @@ if(mode=="bernoulli"){
     if(link=="probit"){
  p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
                       }
-                     }
+                     
 
  y_true[i,j] = rbern( 1 , p[i,j] )
 
