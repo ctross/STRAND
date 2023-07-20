@@ -324,7 +324,7 @@ summarize_bsrm_hh_results = function(input, include_samples=TRUE, HPDI=0.9){
     samples$srm_model_samples$hh_focal_target_Corr = samples$srm_model_samples$hh_focal_target_L
 
     for(i in 1: dim(samples$srm_model_samples$hh_focal_target_Corr)[1]){
-     samples$srm_model_samples$hh_focal_target_Corr[i,,] = samples$srm_model_samples$hh_focal_target_L[i,,] %*% t(samples$srm_model_samples$hh_focal_target_L[i,,])  
+     samples$srm_model_samples$hh_focal_target_Corr[i,,] = t(samples$srm_model_samples$hh_focal_target_L[i,,]) %*% samples$srm_model_samples$hh_focal_target_L[i,,]   
     }
 
      hh_results_srm_base = matrix(NA, nrow=4, ncol=6)
