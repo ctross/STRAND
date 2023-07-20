@@ -60,6 +60,7 @@ simulate_srm_network = function(N_id = 99,                            # Number o
                                     dr_sigma = 1,                     # Variance of dyad effects 
                                     dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
                                     mode="bernoulli",                 # outcome mode
+                                    link="logit",                     # link function
                                     individual_predictors = NULL,     # A matrix of covariates
                                     dyadic_predictors = NULL,         # An array of covariates
                                     individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
@@ -122,10 +123,25 @@ for ( i in 1:(N_id-1) ){
 
 # Simulate outcomes
 if(mode=="bernoulli"){
+    if(link=="logit"){
  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+                     }
+
+    if(link=="probit"){
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
+                      }
+                     }
+
  y_true[i,j] = rbern( 1 , p[i,j] )
 
+ if(link=="logit"){
  p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+  }
+
+  if(link=="probit"){
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+  }
+
  y_true[j,i] = rbern( 1 , p[j,i] )
  }
 
@@ -138,10 +154,21 @@ if(mode=="bernoulli"){
  }
 
  if(mode=="binomial"){
+    if(link=="logit"){
  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+                     }
+    if(link=="probit"){
+ p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+                     }
+
  y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
 
+   if(link=="logit"){
  p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+                    }
+  if(link=="probit"){
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+                    }
  y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
  }
         }

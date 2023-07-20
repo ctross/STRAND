@@ -16,7 +16,8 @@ data{
     matrix [22, 2] priors;
     
     int export_network;
-    int outcome_mode;                           
+    int outcome_mode;   
+    int link_function;                       
 }
 
 transformed data{
@@ -116,11 +117,23 @@ model{
        if ( i != j ) {
 
       if(outcome_mode==1){
-      outcomes[i,j,1] ~ bernoulli_logit(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_function==1){
+        outcomes[i,j,1] ~ bernoulli_logit(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+         }
+        if(link_function==2){
+        outcomes[i,j,1] ~ bernoulli(Phi_approx(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+         } 
        }
+
       if(outcome_mode==2){
-      outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_function==1){
+        outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+         }
+        if(link_function==2){ 
+        outcomes[i,j,1] ~ binomial(exposure[i,j,1], Phi_approx(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+        }
        }
+
       if(outcome_mode==3){
       outcomes[i,j,1] ~ poisson_log(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
        }
@@ -172,11 +185,24 @@ generated quantities{
             if ( i != j ) {
       // consider each possible state of true tie and compute prob of data
       if(outcome_mode==1){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        if(link_function==1){
+        p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
+
+       if(link_function==2){
+        p[i,j] = Phi_approx( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
        }
+
       if(outcome_mode==2){
+       if(link_function==1){
        p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
+       if(link_function==2){
+       p[i,j] = Phi_approx( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
        }
+
       if(outcome_mode==3){
        p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]);  
        }

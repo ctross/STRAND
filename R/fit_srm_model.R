@@ -43,6 +43,7 @@ fit_social_relations_model = function(data,
                                       target_regression,
                                       dyad_regression,
                                       mode="mcmc",
+                                      link="logit",
                                       return_predicted_network=FALSE,
                                       stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                                 iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
@@ -117,7 +118,16 @@ fit_social_relations_model = function(data,
       } else{
     data$priors = priors
       }
-
+    
+    if(link=="logit"){
+    data$link_function = 1
+      }
+    if(link=="probit"){
+    data$link_function = 2
+      }
+    if(!link %in% c("logit","probit")){
+    stop("Link must be logit or probit!")
+      }  
     ############################################################################# Fit model
     
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","social_relations_model.stan"))
