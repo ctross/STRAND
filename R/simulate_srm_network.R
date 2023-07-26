@@ -139,7 +139,7 @@ if(mode=="bernoulli"){
   }
 
   if(link=="probit"){
- p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
   }
 
  y_true[j,i] = rbern( 1 , p[j,i] )
@@ -158,7 +158,7 @@ if(mode=="bernoulli"){
  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
                      }
     if(link=="probit"){
- p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
                      }
 
  y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
@@ -167,7 +167,7 @@ if(mode=="bernoulli"){
  p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
                     }
   if(link=="probit"){
- p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
                     }
  y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
  }
