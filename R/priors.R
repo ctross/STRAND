@@ -69,7 +69,10 @@ make_priors = function(priors_to_change=NULL, include_rownames=FALSE){
   priors[14,2] = 1
 
   priors[15,1] = 1
-  priors[16,1] = 1
+  priors[15,2] = 1
+ 
+  priors[16,1] = 10000
+  priors[16,2] = 10000
 
   priors[17,1] = 2.5
   priors[18,1] = 2.5
