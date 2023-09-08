@@ -3,15 +3,15 @@ data{
     int N_id;                                                                                                            
     int N_responses;        
 
-    int N_params [3];                                          
+    array[3] int N_params;                                          
                                              
-    int outcomes[N_id,N_id,N_responses];  
-    int exposure[N_id,N_id,N_responses];                              
+    array[N_id,N_id,N_responses] int outcomes;  
+    array[N_id,N_id,N_responses] int exposure;                              
 
     matrix[N_id, N_params[1]] focal_set;
     matrix[N_id, N_params[2]] target_set;
 
-    real dyad_set[N_id, N_id, N_params[3]];
+    array[N_id, N_id, N_params[3]] real dyad_set;
 
     matrix [22, 2] priors;
     
@@ -23,7 +23,7 @@ transformed data{
  matrix[N_id, N_params[1]-1] focal_individual_predictors; 
  matrix[N_id, N_params[2]-1] target_individual_predictors; 
 
- real dyad_individual_predictors[N_id, N_id, N_params[3]-1]; 
+ array[N_id, N_id, N_params[3]-1] real dyad_individual_predictors; 
 
 //# Make pruned data
   
@@ -49,7 +49,7 @@ parameters{
 
     vector<lower=0>[2] sr_sigma;  //# Variation of sender-receiver effects
     cholesky_factor_corr[2] sr_L;
-    vector[2] sr_raw[N_id];
+    array[N_id] vector[2] sr_raw;
 
     real<lower=0> dr_sigma;     //# Variation of dyadic effects
     cholesky_factor_corr[2] dr_L;
@@ -62,7 +62,7 @@ parameters{
 }
 
 model{
-  vector[2] sr[N_id];
+  array[N_id] vector[2] sr;
   matrix[N_id, N_id] dr;
 
   vector[2] scrap;
@@ -136,13 +136,13 @@ model{
 generated quantities{
     //# compute posterior prob of each network tie
     matrix[N_id*export_network, N_id*export_network] p;
-    vector[2*export_network] sr[N_id*export_network];
+    array[N_id*export_network] vector[2*export_network] sr;
     matrix[N_id*export_network, N_id*export_network] dr;
  
     if(export_network==1){                
-                vector[2] terms;
-                int tie;
-                vector[2] scrap;
+     vector[2] terms;
+     int tie;
+     vector[2] scrap;
             
     for(i in 1:N_id){
      vector[2] sr_terms;
