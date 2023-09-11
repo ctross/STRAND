@@ -59,5 +59,17 @@ vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Ta
 vis_2
 #ggsave("Baboon_corr.pdf", vis_2, width=6, height=2.5)
 
+############################### Posterior contrasts
+## Get contrast for block effects
+sex_samps = res$sample$srm_model_samples$block_parameters[[2]]
+# The above line of code pulls out the MCMC samples for the within- and between-block tie parameters
+# The first slot, [[1]], is for the intercept, and the next slot, [[2]], is for the Sex variable.
 
+# Check the order of the factor levels
+attr(dat,"group_ids_levels")$Sex
+# "female" is in slot 1, and "male" is in slot 2
+
+# Now, compute the contrast of female-to-male versus male-to-female ties
+mean(sex_samps[,1,2] - sex_samps[,2,1])
+HPDI(sex_samps[,1,2] - sex_samps[,2,1], prob=0.89)
 
