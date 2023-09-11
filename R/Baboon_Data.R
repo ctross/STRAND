@@ -1,17 +1,18 @@
 #' Data on Baboon grooming relationships
 #'
-#' Data on grooming paired with data on presenting. Exposure was calculated from total times each indivudal was seen doing the behaviors of interest. 
+#' Data on grooming paired with additional covariate data. See the reference to the original study below for full methodological information.
 #'
 #' @docType data
 #'
 #' @usage data(Baboon_Data)
 #'
-#' @format An object of class \code{"list"}.
+#' @format An object of class \code{"list"}. N individuals = 19. The list contains three matrices (of dimension 19x19) containing data on Grooming, Presenting, and Threatening behaviours, hand-coded from focal follows. 
+#' An Exposure matrix gives the count of times in which individual i could have been observed engaging in a given behaviour towards individual j. Finally, there are covariate data on Sex and Age.  
 #'
 #' @keywords datasets
 #'
 #' @references Gelardi V, Godard J, Paleressompoulle D, Claidiere N, Barrat A. 2020.
-#' Measuring social networks in primates: wearable sensors versus direct observations.
+#' Measuring social networks in primates: Wearable sensors versus direct observations.
 #' Proc. R. Soc. A 476: 20190737.
 #'
 #' @source \href{http://dx.doi.org/10.1098/rspa.2019.0737}{RSPA}
