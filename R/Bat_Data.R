@@ -1,12 +1,14 @@
 #' Blood sharing data in vampire bats
 #'
-#' Data on blood sharing observations. Kinship data is based on SPAGeDi software estimates from the authors STR data.
+#' Data on blood sharing observations. Kinship data is based on SPAGeDi software estimates from the authors' STR data. See the reference to the original study below for full methodological information.
 #'
 #' @docType data
 #'
 #' @usage data(Bat_Data)
 #'
-#' @format An object of class \code{"list"}.
+#' @format An object of class \code{"list"}. N individuals = 19. The list contains three matrices (of dimension 19x19) containing data on licking duration, relatedness, and opportunity to be observed. 
+#' Finally, there is covariate data on Sex.  
+#'
 #'
 #' @keywords datasets
 #'
