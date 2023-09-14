@@ -1,4 +1,4 @@
-########################################
+#######################################
 #
 #   Binomial Analyses  
 #
@@ -42,8 +42,8 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
                               target_regression = ~ Age,
                               dyad_regression = ~  Presenting + Threatening,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                          iter_warmup = 1000, iter_sampling = 1000,
+                              stan_mcmc_parameters = list(chains = 2, refresh = 1,
+                                                          iter_warmup = 1500, iter_sampling = 1500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
@@ -66,10 +66,23 @@ sex_samps = res$sample$srm_model_samples$block_parameters[[2]]
 # The first slot, [[1]], is for the intercept, and the next slot, [[2]], is for the Sex variable.
 
 # Check the order of the factor levels
-attr(dat,"group_ids_levels")$Sex
+attr(model_dat,"group_ids_levels")$Sex
 # "female" is in slot 1, and "male" is in slot 2
 
 # Now, compute the contrast of female-to-male versus male-to-female ties
 mean(sex_samps[,1,2] - sex_samps[,2,1])
 HPDI(sex_samps[,1,2] - sex_samps[,2,1], prob=0.89)
+
+############################### Model fit diagnostics
+# Note that these functions are run on the raw stan object, so variables are not mapped yet to parameter names.
+# See Supplementary Appendix for a list of parameter names
+################# Rhat and Effective Samples
+fit$fit$summary()
+fit$fit$summary("focal_effects")
+fit$fit$summary("target_effects")
+fit$fit$summary("block_effects")
+
+################# Traceplots
+bayesplot::color_scheme_set("mix-blue-red")
+bayesplot::mcmc_trace(fit$fit$draws(), pars = c("focal_effects[1]","target_effects[1]","sr_L[2,1]","dr_L[2,1]"))
 
