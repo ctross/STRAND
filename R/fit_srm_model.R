@@ -19,6 +19,7 @@
 #' return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
 #' @param 
 #' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param 
 #' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.

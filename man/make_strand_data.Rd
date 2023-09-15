@@ -5,7 +5,8 @@
 \title{A function to create a STRAND data object}
 \usage{
 make_strand_data(
-  self_report,
+  outcome = NULL,
+  self_report = NULL,
   outcome_mode = "bernoulli",
   ground_truth = NULL,
   block_covariates = NULL,
@@ -15,6 +16,8 @@ make_strand_data(
 )
 }
 \arguments{
+\item{outcome}{A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.}
+
 \item{self_report}{A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
 and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
 represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
