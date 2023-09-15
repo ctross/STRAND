@@ -175,7 +175,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
       group_ids_character = levels(factor(group_ids_character_df[,q]))
       test_sorting = group_id_levels[[which(names(group_id_levels) == colnames(group_ids_character_df)[q])]]
       if(all(group_ids_character==test_sorting)==FALSE){
-        error("Factors not sorted correctly.")
+        stop("Factors not sorted correctly.")
       }
 
 

@@ -4,6 +4,8 @@
 #' STRAND model fitting functions require their data to be supplied in the format exported here.
 #'
 #' @param 
+#' outcome A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.
+#' @param 
 #' self_report A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
 #' and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
 #' represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
