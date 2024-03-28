@@ -43,7 +43,7 @@ Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.c
 
 Double-sampled binary outcomes (find out for yourself): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
 
-An example on both simulating and fitting networks (inlcudes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
+An example on both simulating and fitting networks (includes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
 An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
