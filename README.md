@@ -18,7 +18,7 @@ Install by running on R:
 ```{r}
 ################################### Install and/or load
  library(devtools)
- install_github('ctross/STRAND')
+ install_github('ctross/STRAND@measurement_error')
  library(STRAND)
 ```
 
