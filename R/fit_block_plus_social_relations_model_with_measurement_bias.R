@@ -16,7 +16,9 @@
 #' @param 
 #' dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
 #' @param 
-#' censoring_regression A formula for the predictors of censoring (i.e., lack of detectability). This should be specified as in lm(), e.g.: ~ Age * Education
+#' sampling_regression A formula for the predictors of sampling (i.e., exposure time). This should be specified as in lm(), e.g.: ~ Age * Education. If not of interest write: ~ 1.
+#' @param 
+#' censoring_regression A formula for the predictors of censoring (i.e., lack of detectability). This should be specified as in lm(), e.g.: ~ Age * Education.
 #' @param 
 #' mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
@@ -37,6 +39,7 @@
 #'                                             focal_regression = ~ Age * NoFood,
 #'                                             target_regression = ~ Age * NoFood,
 #'                                             dyad_regression = ~ Relatedness + Friends * SameSex,
+#'                                             sampling_regression = ~ Age * NoFood,
 #'                                             censoring_regression = ~ Age * NoFood,
 #'                                             mode="mcmc",
 #'                                             stan_mcmc_parameters = list(seed = 1, chains = 1, 
@@ -52,6 +55,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
                                     focal_regression,
                                     target_regression,
                                     dyad_regression,
+                                    sampling_regression,
                                     censoring_regression,
                                     mode="mcmc",
                                     return_predicted_network=FALSE,
@@ -123,6 +127,12 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
      }
     
+    ################################################################ Sampling model matrix
+    if(data$N_individual_predictors > 0){
+     data$sampling_set = model.matrix( sampling_regression , data$individual_predictors )
+     }else {
+     data$sampling_set = matrix(1, nrow = data$N_id, ncol = 1)
+      }
 
     ################################################################ Censoring model matrix
     if(data$N_individual_predictors > 0){
@@ -131,7 +141,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
      data$censoring_set = matrix(1, nrow = data$N_id, ncol = 1)
       }
 
-    data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3], ncol(data$censoring_set))
+    data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3], ncol(data$sampling_set), ncol(data$censoring_set))
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){

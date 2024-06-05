@@ -2,7 +2,7 @@ data{
   //# Array dimension variables                                   
     int N_id;                                  //# Number of people                                                                                                   
     int N_responses;                           //# Number of outcome networks
-    array[4] int N_params;                     //# Number of focal, target, and dyadic predictors
+    array[5] int N_params;                     //# Number of focal, target, and dyadic predictors
 
   //# Block predictor variables 
     int N_group_vars;                          //# Number of block structure variables
@@ -13,19 +13,22 @@ data{
   //# Focal, target, and dyadic predictor variables                                                                                                      
     matrix[N_id, N_params[1]] focal_set;             //# Focal slash decider predictor variables    
     matrix[N_id, N_params[2]] target_set;            //# Target slash alter predictor variables
-    matrix[N_id, N_params[4]] censoring_set;         //# Censoring predictor variables
+    matrix[N_id, N_params[4]] sampling_set;          //# Sampling predictor variables
+    matrix[N_id, N_params[5]] censoring_set;         //# Censoring predictor variables
     array[N_id, N_id, N_params[3]] real dyad_set;    //# Dyadic predictor variables
 
   //# Outcome and exposure data
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
+    array[N_id] int sampled;                         //# Outcome for sampling
+    array[N_id] int sampled_exposure;                //# Exposure for sampling
     array[N_id] int detected;                        //# Outcome for detectability
     array[N_id] int detected_exposure;               //# Exposure for detectability
 
   //# Accessory paramters 
     matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
     int export_network;                         //# Controls export of predictions
-    int outcome_mode;                           //# Are outcomes binomial
+    int outcome_mode;                           //# Are outcomes binomial? Must be for this model!
 }
 
 transformed data{
@@ -35,7 +38,8 @@ transformed data{
   //# Refactor to the first predictor slot, becuase it is unity
     matrix[N_id, N_params[1]-1] focal_predictors;           //# Same as focal_set without first column
     matrix[N_id, N_params[2]-1] target_predictors;          //# Same as target_set without first column
-    matrix[N_id, N_params[4]-1] censoring_predictors;       //# Same as censoring_set without first column
+    matrix[N_id, N_params[4]-1] sampling_predictors;        //# Same as sampling_set without first column
+    matrix[N_id, N_params[5]-1] censoring_predictors;       //# Same as censoring_set without first column
     array[N_id, N_id, N_params[3]-1] real dyad_predictors;  //# Same as dyad_set without first shelf
 
   //# Store some key indexes
@@ -81,6 +85,11 @@ transformed data{
 
     if(N_params[4]>1){
      for(i in 2:N_params[4]){
+     sampling_predictors[ , i-1] = sampling_set[,i];  
+     }}
+
+    if(N_params[5]>1){
+     for(i in 2:N_params[5]){
      censoring_predictors[ , i-1] = censoring_set[,i];  
      }}
 
@@ -99,6 +108,11 @@ parameters{
     cholesky_factor_corr[2] sr_L;
     array[N_id] vector[2] sr_raw;
 
+    //# Sampling effects
+    real cs_mu;
+    real<lower=0> s_sigma;
+    vector[N_id] s_raw;
+
     //# Censoring effects
     real c_mu;
     real<lower=0> c_sigma;
@@ -112,7 +126,8 @@ parameters{
     //# Effects of covariate
     vector[N_params[1]-1] focal_effects;
     vector[N_params[2]-1] target_effects;
-    vector[N_params[4]-1] censoring_effects;
+    vector[N_params[4]-1] sampling_effects;
+    vector[N_params[5]-1] censoring_effects;
     vector[N_params[3]-1] dyad_effects;    
 }
 
@@ -124,7 +139,8 @@ model{
     vector[N_group_vars] br;                                   //# Sum of block effects per dyad    
     vector[2] scrap;                                           //# Local storage    
     vector[N_id] eta;   
-    vector[N_id] theta;             
+    vector[N_id] theta; 
+    vector[N_id] psi;              
     
     //# The first step, is to transform the vector of block effects into a list of matrices
     for(q in 1:N_group_vars){
@@ -146,6 +162,7 @@ model{
     //# Priors on effects of covariates
      focal_effects ~ normal(priors[12,1], priors[12,2]);
      target_effects ~ normal(priors[13,1], priors[13,2]);
+     sampling_effects ~ normal(priors[12,1], priors[12,2]);
      censoring_effects ~ normal(priors[12,1], priors[12,2]);
      dyad_effects ~ normal(priors[14,1], priors[14,2]);
 
@@ -163,6 +180,11 @@ model{
 
      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
      }
+
+    //# Sampling model priors
+    s_raw ~ normal(0,1);
+    s_sigma ~ exponential(priors[15,1]);
+    s_mu ~ normal(0,5);
 
     //# Censoring model priors
     c_raw ~ normal(0,1);
@@ -190,10 +212,12 @@ model{
     //# likelihood
 
     for(i in 1:N_id){
+      psi[i] = inv_logit(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors[i])));
       theta[i] = inv_logit(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors[i])));
       eta[i] = 1 - theta[i];
     }
 
+    sampled ~ binomial(sampled_exposure, psi);
     undetected ~ binomial(detected_exposure, theta);
 
     for(i in 1:N_id){

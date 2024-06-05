@@ -34,6 +34,10 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
     sr_L = posterior::draws_of(stanfit$"sr_L") 
     sr_raw = posterior::draws_of(stanfit$"sr_raw")
 
+    s_mu = posterior::draws_of(stanfit$"s_mu") 
+    s_sigma = posterior::draws_of(stanfit$"s_sigma")
+    s_raw = posterior::draws_of(stanfit$"s_raw")
+
     c_mu = posterior::draws_of(stanfit$"c_mu") 
     c_sigma = posterior::draws_of(stanfit$"c_sigma")
     c_raw = posterior::draws_of(stanfit$"c_raw")
@@ -50,6 +54,9 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
 
     if(dim(input$data$target_set)[2]>1)
     target_effects = posterior::draws_of(stanfit$"target_effects")  
+
+    if(dim(input$data$sampling_set)[2]>1)
+    sampling_effects = posterior::draws_of(stanfit$"sampling_effects")  
 
     if(dim(input$data$censoring_set)[2]>1)
     censoring_effects = posterior::draws_of(stanfit$"censoring_effects")  
@@ -85,6 +92,10 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
             dyadic_L = dr_L,
             dyadic_random_effects=dr_raw,
 
+            sampling_mu = s_mu,
+            sampling_sd = s_sigma,
+            sampling_random_effects = s_raw,
+
             censoring_mu = c_mu,
             censoring_sd = c_sigma,
             censoring_random_effects = c_raw
@@ -95,6 +106,9 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
 
     if(dim(input$data$target_set)[2]>1)
     srm_samples$target_coeffs = target_effects
+
+    if(dim(input$data$sampling_set)[2]>1)
+    srm_samples$sampling_coeffs = sampling_effects
 
     if(dim(input$data$censoring_set)[2]>1)
     srm_samples$censoring_coeffs = censoring_effects
@@ -129,11 +143,13 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
      Q1 = dim(input$data$focal_set)[2]-1
      Q2 = dim(input$data$target_set)[2]-1
      Q3 = dim(input$data$dyad_set)[3]-1
-     Q4 = dim(input$data$censoring_set)[2]-1
+     Q4 = dim(input$data$sampling_set)[2]-1
+     Q5 = dim(input$data$censoring_set)[2]-1
 
      results_srm_focal = matrix(NA, nrow=(1+Q1) , ncol=6)
      results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=6)
-     results_srm_censoring = matrix(NA, nrow=(2+Q4) , ncol=6)
+     results_srm_sampling = matrix(NA, nrow=(2+Q4) , ncol=6)
+     results_srm_censoring = matrix(NA, nrow=(2+Q5) , ncol=6)
      results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=6)
 
     ######### Calculate all focal effects
@@ -158,6 +174,18 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
 
       results_list[[2]] = results_srm_target
 
+    ######### Calculate all sampling effects
+     results_srm_sampling[1,] = sum_stats("sampling effects mu", samples$srm_model_samples$sampling_mu, HPDI)
+     results_srm_sampling[2,] = sum_stats("sampling effects sd", samples$srm_model_samples$sampling_sd, HPDI)
+     if(Q4>0){
+     coeff_names = colnames(input$data$sampling_set)[-1]
+        for(i in 1:Q4){
+     results_srm_sampling[2+i,] = sum_stats(paste0("sampling effects coeffs, ", coeff_names[i] ), samples$srm_model_samples$sampling_coeffs[,i], HPDI)
+        }
+      }
+
+      results_list[[5]] = results_srm_sampling
+
     ######### Calculate all censoring effects
      results_srm_censoring[1,] = sum_stats("censoring effects mu", samples$srm_model_samples$censoring_mu, HPDI)
      results_srm_censoring[2,] = sum_stats("censoring effects sd", samples$srm_model_samples$censoring_sd, HPDI)
@@ -168,7 +196,7 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
         }
       }
 
-      results_list[[5]] = results_srm_censoring
+      results_list[[6]] = results_srm_censoring
 
     ######### Calculate all dyad effects
      results_srm_dyadic[1,] = sum_stats("dyadic effects sd", c(samples$srm_model_samples$dyadic_sd), HPDI)
@@ -216,12 +244,12 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
      results_list[[4]] = results_srm_base
 
    ############# Finally, merge all effects into a list
-     for(i in 1:5)
+     for(i in 1:6)
      colnames(results_list[[i]]) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 
 
-     names(results_list) = c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates", "Censoring estimates")
+     names(results_list) = c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates", "Sampling estimates", "Censoring estimates")
           
-   results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base, results_srm_censoring)
+   results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base, results_srm_sampling, results_srm_censoring)
    
    df = data.frame(results_out)
    colnames(df) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 

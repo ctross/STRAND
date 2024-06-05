@@ -11,6 +11,7 @@ fit_block_plus_social_relations_model_with_measurement_bias(
   focal_regression,
   target_regression,
   dyad_regression,
+  sampling_regression,
   censoring_regression,
   mode = "mcmc",
   return_predicted_network = FALSE,
@@ -30,7 +31,9 @@ fit_block_plus_social_relations_model_with_measurement_bias(
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
 
-\item{censoring_regression}{A formula for the predictors of censoring (i.e., lack of detectability). This should be specified as in lm(), e.g.: ~ Age * Education}
+\item{sampling_regression}{A formula for the predictors of sampling (i.e., exposure time). This should be specified as in lm(), e.g.: ~ Age * Education. If not of interest write: ~ 1.}
+
+\item{censoring_regression}{A formula for the predictors of censoring (i.e., lack of detectability). This should be specified as in lm(), e.g.: ~ Age * Education.}
 
 \item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
@@ -60,6 +63,7 @@ fit = fit_block_plus_social_relations_model_with_measurement_bias(data=model_dat
                                             focal_regression = ~ Age * NoFood,
                                             target_regression = ~ Age * NoFood,
                                             dyad_regression = ~ Relatedness + Friends * SameSex,
+                                            sampling_regression = ~ Age * NoFood,
                                             censoring_regression = ~ Age * NoFood,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(seed = 1, chains = 1, 
