@@ -39,6 +39,8 @@ Binary outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.c
 
 Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
 
+Binomial outcomes with measurement error (runs in about 20 minutes): [**Binomial + ME models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Measurement_Error_Example.R)
+
 Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
 
 Double-sampled binary outcomes (find out for yourself): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
