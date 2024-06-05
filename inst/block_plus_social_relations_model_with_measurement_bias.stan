@@ -109,7 +109,7 @@ parameters{
     array[N_id] vector[2] sr_raw;
 
     //# Sampling effects
-    real cs_mu;
+    real s_mu;
     real<lower=0> s_sigma;
     vector[N_id] s_raw;
 
