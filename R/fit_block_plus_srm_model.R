@@ -126,6 +126,7 @@ fit_block_plus_social_relations_model = function(data,
       data$block_set = model.matrix( block_regression , data$block_predictors )
      } else{
       data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
+      colnames(data$block_set) = "Intercept"
      }
 
      data$N_group_vars = ncol(data$block_set) 
