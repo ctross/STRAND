@@ -20,7 +20,6 @@
 
 
 summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
-    input=fit_collar; include_samples=TRUE; HPDI=0.9
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_results() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_model() to run your model.")
     }
