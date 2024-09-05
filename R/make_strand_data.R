@@ -23,6 +23,8 @@
 #' dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
 #' @param 
 #' exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
+#' @param 
+#' multiplex If TRUE, then all layers in outcome are modeled jointly.
 #' @return A list of data formatted for use by STRAND models.
 #' @export
 #' @examples
@@ -31,7 +33,7 @@
 #' }
 #'
 
-make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL){
+make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL, multiplex = FALSE){
 
          ############################################################################# Check inputs
          ###################### Outcome mode
@@ -56,11 +58,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
           self_report = outcome
          }
 
+         layer_names = names(self_report)
+
          # Check self_report data
          if(is.null(exposure)){
          if(is.null(self_report)) stop("self_report must be a list of matrices.")
          if(!is.list(self_report)) stop("self_report must be a list of matrices.")
-         if(!length(self_report) %in% c(1,2)) stop("self_report must be a list length 1 or 2.")
          for(i in 1:length(self_report)){
           if(outcome_mode=="bernoulli"){
           if(!all(self_report[[i]] %in% c(0,1))) stop("self_report must be binary 0 or 1")
@@ -70,6 +73,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
 
          if(!is.null(exposure)){
            if(length(self_report) != length(exposure)) stop("self_report and exposure must be lists of matrices equal in length.")
+           if(sum(names(exposure)==names(outcome)) != length(names(exposure))) stop("Names of exposure and outcome must match. Order matters.")
          }
 
          # Check ground_truth data
@@ -175,11 +179,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          }
 
          ############################################################################# Determine legal models
+         if(multiplex==FALSE){
          if(N_responses==1){
           if(max(N_groups_per_type)>1){
             supported_models = c("SRM", "SBM", "SRM+SBM")
             } else{
-            supported_models = c("SRM")
+            supported_models = c("SRM", "SBM", "SRM+SBM")
             }
          } 
 
@@ -189,6 +194,11 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
 
          if(N_responses==2 & N_networktypes==3){
           supported_models = c("LNM","LNM+Flows")
+         }
+         } else{
+          if(N_responses > 1){
+           supported_models = c("Multiplex")
+          }
          }
 
 
@@ -212,6 +222,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
 
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
+   attr(model_dat, "layer_names") = layer_names
    attr(model_dat, "group_ids_character") = group_ids_character
    attr(model_dat, "group_ids_levels") = group_ids_levels
    colnames(attr(model_dat, "group_ids_character"))=colnames(model_dat$block_predictors)
