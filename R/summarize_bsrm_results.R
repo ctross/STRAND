@@ -199,7 +199,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
    results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base)
    
    df = data.frame(results_out)
-   colnames(df) = c("Variable", "Median", paste("HDPI", (1-HDPI)/2, sep=":"), paste("HDPI", (1+HDPI)/2, sep=":"), "Mean","SD") 
+   colnames(df) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD") 
 
    res_final = list(summary=df, summary_list=results_list)
 
