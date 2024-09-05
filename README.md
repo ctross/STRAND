@@ -18,7 +18,7 @@ Install by running on R:
 ```{r}
 ################################### Install and/or load
  library(devtools)
- install_github('ctross/STRAND')
+ install_github('ctross/STRAND@measurement_error')
  library(STRAND)
 ```
 
@@ -38,6 +38,8 @@ Example models, with test data, can be found here. Note that analysis of large n
 Binary outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
 
 Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
+
+Binomial outcomes with measurement error (runs in about 20 minutes): [**Binomial + ME models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Measurement_Error_Example.R)
 
 Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
 
