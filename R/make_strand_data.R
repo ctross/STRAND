@@ -126,7 +126,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          block_covariates = rep(1, N_id)
          N_groups_per_type = 1
          N_block_types = 0
-         group_ids_character = array("Any", c(N_id, 1)) 
+         group_ids_character = array("Any", c(N_id, 1))
          group_ids = block_covariates
          group_ids_levels = "No Blocks"
           } else{

@@ -20,6 +20,7 @@
 
 
 summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
+    input=fit_collar; include_samples=TRUE; HPDI=0.9
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_results() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_model() to run your model.")
     }
@@ -161,8 +162,13 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
  
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
+
+     if(is.null(colnames(group_ids_character_df))){
+        colnames(group_ids_character_df) = paste0("(NoBlockingVars)", 1:ncol(group_ids_character_df))
+     }
      
      colnames(group_ids_character_df)[1] = "(Intercept)"
+
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
      group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs), drop = FALSE]
