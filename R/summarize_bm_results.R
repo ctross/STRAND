@@ -145,7 +145,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
      colnames(group_ids_character_df)[1] = "(Intercept)"
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
-     group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs)]
+     group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs), drop = FALSE]
      
      group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
      names(group_id_levels)[1]= "(Intercept)"
@@ -178,7 +178,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base)
    
      df = data.frame(results_out)
-     colnames(df) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 
+     colnames(df) = c("Variable", "Median", paste("HDPI", (1-HDPI)/2, sep=":"), paste("HDPI", (1+HDPI)/2, sep=":"), "Mean","SD") 
 
      df = df[complete.cases(df),]
 
