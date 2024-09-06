@@ -17,7 +17,6 @@
 #'
 
 summarize_bsrm_results_with_measurement_bias = function(input, include_samples=TRUE, HPDI=0.9){
-    input=fit_cens; include_samples=TRUE; HPDI=0.9
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_results_with_measurement_bias() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_model_with_measurement_bias() to run your model.")
     }
