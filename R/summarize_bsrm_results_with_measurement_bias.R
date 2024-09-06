@@ -17,6 +17,7 @@
 #'
 
 summarize_bsrm_results_with_measurement_bias = function(input, include_samples=TRUE, HPDI=0.9){
+    input=fit_cens; include_samples=TRUE; HPDI=0.9
     if(attributes(input)$class != "STRAND Model Object"){
         stop("summarize_bsrm_results_with_measurement_bias() requires a fitted object of class: STRAND Model Object. Please use fit_block_plus_social_relations_model_with_measurement_bias() to run your model.")
     }
@@ -222,7 +223,7 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
      colnames(group_ids_character_df)[1] = "(Intercept)"
      in_IDs = colnames(input$data$block_set)
      all_IDs = colnames(group_ids_character_df)
-     group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs)]
+     group_ids_character_df = group_ids_character_df[,match(in_IDs, all_IDs), drop = FALSE]
 
      group_id_levels = append("Any", attr(input$data, "group_ids_levels"), 1)
      names(group_id_levels)[1]= "(Intercept)"
