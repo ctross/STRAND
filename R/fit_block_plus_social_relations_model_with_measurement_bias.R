@@ -70,7 +70,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
     }
 
     if(!("SRM+SBM+ME" %in% attributes(data)$supported_models)){
-        stop("The supplied data are not appropriate for a block plus social relations model. Please ensure that self_report data are single sampled and a group variable is provided.")
+        stop("The supplied data are not appropriate for a block plus social relations model with measurement error. Please ensure that an m_e_data list is provided in the call to make_strand_data().")
     }
 
     if(data$N_individual_predictors==0 & focal_regression != ~ 1){

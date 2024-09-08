@@ -95,7 +95,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
 
         if(!is.null(mask)){
            if(length(self_report) != length(mask)) stop("self_report and mask must be lists of matrices equal in length.")
-           if(sum(names(mask)==names(outcome)) != length(names(mask))) stop("Names of exposure and outcome must match. Order matters.")
+           if(sum(names(mask)==names(outcome)) != length(names(mask))) stop("Names of mask and outcome must match. Order matters.")
          }
 
          # Check ground_truth data
