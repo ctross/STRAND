@@ -69,7 +69,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
         stop("fit_block_plus_social_relations_model_with_measurement_bias() requires a data object of class: STRAND Data Object. Please use make_strand_data() to build your data list.")
     }
 
-    if(!("SRM+SBM" %in% attributes(data)$supported_models)){
+    if(!("SRM+SBM+ME" %in% attributes(data)$supported_models)){
         stop("The supplied data are not appropriate for a block plus social relations model. Please ensure that self_report data are single sampled and a group variable is provided.")
     }
 

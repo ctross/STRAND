@@ -20,6 +20,8 @@ data{
   //# Outcome and exposure data
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
+    array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
+
     array[N_id] int sampled;                         //# Outcome for sampling
     array[N_id] int sampled_exposure;                //# Exposure for sampling
     array[N_id] int detected;                        //# Outcome for detectability
@@ -223,7 +225,7 @@ model{
     for(i in 1:N_id){
      for(j in 1:N_id){
        if(i != j){
-
+        if(mask[i,j,1]==0){
         for(q in 1:N_group_vars){
           br[q] = B[q,block_set[i,q], block_set[j,q]]; //# Extract all of the block components for this dyad
          }
@@ -237,7 +239,7 @@ model{
 
        }
       }
-     }
+     }}
 
 
  }

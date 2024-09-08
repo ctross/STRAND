@@ -24,6 +24,10 @@
 #' @param 
 #' exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
 #' @param 
+#' m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.
+#' @param 
+#' mask A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).
+#' @param 
 #' multiplex If TRUE, then all layers in outcome are modeled jointly.
 #' @return A list of data formatted for use by STRAND models.
 #' @export
@@ -33,7 +37,11 @@
 #' }
 #'
 
-make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL, multiplex = FALSE){
+
+
+
+
+make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL, m_e_data = NULL, mask=NULL, multiplex = FALSE){
 
          ############################################################################# Check inputs
          ###################### Outcome mode
@@ -58,6 +66,15 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
           self_report = outcome
          }
 
+         N_id =  dim(self_report[[1]])[1]
+
+         if(!is.null(m_e_data)){ 
+          if(!all(names(m_e_data)==c("sampled","sampled_exposure",  "detected", "detected_exposure")))
+          stop("m_e_data must be named list: sampled, sampled_exposure, detected, detected_exposure, in this order.")
+         }else{
+          m_e_data = list(sampled=rep(0,N_id), sampled_exposure=rep(0,N_id), detected=rep(0,N_id), detected_exposure=rep(0,N_id))
+         }
+
          layer_names = names(self_report)
 
          # Check self_report data
@@ -74,6 +91,11 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          if(!is.null(exposure)){
            if(length(self_report) != length(exposure)) stop("self_report and exposure must be lists of matrices equal in length.")
            if(sum(names(exposure)==names(outcome)) != length(names(exposure))) stop("Names of exposure and outcome must match. Order matters.")
+         }
+
+        if(!is.null(mask)){
+           if(length(self_report) != length(mask)) stop("self_report and mask must be lists of matrices equal in length.")
+           if(sum(names(mask)==names(outcome)) != length(names(mask))) stop("Names of exposure and outcome must match. Order matters.")
          }
 
          # Check ground_truth data
@@ -106,6 +128,17 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          N_responses = length(self_report)
 
          outcomes = array(NA, c(N_id, N_id, N_responses))
+         mask_mat = array(NA, c(N_id, N_id, N_responses))
+
+         if(is.null(mask)){
+            for(i in 1:length(self_report)){
+              mask_mat[,,i] = matrix(0, nrow=N_id, ncol=N_id)
+             }} else{
+            for(i in 1:length(self_report)){
+              mask_mat[,,i] = mask[[i]]
+             }
+         }
+
 
          if(is.null(exposure)){
           exposure_on = 0
@@ -181,10 +214,10 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          ############################################################################# Determine legal models
          if(multiplex==FALSE){
          if(N_responses==1){
-          if(max(N_groups_per_type)>1){
+          if(is.null(m_e_data)){
             supported_models = c("SRM", "SBM", "SRM+SBM")
             } else{
-            supported_models = c("SRM", "SBM", "SRM+SBM")
+            supported_models = c("SRM", "SBM", "SRM+SBM","SRM+SBM+ME")
             }
          } 
 
@@ -201,7 +234,6 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
           }
          }
 
-
    model_dat = list(
      N_networktypes = N_networktypes,                                               
      N_id = N_id,                                                                                                          
@@ -217,7 +249,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
      N_groups_per_block_type = N_groups_per_type,
      block_predictors = group_ids,
      outcome_mode=outcome_mode_numeric,
-     exposure=exposure_risk
+     exposure=exposure_risk,
+     mask=mask_mat,
+     sampled = m_e_data$sampled, 
+     detected = m_e_data$detected,
+     sampled_exposure = m_e_data$sampled_exposure, 
+     detected_exposure = m_e_data$detected_exposure
      )
 
    attr(model_dat, "class") = "STRAND Data Object"
