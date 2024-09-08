@@ -130,7 +130,7 @@ simulate_selfreport_network = function(  N_id = 99,                        # Num
                                          sr_mu = c(0,0),                   # Average sender (cell 1) and reciever (cell 2) effect log odds
                                          sr_sigma = c(1,1),                # Sender (cell 1) and reciever (cell 2) effect variances 
                                          sr_rho = 0.6,                     # Correlation of sender and reciever effects
-                                         dr_mu = c(0,0),                   # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
+                                         dr_mu = 0,                        # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                          dr_sigma = 1,                     # Variance of dyad effects 
                                          dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
                                          individual_predictors = NULL,     # A matrix of covariates
