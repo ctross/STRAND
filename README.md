@@ -47,7 +47,7 @@ Double-sampled binary outcomes (find out for yourself): [**Latent network models
 
 An example on both simulating and fitting networks (includes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
-An example on accounting for structural-zeros/censored-data. For example, there may be N groups of individuals in a dataset, where each group is in a separate enclosure, and thus only with-group ties can be modeled: [**Structural Zeros**]([https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Callithrix_Example.R))
+An example on accounting for structural-zeros/censored-data. For example, there may be N groups of individuals in a dataset, where each group is in a separate enclosure, and thus only with-group ties can be modeled: [**Structural Zeros**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Callithrix_Example.R).
 
 An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
