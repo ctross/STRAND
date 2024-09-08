@@ -22,30 +22,31 @@ data(Callithrix_Data)
 # Old Method: Use interaction.
 
 # We show both here. First the masking approach. Then the interaction method. The masking method is better,
-# as it yields more accurate estimation of the random effects strucutre.
+# as it yields more accurate estimation of the random effects structure.
 
-# Either way, start by creating a matrix of 0s and 1s for each layer of the outcome list. Use the same names is in the outcome list.
+# Either way, start by creating a matrix of 0s and 1s for each layer of the outcome list. Use the same names as in the outcome list.
 # 0s represent non-censored ties---i.e., dyadic outcomes for which there is a possibility of an interaction/tie/link/flow/etc.
 # 1s represent censored ties---i.e., dyadic outcomes for which there is no possibility of an interaction/tie/link/flow/etc.
 
 # In this example, the variable: Callithrix_Data[[1]]$NoOpportunity is a censoring mask. 
 # There are 4 groups of Callithrix, and ties can only occur within groups. Individuals are sorted by group id. Thus, running:
 Callithrix_Data[[1]]$NoOpportunity
-
 # shows that there are 4 blocks of 0s along the diagonal. These 0s represent "real data" appearing in the outcome matrix.
-# There are also 1s appearing in the rest of the matrix. These 1s represent dyad interactions that are impossible to observe. 
+# There are also 1s appearing in the rest of the matrix. These 1s represent between-group dyad interactions that are impossible (e.g., because the groups live in different areas). 
+
 # By running:
 # mask = list(Aggressed = Callithrix_Data[[1]]$NoOpportunity)
 # and then adding "mask=mask" to the make_strand_data() function, STRAND will only model outcome[i,j,m] if mask[i,j,m]==0.
 
+# If make_strand_data() is called, and mask != NULL, then the mask layer will be used by any model that reads this data.
+
 ############################################################################################## 
 ## Censoring mask
 ##############################################################################################
-
 ################################################################ Condition, C-, low food
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
-mask = list(Aggressed = Callithrix_Data[[1]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the model.
+mask = list(Aggressed = Callithrix_Data[[1]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the likelihood of the model.
 dyad = list(RankDiff = Callithrix_Data[[1]]$RankDiff)
 indiv =  data.frame(Female = Callithrix_Data[[1]]$Female)
 
@@ -67,6 +68,7 @@ fit_cm =  fit_social_relations_model(data=model_dat_cm,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
+# Get results.
 res_cm_mask = summarize_strand_results(fit_cm)
 
 
@@ -95,12 +97,12 @@ fit_spp =  fit_social_relations_model(data=model_dat_spp,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
+# Get results.
 res_spp_mask = summarize_strand_results(fit_spp)
 
 ############################################################################################## 
 ## Interaction method
 ##############################################################################################
-
 ################################################################ Condition, C-, low food
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
@@ -127,6 +129,7 @@ fit_cm =  fit_social_relations_model(data=model_dat_cm,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
+# Get results.
 res_cm_interaction = summarize_strand_results(fit_cm)
 
 
@@ -156,6 +159,7 @@ fit_spp =  fit_social_relations_model(data=model_dat_spp,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
+# Get results.
 res_spp_interaction = summarize_strand_results(fit_spp)
 
 #################################################################### Compare effects of covariates
