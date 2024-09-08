@@ -70,7 +70,7 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
                                                                sr_sigma = c(0.3, 1.5),
                                                                sr_rho = 0.6,
 
-                                                               dr_mu = c(0,0),
+                                                               dr_mu = 0,
                                                                dr_sigma = 1,
                                                                dr_rho = 0.7,
 
@@ -148,7 +148,7 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
   for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
       # Dyadic effects
-       dr_scrap = rmvnorm2(1, Mu=c(dr_mu), sigma=rep(dr_sigma,2), Rho=Rho_dr)
+       dr_scrap = rmvnorm2(1, Mu=rep(dr_mu,2), sigma=rep(dr_sigma,2), Rho=Rho_dr)
 
        if(!is.null(dyadic_predictors)){
          dr_scrap[1] = dr_scrap[1] + sum(dyadic_effects*dyadic_predictors[i,j,])
