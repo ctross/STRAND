@@ -56,7 +56,7 @@ simulate_srm_network = function(N_id = 99,                            # Number o
                                     sr_mu = c(0,0),                   # Average sender (cell 1) and reciever (cell 2) effect log odds
                                     sr_sigma = c(0.3, 1.5),           # Sender (cell 1) and reciever (cell 2) effect variances 
                                     sr_rho = 0.6,                     # Correlation of sender and reciever effects
-                                    dr_mu = c(0,0),                   # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
+                                    dr_mu = 0,                        # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                     dr_sigma = 1,                     # Variance of dyad effects 
                                     dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
                                     mode="bernoulli",                 # outcome mode
@@ -110,7 +110,7 @@ samps = matrix(rpois(N_id^2,15),nrow=N_id,ncol=N_id)
 for ( i in 1:(N_id-1) ){
     for ( j in (i+1):N_id){
 # Dyadic effects
- dr_scrap = rmvnorm2(1, Mu=c(dr_mu), sigma=rep(dr_sigma,2), Rho=Rho_dr)
+ dr_scrap = rmvnorm2(1, Mu=rep(dr_mu,2), sigma=rep(dr_sigma,2), Rho=Rho_dr)
 
  if(!is.null(dyadic_predictors)){
   dr_scrap[1] = dr_scrap[1] + sum(dyadic_effects*dyadic_predictors[i,j,]) 
