@@ -104,6 +104,11 @@ fit_latent_network_model = function(data,
     if(data$N_block_predictors==0 & block_regression != ~ 1){
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
+
+    if(!is.null(data$mask)){
+        stop("Censoring mask is not supported for latent network models.")
+    }
+    
     
     ############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)

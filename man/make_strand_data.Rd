@@ -12,7 +12,10 @@ make_strand_data(
   block_covariates = NULL,
   individual_covariates = NULL,
   dyadic_covariates = NULL,
-  exposure = NULL
+  exposure = NULL,
+  m_e_data = NULL,
+  mask = NULL,
+  multiplex = FALSE
 )
 }
 \arguments{
@@ -35,6 +38,12 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 \item{dyadic_covariates}{A list of N_id by N_id by N_dyadic_parameters matrices.}
 
 \item{exposure}{A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
+
+\item{m_e_data}{A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.}
+
+\item{mask}{A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).}
+
+\item{multiplex}{If TRUE, then all layers in outcome are modeled jointly.}
 }
 \value{
 A list of data formatted for use by STRAND models.

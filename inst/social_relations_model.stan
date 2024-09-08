@@ -6,7 +6,8 @@ data{
     array[3] int N_params;                                          
                                              
     array[N_id,N_id,N_responses] int outcomes;  
-    array[N_id,N_id,N_responses] int exposure;                              
+    array[N_id,N_id,N_responses] int exposure; 
+    array[N_id,N_id,N_responses] int mask;                                   
 
     matrix[N_id, N_params[1]] focal_set;
     matrix[N_id, N_params[2]] target_set;
@@ -111,10 +112,10 @@ model{
 
 
     //# likelihood
-    for ( i in 1:N_id ) {
-     for ( j in 1:N_id ) {
-       if ( i != j ) {
-
+    for( i in 1:N_id ) {
+     for( j in 1:N_id ) {
+       if( i != j ) {
+        if(mask[i,j,1]==0){
       if(outcome_mode==1){
       outcomes[i,j,1] ~ bernoulli_logit(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
        }
@@ -127,7 +128,7 @@ model{
 
        }
       }
-     }
+     }}
 
 
  }
