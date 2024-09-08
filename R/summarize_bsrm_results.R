@@ -197,7 +197,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
    ############# Finally, merge all effects into a list
      for(i in 1:4)
-     colnames(results_list[[i]]) = c("Variable", "Median", "HPDI:L","HPDI:H","Mean","SD") 
+     colnames(results_list[[i]]) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD") 
 
      names(results_list) = c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
           
