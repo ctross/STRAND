@@ -56,6 +56,7 @@ groups_3 = sample( c("Strange", "Charm") , size=N_id , replace=TRUE , prob=c(0.5
 
 groups = data.frame(Intercept=as.numeric(factor(groups_1)), Merica=as.numeric(factor(groups_2)), Quantum=as.numeric(factor(groups_3)))
 groups_f = data.frame(Intercept=factor(groups_1), Merica=factor(groups_2), Quantum=factor(groups_3))
+individual = data.frame(Mass=Mass)
 
 #################################################### Simulate SBM + SRM network
 G = simulate_sbm_plus_srm_network(N_id = N_id, 
@@ -76,8 +77,22 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
                          )        
 
 ################################################### Organize for model fitting
-model_dat = make_strand_data(outcome=list(G$network),  block_covariates=groups_f, individual_covariates=data.frame(Mass=Mass), 
-                           dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  outcome_mode = "binomial", exposure=list(G$samps))
+
+# Add row and colnames
+name_vec = paste("Individual", 1:N_id)
+rownames(G$network) = colnames(G$network) = name_vec
+rownames(G$samps) = colnames(G$samps) = name_vec
+rownames(Kinship) = colnames(Kinship) = name_vec
+rownames(Dominant) = colnames(Dominant) = name_vec
+rownames(groups_f) = name_vec
+rownames(individual) = name_vec
+
+model_dat = make_strand_data(outcome=list(Outcome = G$network),  
+                             block_covariates=groups_f, 
+                             individual_covariates=individual, 
+                             dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  
+                             outcome_mode = "binomial", 
+                             exposure=list(Outcome = G$samps))
 
 # Model the data with STRAND
 fit =  fit_block_plus_social_relations_model(data=model_dat,
@@ -87,7 +102,7 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
                               dyad_regression = ~ Kinship*Dominant,
                               mode="mcmc",
                               stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                          iter_warmup = 1000, iter_sampling = 1000,
+                                                          iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .9)
 )
 
@@ -111,4 +126,6 @@ plot(B_3_Pred~B_3)
 
 # NOTE: The block offsets are only identified relative to one-another. Calculate contrasts to look for differences between parameters.
 
- 
+############################################################### To compute contrasts with new tools, do this:
+process_block_parameters(input=fit, focal="Strange to Charm", base="Strange to Strange", HPDI=0.9)
+

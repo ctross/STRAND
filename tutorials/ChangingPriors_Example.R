@@ -23,7 +23,8 @@ dyad = list(Relatedness = Bat_Data$Relatedness,
               )
 
 # Block variables
-group_ids = data.frame(Sex = as.factor(Bat_Data$Sex))
+group_ids = data.frame(Sex = as.factor(Bat_Data$Individual$Sex))
+rownames(group_ids) = rownames(Bat_Data$Individual)
 
 model_dat = make_strand_data(outcome = nets,
                               block_covariates = group_ids, 
@@ -81,19 +82,19 @@ tab2$Priors = "Modified, Especially vague"
 
 tab0 = rbind(tab1, tab2)
 
-plot_0 = ggplot2::ggplot(tab0, ggplot2::aes(x = Variable, y = Median, 
-        ymin = LI, ymax = HI, color=Priors)) + ggplot2::geom_linerange(size = 1,  position = ggplot2::position_dodge(0.33)) + 
-        ggplot2::geom_point(size = 2, position = ggplot2::position_dodge(0.33)) + ggplot2::facet_grid(Submodel ~ 
-        ., scales = "free", space = "free") + ggplot2::geom_hline(ggplot2::aes(yintercept = 0), 
-        color = "black", linetype = "dashed") + ggplot2::labs(y = "Regression parameters", 
-        x = "") + ggplot2::theme(strip.text.x = ggplot2::element_text(size = 12, 
-        face = "bold"), strip.text.y = ggplot2::element_text(size = 12, 
-        face = "bold"), axis.text = ggplot2::element_text(size = 12), 
-        axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
-        axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
-        ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
-        "lines")) + ggplot2::theme(legend.position="bottom") + ggplot2::scale_color_manual(values=c("#E69F00", "black"))
+plot_0 = ggplot(tab0, aes(x = Variable, y = Median, 
+        ymin = LI, ymax = HI, color=Priors)) + geom_linerange(size = 1,  position = position_dodge(0.33)) + 
+        geom_point(size = 2, position = position_dodge(0.33)) + facet_grid(Submodel ~ 
+        ., scales = "free", space = "free") + geom_hline(aes(yintercept = 0), 
+        color = "black", linetype = "dashed") + labs(y = "Regression parameters", 
+        x = "") + theme(strip.text.x = element_text(size = 12, 
+        face = "bold"), strip.text.y = element_text(size = 12, 
+        face = "bold"), axis.text = element_text(size = 12), 
+        axis.title.y = element_text(size = 14, face = "bold"), 
+        axis.title.x = element_blank()) + theme(strip.text.y = element_text(angle = 360)) + 
+        coord_flip() + theme(panel.spacing = grid::unit(1, 
+        "lines")) + theme(legend.position="bottom") + scale_color_manual(values=c("#E69F00", "black"))
+plot_0
 
-
-ggplot2::ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
+ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
 

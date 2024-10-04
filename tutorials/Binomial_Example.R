@@ -17,22 +17,23 @@ data(Baboon_Data)
 # Number of grooming event and a sample-size measure
 # Here, the term "exposure" relates to the number of trials for a binomial distribution
 nets = list(Grooming = Baboon_Data$Grooming)
-exposure_nets = list(Exposure = Baboon_Data$Exposure)
+exposure = list(Grooming = Baboon_Data$Exposure)
 
 # Dyadic variable: transpose of Presenting
 dyad = list(Presenting = t(Baboon_Data$Presenting),
             Threatening = t(Baboon_Data$Threatening))
 
-block = data.frame(Sex = as.factor(Baboon_Data$Sex))
+indiv = Baboon_Data$Individual
 
-indiv =  data.frame(Age = Baboon_Data$Age)
+block = data.frame(Sex = as.factor(indiv$Sex))
+rownames(block) = rownames(indiv)
 
 model_dat = make_strand_data(outcome = nets,
                              individual_covariates = indiv, 
                              block_covariates = block,
                              dyadic_covariates = dyad,
                              outcome_mode = "binomial",
-                             exposure = exposure_nets
+                             exposure = exposure
                              )
 
 # model
@@ -42,8 +43,8 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
                               target_regression = ~ Age,
                               dyad_regression = ~  Presenting + Threatening,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 2, refresh = 1,
-                                                          iter_warmup = 1500, iter_sampling = 1500,
+                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
+                                                          iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
@@ -59,6 +60,10 @@ vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Ta
 vis_2
 #ggsave("Baboon_corr.pdf", vis_2, width=6, height=2.5)
 
+############################################################### To compute contrasts with new tools, do this:
+process_block_parameters(input=fit, focal="female to male", base="male to female", HPDI=0.9)
+
+############################################################### To compute contrasts by hand do this:
 ############################### Posterior contrasts
 ## Get contrast for block effects
 sex_samps = res$sample$srm_model_samples$block_parameters[[2]]
