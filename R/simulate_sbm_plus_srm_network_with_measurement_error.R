@@ -3,57 +3,32 @@
 #' This is a function to simulate single layer network data with a stochastic block structure, sender-receiver effects, and dyadic reciprocity. This function
 #' is essentially the union of a social relations model and a stochastic block model.
 #'
-#' @param 
-#' N_id Number of individuals.
-#' @param 
-#' B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
-#' @param 
-#' V Number of blocking variables in B.
-#' @param 
-#' groups Dataframe of the block IDs of each individual for each variable in B.
-#' @param 
-#' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
-#' @param 
-#' dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
-#' @param 
-#' exposure_mu Intercept term for log-odds of encounter.
-#' @param 
-#' censoring_mu Intercept term for log-odds of censoring.
-#' @param 
-#' sr_sigma A standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
-#' @param 
-#' dr_sigma Standard deviation for dyadic random effects.
-#' @param 
-#' exposure_sigma Standard deviation for exposure random effects.
-#' @param 
-#' censoring_sigma Standard deviation for censoring random effects.
-#' @param 
-#' sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
-#' @param 
-#' dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
-#' @param 
-#' exposure_max Max sample size of observations for a given focal.
-#' @param 
-#' N_trials Number of binomial trials in follow-up detectability experiment.
-#' @param 
-#' mode Outcome mode: only "binomial" is supported.
-#' @param 
-#' individual_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
-#' @param 
-#' exposure_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' censoring_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
+#' @param N_id Number of individuals.
+#' @param B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
+#' @param V Number of blocking variables in B.
+#' @param groups Dataframe of the block IDs of each individual for each variable in B.
+#' @param sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
+#' @param dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
+#' @param exposure_mu Intercept term for log-odds of encounter.
+#' @param censoring_mu Intercept term for log-odds of censoring.
+#' @param sr_sigma A standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
+#' @param dr_sigma Standard deviation for dyadic random effects.
+#' @param exposure_sigma Standard deviation for exposure random effects.
+#' @param censoring_sigma Standard deviation for censoring random effects.
+#' @param sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
+#' @param dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
+#' @param exposure_max Max sample size of observations for a given focal.
+#' @param N_trials Number of binomial trials in follow-up detectability experiment.
+#' @param mode Outcome mode: only "binomial" is supported.
+#' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
+#' @param exposure_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param censoring_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
 #' The second row gives effects of target characteristics (on in-degree).
-#' @param 
-#' dyadic_effects An N_dyadic_parameters vector of slopes.
-#' @param 
-#' exposure_effects An N_parameters vector of slopes.
-#' @param 
-#' censoring_effects An N_parameters vector of slopes.
+#' @param dyadic_effects An N_dyadic_parameters vector of slopes.
+#' @param exposure_effects An N_parameters vector of slopes.
+#' @param censoring_effects An N_parameters vector of slopes.
 #' @return A list of objects including: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
 #' group_ids (a vector of length N_id, giving the group of each individual), individual_predictors (the supplied covariate data is saved along with the network data), 
 #' and dyadic_predictors (the supplied covariate data is saved along with the network data).
@@ -229,7 +204,6 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
     
   eta = 1 - censoring_prob             # Flip to represent NOT censoring
   
-  
 ###############################
 #######  Model outcomes #######
 ###############################
@@ -240,7 +214,6 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
       y[j,i] = rbinom( 1 , size=true_samps[j,i], prob = p[j,i]*eta[j]*eta[i] )
     }
   }
-  
   
   trials = rep(N_trials, N_id)
   detected = NULL
@@ -268,6 +241,4 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
               censoring_prob = censoring_prob,
               detected = detected,
               trials = trials))
-
 }
-

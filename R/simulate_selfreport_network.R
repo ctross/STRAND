@@ -4,66 +4,39 @@
 #' The function first simulates the true network data using the simulate_sbm_plus_srm_network() function, and then simulate self-reports and observable resource flows over the true network.
 #' This allows the user to investigate the effects of response biases, such as false positive rate, on network properties.
 #'
-#' @param 
-#' N_id Number of individuals.
-#' @param 
-#' B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
-#' @param 
-#' V Number of blocking variables in B.
-#' @param 
-#' groups Dataframe of the block IDs of each individual for each variable in B.
-#' @param 
-#' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
-#' @param 
-#' dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
-#' @param 
-#' sr_sigma Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
-#' @param 
-#' dr_sigma Standard deviation for dyadic random effects.
-#' @param 
-#' sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
-#' @param 
-#' dr_rho Correlation of dyad effects: (i.e., dyadic reciprocity).
-#' @param 
-#' individual_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' dyadic_predictors An N_id by N_id by N_dyadic_parameters matrix of covariates.
-#' @param 
-#' individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
+#' @param N_id Number of individuals.
+#' @param B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
+#' @param V Number of blocking variables in B.
+#' @param groups Dataframe of the block IDs of each individual for each variable in B.
+#' @param sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
+#' @param dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
+#' @param sr_sigma Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
+#' @param dr_sigma Standard deviation for dyadic random effects.
+#' @param sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
+#' @param dr_rho Correlation of dyad effects: (i.e., dyadic reciprocity).
+#' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters matrix of covariates.
+#' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
 #' The second row gives effects of target characteristics (on in-degree).
-#' @param 
-#' dyadic_effects An N_dyadic_parameters vector of slopes.
-#' @param 
-#' fpr_effects A 3 by N_predictors matrix of slopes. The first row controls the effects of covariates on layer 1 responses, and the second row layer 2 responses. 
+#' @param dyadic_effects An N_dyadic_parameters vector of slopes.
+#' @param fpr_effects A 3 by N_predictors matrix of slopes. The first row controls the effects of covariates on layer 1 responses, and the second row layer 2 responses. 
 #' The third row controls the effects of covariates on false positive in the observation network.  
-#' @param 
-#' rtt_effects A 3 by N_predictors matrix of slopes. The first row controls the effects of covariates on layer 1 responses, and the second row layer 2 responses. 
+#' @param rtt_effects A 3 by N_predictors matrix of slopes. The first row controls the effects of covariates on layer 1 responses, and the second row layer 2 responses. 
 #' The third row controls the effects of covariates on false positive in the observation network.  
-#' @param 
-#' theta_effects An N_predictors vector of slopes controling the effects of covariates on name duplication from layer 1 to layer 2.
-#' @param 
-#' false_positive_rate The baseline false positive rate. This should be supplied as a 3 vector, with each element controlling the false positive rate for a single layer. 
+#' @param theta_effects An N_predictors vector of slopes controling the effects of covariates on name duplication from layer 1 to layer 2.
+#' @param false_positive_rate The baseline false positive rate. This should be supplied as a 3 vector, with each element controlling the false positive rate for a single layer. 
 #' Support is on the unit interval. If covariates are centered, this can be loosly thought of as an average false positive rate.
-#' @param 
-#' recall_of_true_ties The baseline recall rate of true ties. This should be supplied as a 3 vector, with each element controlling the true tie recall rate for a single layer. 
+#' @param recall_of_true_ties The baseline recall rate of true ties. This should be supplied as a 3 vector, with each element controlling the true tie recall rate for a single layer. 
 #' Support is on the unit interval. If covariates are centered, this can be loosly thought of as an average true tie recall rate.
-#' @param 
-#' theta_mean The baseline probability of name duplication from layer 1 to layer 2. Scalar.
+#' @param theta_mean The baseline probability of name duplication from layer 1 to layer 2. Scalar.
 #' Support is on the unit interval. If covariates are centered, this can be loosly thought of as an average true tie recall rate.
-#' @param 
-#' fpr_sigma Standard deviation 3-vector for false_positive_rate random effects. There should be one value for each layer.
-#' @param 
-#' rtt_sigma Standard deviation 3-vector for recall_of_true_ties random effects. There should be one value for each layer.
-#' @param 
-#' theta_sigma Standard deviation scalar for theta random effects. 
-#' @param 
-#' N_responses Number of self-report layers. =1 for single-sampled, =2 for double-sampled.
-#' @param 
-#' N_periods Number of time-periods in which observed transfers are sampled. 
-#' @param 
-#' flow_rate A vector of length N_periods, each element controls the probability that a true tie will result in a transfer in a given time period.
-#' @param 
-#' decay_curve A vector of length N_periods, each element controls the increment log-odds of recalling a true tie at time T, as a function of a transfer occuring in period t.
+#' @param fpr_sigma Standard deviation 3-vector for false_positive_rate random effects. There should be one value for each layer.
+#' @param rtt_sigma Standard deviation 3-vector for recall_of_true_ties random effects. There should be one value for each layer.
+#' @param theta_sigma Standard deviation scalar for theta random effects. 
+#' @param N_responses Number of self-report layers. =1 for single-sampled, =2 for double-sampled.
+#' @param N_periods Number of time-periods in which observed transfers are sampled. 
+#' @param flow_rate A vector of length N_periods, each element controls the probability that a true tie will result in a transfer in a given time period.
+#' @param decay_curve A vector of length N_periods, each element controls the increment log-odds of recalling a true tie at time T, as a function of a transfer occuring in period t.
 #' @return A list of data formatted for use in Stan models.
 #' @export
 #' @examples
@@ -171,7 +144,6 @@ G_net = simulate_sbm_plus_srm_network(N_id = N_id, B=B, V=V, groups=groups,
 group_id = G_net$group_ids
 y_true = G_net$network
 
-
 # Link functions for individual-level parameters
 theta = rtt_goods = fpr_goods = rtt_rev = fpr_rev = rtt = fpr = rep(NA, N_id)
 for(i in 1:N_id){
@@ -238,7 +210,7 @@ for ( i in 1:N_id ){
       }
       }}
 
-# (below) code these ties in reverse order since question is reversed. if accuracy is perfect, then statement_flows[j, i, 1] = statement_flows[j, i, 2]? make sure to check
+# (Below) code these ties in reverse order since question is reversed. if accuracy is perfect, then statement_flows[j, i, 1] = statement_flows[j, i, 2]? make sure to check
  if(N_responses == 2){
 
   for ( i in 1:N_id ){
@@ -257,8 +229,6 @@ for ( i in 1:N_id ){
        statement_flows[i, j, 2] = rbern(1, theta[i])
          }
          }}
-
-  
 }
 
 for(i in 1:N_id){
@@ -270,17 +240,7 @@ for(i in 1:N_id){
  statement_flows[i,i,2] <- 0
 }
 
-
-
 return(list(true_network=y_true, transfer_network=goods_flows, reporting_network=statement_flows, group_ids=group_id, N_id = N_id,
             N_periods=N_periods, N_responses=N_responses, sr = G_net$sr, dr=G_net$dr, 
             fpr=fpr_out, rtt=rtt_out, theta=theta ))
 }
-
-
-
-
- 
-
-
- 

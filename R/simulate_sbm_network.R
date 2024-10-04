@@ -2,25 +2,16 @@
 #'
 #' This is a function to simulate single layer network data with a stochastic block structure. 
 #'
-#' @param 
-#' N_id Number of individuals.
-#' @param 
-#' B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
-#' @param 
-#' V Number of blocking variables in B.
-#' @param 
-#' groups Dataframe of the block IDs of each individual for each variable in B.
-#' @param 
-#' mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
-#' @param 
-#' individual_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
-#' @param 
-#' individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
+#' @param N_id Number of individuals.
+#' @param B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
+#' @param V Number of blocking variables in B.
+#' @param groups Dataframe of the block IDs of each individual for each variable in B.
+#' @param mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
+#' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
 #' The second row gives effects of target characteristics (on in-degree).
-#' @param 
-#' dyadic_effects An N_dyadic_parameters vector of slopes.
+#' @param dyadic_effects An N_dyadic_parameters vector of slopes.
 #' @return A list of objects including: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
 #' group_ids (a vector of length N_id, giving the group of each individual), individual_predictors (the supplied covariate data is saved along with the network data), 
 #' and dyadic_predictors (the supplied covariate data is saved along with the network data).
@@ -62,8 +53,8 @@ simulate_sbm_network = function(N_id = 100,                           # N people
                                     individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
                                     dyadic_effects = NULL             # The effects of predictors on dyadic ties
                                 ){
-   ##################################### Run some checks
-   ######### Individual parameters
+##################################### Run some checks
+######### Individual parameters
    if(!is.null(individual_predictors)){
    if(is.null(individual_effects)){
     stop("If individual_predictors is supplied, a matching matrix of individual_effects must be supplied.")
@@ -151,4 +142,3 @@ for ( i in 1:N_id ){
 
 return(list(network=y_true, tie_strength=p, group_ids=groups, individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr, samps=samps))
 }
-
