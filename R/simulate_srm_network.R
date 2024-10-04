@@ -3,33 +3,20 @@
 #' This is a function to simulate single layer network data with sender-receiver effects and dyadic reciprocity. This function
 #' is essentially a social relations model.
 #'
-#' @param 
-#' N_id Number of individuals.
-#' @param 
-#' B Intercept tie log-odds.
-#' @param 
-#' sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
-#' @param 
-#' dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
-#' @param 
-#' sr_sigma Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
-#' @param 
-#' dr_sigma Standard deviation for dyadic random effects.
-#' @param 
-#' sr_rho Correlation of sender-receiver effects: aka. generalized reciprocity.
-#' @param 
-#' dr_rho Correlation of dyad effects: aka. dyadic reciprocity.
-#' @param 
-#' mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
-#' @param 
-#' individual_predictors An N_id by N_individual_parameters matrix of covariates.
-#' @param 
-#' dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
-#' @param 
-#' individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
+#' @param N_id Number of individuals.
+#' @param B Intercept tie log-odds.
+#' @param sr_mu Mean vector for sender and receivier random effects. In most cases, this should be c(0,0).
+#' @param dr_mu Mean vector for dyadic random effects. In most cases, this should be c(0,0).
+#' @param sr_sigma Standard deviation vector for sender and receivier random effects. The first element controls node-level variation in out-degree, the second in in-degree.
+#' @param dr_sigma Standard deviation for dyadic random effects.
+#' @param sr_rho Correlation of sender-receiver effects: aka. generalized reciprocity.
+#' @param dr_rho Correlation of dyad effects: aka. dyadic reciprocity.
+#' @param mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
+#' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
+#' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
 #' The second row gives effects of target characteristics (on in-degree).
-#' @param 
-#' dyadic_effects An N_dyadic_parameters vector of slopes.
+#' @param dyadic_effects An N_dyadic_parameters vector of slopes.
 #' @return A list of objects including: network (an adjacency matrix of binary outcomes), tie_strength (an adjacency matrix with probability weights), 
 #' individual_predictors (the supplied covariate data is saved along with the network data), 
 #' and dyadic_predictors (the supplied covariate data is saved along with the network data).
@@ -65,10 +52,7 @@ simulate_srm_network = function(N_id = 99,                            # Number o
                                     individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
                                     dyadic_effects = NULL             # The effects of predictors on dyadic ties
                                 ){
-   ##################################### Run some checks
-   
-
-   ######### Individual parameters
+ ######### Individual parameters
    if(!is.null(individual_predictors)){
    if(is.null(individual_effects)){
     stop("If individual_predictors is supplied, a matching matrix of individual_effects must be supplied.")
@@ -155,6 +139,3 @@ for ( i in 1:N_id ){
 
 return(list(network=y_true, tie_strength=p,  individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr, samps=samps))
 }
-
-
-
