@@ -23,7 +23,8 @@ dyad = list(Relatedness = Bat_Data$Relatedness,
               )
 
 # Block variables
-group_ids = data.frame(Sex = as.factor(Bat_Data$Sex))
+group_ids = data.frame(Sex = as.factor(Bat_Data$Individual$Sex))
+rownames(group_ids) = rownames(Bat_Data$Lick)
 
 model_dat = make_strand_data(outcome = nets,
                               block_covariates = group_ids, 
@@ -53,4 +54,7 @@ vis_1
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Bat_corr.pdf", vis_2, width=6, height=2.5)
+
+############################################################### To compute contrasts with new tools, do this:
+process_block_parameters(input=fit, focal="Female to Female", base="Male to Female", HPDI=0.9)
 

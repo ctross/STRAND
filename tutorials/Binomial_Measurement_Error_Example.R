@@ -40,7 +40,7 @@ A = simulate_sbm_plus_srm_network_with_measurement_bias(N_id = N_id,
                                                    sr_mu = c(0,0),
                                                    sr_sigma = c(1.4, 0.8),
                                                    sr_rho = 0.6,
-                                                   dr_mu = c(0,0),
+                                                   dr_mu = 0,
                                                    dr_sigma = 1.0,
                                                    dr_rho = 0.75,
                                                    exposure_mu = 4.5,
@@ -60,13 +60,26 @@ V(Net)$color = c("turquoise4","brown4", "goldenrod3")[A$group_ids$Group]
 E(Net)$color = c("grey60","black")[is.mutual(Net)+1]
 plot(Net, edge.arrow.size =0.3, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 
+# Prep dyadic data
+# Add colnames and rownames
+animal_names = paste("Bonobo", 1:N_id)
+colnames(SizeDiff) = rownames(SizeDiff) = animal_names
+colnames(A$net) = rownames(A$net) = animal_names
+colnames(A$true_samps) = rownames(A$true_samps) = animal_names
 
-# Prep data
+# Make lists
 grooming = list(Grooming = A$net)
-exposure = list(Exposure = A$true_samps)
+exposure = list(Grooming = A$true_samps)
 dyad = list(SizeDiff = SizeDiff)
+
+# Prep individual data
+# Make data frames
 block = data.frame(Group = as.factor(Group))
 indiv =  data.frame(Coloration = Coloration)
+
+# Add colnames and rownames
+rownames(block) = animal_names
+rownames(indiv) = animal_names
 
 model_dat = make_strand_data(outcome = grooming,
                              individual_covariates = indiv, 
@@ -93,10 +106,10 @@ fit =  fit_block_plus_social_relations_model_with_measurement_bias(data=model_da
                               dyad_regression = ~  SizeDiff,
                               mode="mcmc",
                               stan_mcmc_parameters = list(chains = 1, refresh = 1,
-                                                          iter_warmup = 600, iter_sampling = 600,
+                                                          iter_warmup = 300, iter_sampling = 300,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
-res = summarize_bsrm_results_with_measurement_bias(fit)
+res = summarize_strand_results(fit)
 
 

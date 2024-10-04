@@ -48,7 +48,7 @@ Callithrix_Data[[1]]$NoOpportunity
 outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
 mask = list(Aggressed = Callithrix_Data[[1]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the likelihood of the model.
 dyad = list(RankDiff = Callithrix_Data[[1]]$RankDiff)
-indiv =  data.frame(Female = Callithrix_Data[[1]]$Female)
+indiv =  Callithrix_Data[[1]]$Individual
 
 model_dat_cm = make_strand_data(outcome = outcome,
                              individual_covariates = indiv, 
@@ -77,7 +77,7 @@ res_cm_mask = summarize_strand_results(fit_cm)
 outcome = list(Aggressed = Callithrix_Data[[2]]$Aggressed)
 mask = list(Aggressed = Callithrix_Data[[2]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the model.
 dyad = list(RankDiff = Callithrix_Data[[2]]$RankDiff)
-indiv =  data.frame(Female = Callithrix_Data[[2]]$Female)
+indiv =  Callithrix_Data[[2]]$Individual
 
 model_dat_spp = make_strand_data(outcome = outcome,
                              individual_covariates = indiv, 
@@ -110,7 +110,7 @@ outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
 dyad = list(RankDiff = Callithrix_Data[[1]]$RankDiff,
             NoOpportunity = Callithrix_Data[[1]]$NoOpportunity)
 
-indiv =  data.frame(Female = Callithrix_Data[[1]]$Female)
+indiv = Callithrix_Data[[1]]$Individual
 
 model_dat_cm = make_strand_data(outcome = outcome,
                              individual_covariates = indiv, 
@@ -140,7 +140,7 @@ outcome = list(Aggressed = Callithrix_Data[[2]]$Aggressed)
 dyad = list(RankDiff = Callithrix_Data[[2]]$RankDiff,
             NoOpportunity = Callithrix_Data[[2]]$NoOpportunity)
 
-indiv =  data.frame(Female = Callithrix_Data[[2]]$Female)
+indiv = Callithrix_Data[[2]]$Individual
 
 model_dat_spp = make_strand_data(outcome = outcome,
                              individual_covariates = indiv, 
@@ -253,4 +253,8 @@ p2 = ggplot(vis_2, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=Typ
         "lines")) + scale_color_manual(values=c("C-"="#697f4f", "S++"="black")) + theme(legend.position="bottom")
 
 #ggsave("Callithrix_corr.pdf", p2, width=8, height=3.5)
+
+
+
+
 

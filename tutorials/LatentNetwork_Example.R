@@ -15,24 +15,20 @@ library(ggplot2)
 data(FoodSharing_Data)
 
 # Create the STRAND data object
-outcome = list(TransferOut = FoodSharing_Data$TransferOut, TransferIn = FoodSharing_Data$TransferIn)
+outcome = list(TransferOut = FoodSharing_Data$TransferOut, 
+               TransferIn = FoodSharing_Data$TransferIn)
 
 dyad = list(Relatedness = FoodSharing_Data$Relatedness, 
             Friends = FoodSharing_Data$Friends
             )
 
-groups = data.frame(Ethnicity = as.factor(FoodSharing_Data$Ethnicity), 
-                    Sex = as.factor(FoodSharing_Data$Sex)
+indiv = FoodSharing_Data$Individual 
+
+groups = data.frame(Ethnicity = as.factor(FoodSharing_Data$Individual$Ethnicity), 
+                    Sex = as.factor(FoodSharing_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = FoodSharing_Data$Age, 
-                    GoodsValues = FoodSharing_Data$GoodsValues,  
-                    Education = FoodSharing_Data$Education,
-                    CantWork = FoodSharing_Data$CantWork,
-                    GripStrength = FoodSharing_Data$GripStrength,
-                    NoFood = FoodSharing_Data$NoFood,
-                    Depressed = FoodSharing_Data$Depressed
-                     )
+rownames(groups) = rownames(indiv)  
 
 dat = make_strand_data(outcome = outcome,
                        block_covariates = groups, 
@@ -42,16 +38,16 @@ dat = make_strand_data(outcome = outcome,
 # Run model
 fit = fit_latent_network_model(data=dat,
                                 block_regression = ~ Ethnicity + Sex,
-                                focal_regression = ~ Age + GoodsValues + NoFood + CantWork + GripStrength + Depressed,
-                                target_regression = ~ Age + GoodsValues + NoFood + CantWork + GripStrength + Depressed,
+                                focal_regression = ~ Age + Wealth + FoodInsecure + CantWork + GripStrength + Depressed,
+                                target_regression = ~ Age + Wealth + FoodInsecure + CantWork + GripStrength + Depressed,
                                 dyad_regression = ~ Relatedness + Friends,
-                                fpr_regression = ~ Age + GoodsValues + Depressed,
-                                rtt_regression = ~ Age + GoodsValues + Depressed,
+                                fpr_regression = ~ Age + Wealth + Depressed,
+                                rtt_regression = ~ Age + Wealth + Depressed,
                                 theta_regression = ~ 1,
                                 mode="mcmc",
                                 return_predicted_network = FALSE,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 1000,
-                                iter_sampling = 1000, max_treedepth = NULL, adapt_delta = NULL)
+                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = NULL, adapt_delta = NULL)
                                               )
 
 res = summarize_strand_results(fit)
