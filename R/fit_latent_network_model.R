@@ -105,7 +105,7 @@ fit_latent_network_model = function(data,
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
 
-    if(!is.null(data$mask)){
+    if(sum(data$mask) != 0){
         stop("Censoring mask is not supported for latent network models.")
     }
     
