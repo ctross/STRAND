@@ -1,6 +1,6 @@
 functions{
     //# probability of observed variables relevant to ij dyad
-    real prob_sgij( int[] sij, int[] sji, int tie, vector fpri, vector fprj, vector rtti, vector rttj, real theta) {
+    real prob_sgij(array[] int sij, array[] int sji, int tie, vector fpri, vector fprj, vector rtti, vector rttj, real theta) {
        vector[2] y;
       
     //# model likelihood
