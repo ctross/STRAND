@@ -1,18 +1,15 @@
 #' Organize Stan output and provide summaries of model parameters
 #' 
-#' This is a function to organize Stan output and provide summaries of key model parameters
+#' This is a function to organize Stan output and provide summaries of key model parameters.
 #'
-#' @param 
-#' input A STRAND model object, obtained by fitting a combined stochastic block and social relations model.
-#' @param 
-#' include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
-#' @param 
-#' HPDI Highest Posterior Density Interval. Ranges in (0,1).
+#' @param input A STRAND model object, obtained by fitting a combined stochastic block and social relations model.
+#' @param include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
+#' @param HPDI Highest Posterior Density Interval. Ranges in (0,1).
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples
 #' \dontrun{
-#' res = summarize_bsrm_results(input=fit)
+#' res = summarize_bsrm_results(input = fit)
 #' }
 #'
 
@@ -22,8 +19,14 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
     }
 
     if(attributes(input)$fit_type != "mcmc"){
-        stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
-              during experimental model runs, but final inferences should be based on MCMC sampling.")   
+      if(attributes(input)$fit_type == "vb"){
+         warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
+              but often failed to recover strong true effects. ")  
+         } else{
+         stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling.")  
+      }    
     }
 
     ###################################################### Create samples 
@@ -122,21 +125,7 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
         samples$predicted_network_sample = posterior::draws_of(stanfit$"p")
         }
 
-
-    ###################################################### Create summary stats 
-     sum_stats = function(y, x, z){
-      bob = rep(NA, 6)
-       dig = 3
-      bob[1] = y
-      bob[2] = round(median(x),dig)
-      bob[3] = round(HPDI(x, z)[1],dig)
-      bob[4] = round(HPDI(x, z)[2],dig)
-      bob[5] = round(mean(x),dig)
-      bob[6] = round(sd(x),dig)
-
-      return(bob)
-      }
-     
+    ###################################################### Create summary stats   
      results_list = list()
 
     ################### SRM model
@@ -146,11 +135,11 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
      Q4 = dim(input$data$sampling_set)[2]-1
      Q5 = dim(input$data$censoring_set)[2]-1
 
-     results_srm_focal = matrix(NA, nrow=(1+Q1) , ncol=6)
-     results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=6)
-     results_srm_sampling = matrix(NA, nrow=(2+Q4) , ncol=6)
-     results_srm_censoring = matrix(NA, nrow=(2+Q5) , ncol=6)
-     results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=6)
+     results_srm_focal = matrix(NA, nrow=(1+Q1) , ncol=7)
+     results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=7)
+     results_srm_sampling = matrix(NA, nrow=(2+Q4) , ncol=7)
+     results_srm_censoring = matrix(NA, nrow=(2+Q5) , ncol=7)
+     results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=7)
 
     ######### Calculate all focal effects
      results_srm_focal[1,] = sum_stats("focal effects sd", samples$srm_model_samples$focal_target_sd[,1], HPDI)
@@ -209,7 +198,7 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
      results_list[[3]] = results_srm_dyadic
 
     ######### Calculate all block effects
-     results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=6)
+     results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=7)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
  
@@ -235,7 +224,6 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
         stop("Factors not sorted correctly.")
       }
 
-
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
        ticker = ticker + 1  
@@ -249,14 +237,14 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
 
    ############# Finally, merge all effects into a list
      for(i in 1:6)
-     colnames(results_list[[i]]) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD") 
+     colnames(results_list[[i]]) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
 
      names(results_list) = c( "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates", "Sampling estimates", "Censoring estimates")
           
    results_out = rbind( results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base, results_srm_sampling, results_srm_censoring)
    
    df = data.frame(results_out)
-   colnames(df) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD")  
+   colnames(df) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P")  
 
    res_final = list(summary=df, summary_list=results_list)
 
@@ -269,6 +257,3 @@ summarize_bsrm_results_with_measurement_bias = function(input, include_samples=T
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
-
-
-

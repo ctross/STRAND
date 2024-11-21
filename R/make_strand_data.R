@@ -3,32 +3,24 @@
 #' This function organizes network data and covariates into a form that can be used by STRAND for model fitting. All 
 #' STRAND model fitting functions require their data to be supplied in the format exported here.
 #'
-#' @param 
-#' outcome A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.
-#' @param 
-#' self_report A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
+#' @param outcome A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.
+#' @param self_report A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
 #' and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
 #' represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
 #' If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.
-#' @param
-#' outcome_mode Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.
-#' @param 
-#' ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
+#' @param outcome_mode Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.
+#' @param link_mode Can be either "logit", "probit", or "log"; "log" can only be used with "poisson" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.
+#' @param ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
-#' @param 
-#' block_covariates A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
-#' @param 
-#' individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
-#' @param 
-#' dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
-#' @param 
-#' exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
-#' @param 
-#' m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.
-#' @param 
-#' mask A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).
-#' @param 
-#' multiplex If TRUE, then all layers in outcome are modeled jointly.
+#' @param block_covariates A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
+#' @param individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
+#' @param dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
+#' @param exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
+#' @param m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.
+#' @param mask A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).
+#' @param multiplex If TRUE, then all layers in outcome are modeled jointly.
+#' @param longitudinal If TRUE, then checks for longitudinal data structure are performed.
+#' @param check_data_organization If TRUE, then checks that all colnames and rownames match. This will catch missorted data.
 #' @return A list of data formatted for use by STRAND models.
 #' @export
 #' @examples
@@ -37,36 +29,66 @@
 #' }
 #'
 
-
-
-
-
-make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernoulli", ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, exposure=NULL, m_e_data = NULL, mask=NULL, multiplex = FALSE){
+make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, link_mode=NULL, ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
+                            exposure=NULL, m_e_data = NULL, mask=NULL, multiplex = FALSE, longitudinal = FALSE, check_data_organization = TRUE){
 
          ############################################################################# Check inputs
-         ###################### Outcome mode
-         outcome_mode_numeric = NULL
-
-         if(outcome_mode=="bernoulli"){
-          outcome_mode_numeric = 1
-         }
-
-         if(outcome_mode=="binomial"){
-          outcome_mode_numeric = 2
-         }
-
-         if(outcome_mode=="poisson"){
-          outcome_mode_numeric = 3
-         }
-
-         if(is.null(outcome_mode_numeric)) stop("outcome_mode not supported")
-
          # Renames self-report if needed
          if(is.null(self_report)){
           self_report = outcome
          }
 
-         N_id =  dim(self_report[[1]])[1]
+         if(longitudinal==TRUE & length(self_report)>1){
+           stop("Longitudinal models require single-layer networks.")
+         }
+
+         ###################### Outcome mode
+         if(is.null(outcome_mode)) stop(" 'outcome_mode' must be declared.")
+         if(is.null(link_mode)) stop(" 'link_mode' must be declared.")
+
+         outcome_mode_numeric = NULL
+         link_mode_numeric = NULL
+
+         if(outcome_mode=="bernoulli"){
+          outcome_mode_numeric = 1
+
+          if(!link_mode %in% c("logit", "probit")){stop("If outcome_mode is 'bernoulli', you must set link_mode to 'logit' or 'probit'.")}
+
+          if(link_mode == "logit"){
+            link_mode_numeric = 1
+          } 
+
+          if(link_mode == "probit"){
+            link_mode_numeric = 2
+          } 
+
+         }
+
+         if(outcome_mode=="binomial"){
+          if(is.null(exposure)){stop("If outcome is binomial, an exposure variable must be provided.")}
+          outcome_mode_numeric = 2
+
+          if(!link_mode %in% c("logit", "probit")){stop("If outcome_mode is 'binomial', you must set link_mode to 'logit' or 'probit'.")}
+
+          if(link_mode == "logit"){
+            link_mode_numeric = 1
+          } 
+
+          if(link_mode == "probit"){
+            link_mode_numeric = 2
+          } 
+
+         }
+
+         if(outcome_mode=="poisson"){
+          if(link_mode != "log"){stop("If outcome_mode is 'poisson', you must set link_mode to 'log'.")}
+          outcome_mode_numeric = 3
+          link_mode_numeric = 3
+         }
+
+         if(is.null(outcome_mode_numeric)) stop("outcome_mode not supported")
+
+         N_id = dim(self_report[[1]])[1]
 
          if(!is.null(m_e_data)){ 
           if(!all(names(m_e_data)==c("sampled","sampled_exposure",  "detected", "detected_exposure")))
@@ -121,7 +143,51 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          if(!is.list(dyadic_covariates)) stop("dyadic_covariates must be a list of matrices.")
          } 
           
-         # need to add checks that rownames and colnames of all data types match
+         ###################### Check rownames and colnames
+         if(check_data_organization==TRUE){
+          node_names = rownames(self_report[[1]])
+
+         for(i in 1:length(self_report)){
+          if(is.null(rownames(self_report[[i]]))) stop("All outcome layers must have rownames.")
+          if(is.null(colnames(self_report[[i]]))) stop("All outcome layers must have colnames.")
+          if(all(rownames(self_report[[i]]) == node_names)==FALSE) stop("All outcome matrices must have the same colnames.")
+          if(all(colnames(self_report[[i]]) == node_names)==FALSE) stop("All outcome matrices must have the same rownames.")
+         }
+        
+         if(!is.null(dyadic_covariates)){ 
+         for(i in 1:length(dyadic_covariates)){
+          if(is.null(rownames(dyadic_covariates[[i]]))) stop("All dyadic layers must have rownames.")
+          if(is.null(colnames(dyadic_covariates[[i]]))) stop("All dyadic layers must have colnames.")
+          if(all(rownames(dyadic_covariates[[i]]) == node_names)==FALSE) stop("All dyadic matrices must have the same colnames and match outcomes.")
+          if(all(colnames(dyadic_covariates[[i]]) == node_names)==FALSE) stop("All dyadic matrices must have the same rownames and match outcomes.")
+         }}
+
+         if(!is.null(mask)){ 
+         for(i in 1:length(mask)){
+          if(is.null(rownames(mask[[i]]))) stop("All mask layers must have rownames.")
+          if(is.null(colnames(mask[[i]]))) stop("All mask layers must have colnames.")
+          if(all(rownames(mask[[i]]) == node_names)==FALSE) stop("All mask matrices must have the same colnames and match outcomes.")
+          if(all(colnames(mask[[i]]) == node_names)==FALSE) stop("All mask matrices must have the same rownames and match outcomes.")
+         }}
+
+         if(!is.null(exposure)){ 
+         for(i in 1:length(exposure)){
+          if(is.null(rownames(exposure[[i]]))) stop("All exposure layers must have rownames.")
+          if(is.null(colnames(exposure[[i]]))) stop("All exposure layers must have colnames.")
+          if(all(rownames(exposure[[i]]) == node_names)==FALSE) stop("All exposure matrices must have the same colnames and match outcomes.")
+          if(all(colnames(exposure[[i]]) == node_names)==FALSE) stop("All exposure matrices must have the same rownames and match outcomes.")
+         }}
+
+         if(!is.null(individual_covariates)){ 
+          if(is.null(rownames(individual_covariates))) stop("individual_covariates must have rownames.")
+          if(all(rownames(individual_covariates) == node_names)==FALSE) stop("individual_covariates must have same rownames as outcome matrix.")
+         }
+
+         if(!is.null(block_covariates)){ 
+          if(is.null(rownames(block_covariates))) stop("block_covariates must have rownames.")
+          if(all(rownames(block_covariates) == node_names)==FALSE) stop("block_covariates must have same rownames as outcome matrix.")
+         }
+         }
 
          ############################################################################# Process data
          N_id =  dim(self_report[[1]])[1]
@@ -213,6 +279,9 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
 
          ############################################################################# Determine legal models
          if(multiplex==FALSE){
+          if(longitudinal==TRUE){
+            supported_models = c("Longitudinal")
+            } else{
          if(N_responses==1){
           if(is.null(m_e_data)){
             supported_models = c("SRM", "SBM", "SRM+SBM")
@@ -228,7 +297,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
          if(N_responses==2 & N_networktypes==3){
           supported_models = c("LNM","LNM+Flows")
          }
-         } else{
+         }} else{
           if(N_responses > 1){
            supported_models = c("Multiplex")
           }
@@ -249,6 +318,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode="bernou
      N_groups_per_block_type = N_groups_per_type,
      block_predictors = group_ids,
      outcome_mode=outcome_mode_numeric,
+     link_mode=link_mode_numeric,
      exposure=exposure_risk,
      mask=mask_mat,
      sampled = m_e_data$sampled, 

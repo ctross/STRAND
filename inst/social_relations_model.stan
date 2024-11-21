@@ -17,7 +17,8 @@ data{
     matrix [22, 2] priors;
     
     int export_network;
-    int outcome_mode;                           
+    int outcome_mode;
+    int link_mode;                           
 }
 
 transformed data{
@@ -60,6 +61,14 @@ parameters{
     vector[N_params[1]-1] focal_effects;
     vector[N_params[2]-1] target_effects;
     vector[N_params[3]-1] dyad_effects;  
+}
+
+transformed parameters{
+    matrix[2*N_responses, 2*N_responses] G_corr; 
+    matrix[2*N_responses, 2*N_responses] D_corr; 
+
+    G_corr = tcrossprod(sr_L); 
+    D_corr = tcrossprod(dr_L);  
 }
 
 model{
@@ -116,12 +125,31 @@ model{
      for( j in 1:N_id ) {
        if( i != j ) {
         if(mask[i,j,1]==0){
+          //# Loops above run over relevant outcomes, below we split by outcome types and links
+
+      //########################### Bernoulli    
       if(outcome_mode==1){
-      outcomes[i,j,1] ~ bernoulli_logit(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_mode==1){
+         outcomes[i,j,1] ~ bernoulli_logit(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        }
+
+        if(link_mode==2){
+         outcomes[i,j,1] ~ bernoulli(Phi(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+        }   
        }
+
+      //########################### Binomial 
       if(outcome_mode==2){
-      outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_mode==1){
+         outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        }
+
+        if(link_mode==2){
+         outcomes[i,j,1] ~ binomial(exposure[i,j,1], Phi(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+        }
        }
+      
+      //########################### Poisson: link is always log, so skip the if-staement for now 
       if(outcome_mode==3){
       outcomes[i,j,1] ~ poisson_log(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
        }
@@ -173,17 +201,31 @@ generated quantities{
             if ( i != j ) {
       // consider each possible state of true tie and compute prob of data
       if(outcome_mode==1){
+       if(link_mode==1){
        p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
        }
+
+       if(link_mode==2){
+       p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+       }
+      }
+
       if(outcome_mode==2){
+       if(link_mode==1){
        p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
        }
+
+       if(link_mode==2){
+       p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+       }
+     }
+
       if(outcome_mode==3){
        p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]);  
        }
             }
-        }//j
-    }//i
+        }
+    }
 
   for ( i in 1:N_id ) {
    p[i,i] = 0; 

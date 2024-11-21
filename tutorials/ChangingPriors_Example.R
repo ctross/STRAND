@@ -30,7 +30,8 @@ model_dat = make_strand_data(outcome = nets,
                               block_covariates = group_ids, 
                               individual_covariates = NULL, 
                               dyadic_covariates = dyad,
-                              outcome_mode = "poisson"
+                              outcome_mode = "poisson",
+                              link_mode = "log"
                               )
 
 # Default Priors Model
@@ -96,5 +97,5 @@ plot_0 = ggplot(tab0, aes(x = Variable, y = Median,
         "lines")) + theme(legend.position="bottom") + scale_color_manual(values=c("#E69F00", "black"))
 plot_0
 
-ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
+# ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
 

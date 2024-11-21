@@ -1,4 +1,4 @@
-#######################################
+###########################################
 #
 #   Binomial Analyses with sampling biases  
 #
@@ -51,7 +51,9 @@ A = simulate_sbm_plus_srm_network_with_measurement_bias(N_id = N_id,
                                                    exposure_predictors = Coloration,
                                                    censoring_predictors = Coloration,
                                                    exposure_effects = c(-2.7),
-                                                   censoring_effects = c(2.1)
+                                                   censoring_effects = c(2.1),
+                                                   outcome_mode = "binomial",
+                                                   link_mode = "logit"
                                                    )
 
 # Plot data
@@ -86,6 +88,7 @@ model_dat = make_strand_data(outcome = grooming,
                              block_covariates = block,
                              dyadic_covariates = dyad,
                              outcome_mode = "binomial",
+                             link_mode = "logit",
                              exposure = exposure
                              )
 
@@ -106,10 +109,40 @@ fit =  fit_block_plus_social_relations_model_with_measurement_bias(data=model_da
                               dyad_regression = ~  SizeDiff,
                               mode="mcmc",
                               stan_mcmc_parameters = list(chains = 1, refresh = 1,
-                                                          iter_warmup = 300, iter_sampling = 300,
+                                                          iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
 
+######################################## Estimates
 res = summarize_strand_results(fit)
 
+
+####################################### Variance partition and reciprocity
+VPCs_1 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")  # STRAND STYLE, separates error and dyadic effects
+VPCs_2 = strand_VPCs(fit, n_partitions = 3, include_reciprocity = TRUE, mode="adj")  # AMEN STYLE, merges error and dyadic effects
+
+VPCs_1
+VPCs_2
+
+####################################### Block effects
+process_block_parameters(input=fit, focal="2 to 1", base="1 to 1", HPDI=0.9)
+process_block_parameters(input=fit, focal="3 to 1", base="1 to 1", HPDI=0.9)
+process_block_parameters(input=fit, focal="3 to 2", base="1 to 1", HPDI=0.9)
+
+
+###############################################################################################################
+############################### Model fit diagnostics
+# Note that these functions are run on the raw stan object, so variables are not mapped yet to parameter names.
+# See Supplementary Appendix for a list of parameter names
+################# Rhat and Effective Samples
+# Check all the relevant parameters
+fit$fit$summary()
+fit$fit$summary("focal_effects")
+fit$fit$summary("target_effects")
+fit$fit$summary("block_effects")
+
+################# Traceplots
+# Check all the relevant parameters
+bayesplot::color_scheme_set("mix-blue-red")
+bayesplot::mcmc_trace(fit$fit$draws(), pars = c("focal_effects[1]","target_effects[1]","sr_L[2,1]","dr_L[2,1]"))
 

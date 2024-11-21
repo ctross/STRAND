@@ -19,7 +19,8 @@
 #' @param dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
 #' @param exposure_max Max sample size of observations for a given focal.
 #' @param N_trials Number of binomial trials in follow-up detectability experiment.
-#' @param mode Outcome mode: only "binomial" is supported.
+#' @param outcome_mode Outcome mode: only "binomial" is supported.
+#' @param link_mode Link mode: can be "logit", "probit".
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param exposure_predictors An N_id by N_individual_parameters matrix of covariates.
@@ -57,7 +58,8 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
                                                                censoring_sigma = 0.01,
                                                                N_trials = 20,
 
-                                                               mode = "binomial",
+                                                               outcome_mode = "binomial",
+                                                               link_mode = "logit",              
 
                                                                individual_predictors = NULL,
                                                                dyadic_predictors = NULL,                                                               
@@ -89,7 +91,7 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
     }
    }
 
-   if(mode != "binomial"){
+   if(outcome_mode != "binomial"){
     stop("Only binomial output supported.")
    }
 
@@ -144,8 +146,15 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
   # Sum dyad and interaction weights and create tie probability matrix.
   for (i in 1:(N_id-1) ){
     for (j in (i+1):N_id){
+      if(link_mode=="logit"){
       p[i,j] = inv_logit(sr[i,1] + sr[j,2] + dr[i,j])
       p[j,i] = inv_logit(sr[j,1] + sr[i,2] + dr[j,i])
+      }
+
+      if(link_mode=="probit"){
+      p[i,j] = pnorm(sr[i,1] + sr[j,2] + dr[i,j])
+      p[j,i] = pnorm(sr[j,1] + sr[i,2] + dr[j,i])
+      }
     }
   }
 
@@ -167,9 +176,17 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
     if(!is.null(exposure_predictors)){
     exposure_factors[i] = exposure_factors[i] + sum(exposure_effects*exposure_predictors[i,])
     }
-
+    
     exposure_offset[i] = rnorm(1, 0, exposure_sigma)                                             # Observation bias.
+    
+    if(link_mode=="logit"){
     exposure_prob[i] = inv_logit(exposure_mu + exposure_factors[i] + exposure_offset[i])         # Its observation probabilities based on individual characteristics.
+      }
+
+    if(link_mode=="probit"){
+    exposure_prob[i] = pnorm(exposure_mu + exposure_factors[i] + exposure_offset[i])             # Its observation probabilities based on individual characteristics.
+      }
+
     true_exposure[i] = rbinom(1, size=exposure_max, prob=exposure_prob[i])                       # Its observations with bias.
   }
 
@@ -198,8 +215,14 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
     censoring_factors[i] = censoring_factors[i] + sum(censoring_effects*censoring_predictors[i,])
     }
 
-    censoring_offset[i] = rnorm(1, 0, censoring_sigma)                                                                 
-    censoring_prob[i] = inv_logit(censoring_mu + censoring_factors[i] + censoring_offset[i])                                      
+    censoring_offset[i] = rnorm(1, 0, censoring_sigma) 
+   if(link_mode=="logit"){
+    censoring_prob[i] = inv_logit(censoring_mu + censoring_factors[i] + censoring_offset[i]) 
+      }        
+
+   if(link_mode=="probit"){
+    censoring_prob[i] = pnorm(censoring_mu + censoring_factors[i] + censoring_offset[i]) 
+      }                                        
     }
     
   eta = 1 - censoring_prob             # Flip to represent NOT censoring

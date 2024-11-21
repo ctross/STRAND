@@ -2,8 +2,7 @@
 #'
 #' This is a simple helper function to mean center data. We recommmend to mean center covariates as it makes parameter interpretation easier.
 #'
-#' @param 
-#' input A vector of data to center.
+#' @param input A vector of data to center.
 #' @return A vector of centered data.
 #' @export
 #' @examples

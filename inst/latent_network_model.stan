@@ -61,6 +61,7 @@ data{
 
   //# Outcome and exposure data
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties
+    array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
   //# Accessory paramters 
     matrix[22, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
@@ -184,6 +185,14 @@ parameters{
     vector[N_params[6]-1] dyad_effects;  
 }
 
+transformed parameters{
+    matrix[2, 2] G_corr; 
+    matrix[2, 2] D_corr; 
+
+    G_corr = tcrossprod(sr_L); 
+    D_corr = tcrossprod(dr_L);  
+}
+
 model{
   array[N_id] vector[2] sr;
   matrix[N_id, N_id] dr;
@@ -294,6 +303,7 @@ model{
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
             if ( i != j ) {
+              if(mask[i,j,1]==0){
                 vector[2] terms;
 
                 //# consider each possible state of true tie and compute prob of data
@@ -306,10 +316,13 @@ model{
                  }
                 
       p[i,j] = inv_logit( sum(br) + sr[i,1] + sr[j,2] + dr[i,j] );  //# Model as a mixture distribution
-      mixed_p[i,j] = log_mix( p[i,j] , terms[2] , terms[1] );  //# Model as a mixture distribution
+      mixed_p[i,j] = log_mix( p[i,j] , terms[2] , terms[1] );       //# Model as a mixture distribution
+      } else{
+        p[i,j] = inv_logit( sum(br) + sr[i,1] + sr[j,2] + dr[i,j] );  
+        mixed_p[i,j] = 0;                                             //# If censored, cut out of sum                         
       }
    }
-  }
+  }}
 
   for ( i in 1:N_id ) {
    p[i,i] = 0; //# we only defined the off diagonal above. here we set the diagonal to zero, in order to call sum below
@@ -390,6 +403,7 @@ generated quantities{
     for ( i in 1:N_id ) {
         for ( j in 1:N_id ) {
             if ( i != j ) {
+              if(mask[i,j,1]==0){
                 // # consider each possible state of true tie and compute prob of data
                 p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
 
@@ -404,6 +418,10 @@ generated quantities{
                     prob_sgij(outcomes[i,j,], outcomes[j,i,], tie, fpr[i], fpr[j], rtt[i], rtt[j], theta[j]);
 
                 p_tie_out[i,j] = exp(terms[2] - log_sum_exp( terms ));
+                } else{
+                  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+                  p_tie_out[i,j] = p[i,j];                                  //# If no data, best guess is p[i,j]
+                }
             }
         }//j
     }//i

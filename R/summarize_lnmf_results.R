@@ -1,23 +1,17 @@
 #' Organize Stan output and provide summaries of model parameters
 #' 
-#' This is a function to organize Stan output and provide summaries of key model parameters
+#' This is a function to organize Stan output and provide summaries of key model parameters.
 #'
-#' @param 
-#' input A STRAND model object, obtained by fitting a latent network model including observed network flows.
-#' @param 
-#' include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
-#' @param 
-#' HPDI Highest Posterior Density Interval. Ranges in (0,1).
+#' @param input A STRAND model object, obtained by fitting a latent network model including observed network flows.
+#' @param include_samples An indicator for the user to specify where raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
+#' @param HPDI Highest Posterior Density Interval. Ranges in (0,1).
 #' @return A STRAND results object including summary table, a summary list, and samples.
 #' @export
 #' @examples
 #' \dontrun{
-#' res = summarize_lnmf_results(input=fit)
+#' res = summarize_lnmf_results(input = fit)
 #' }
 #'
-
-# Should change to allow users to specify HPDI intervals
-
 
 summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
     if(attributes(input)$class != "STRAND Model Object"){
@@ -25,8 +19,14 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
     }
 
     if(attributes(input)$fit_type != "mcmc"){
-        stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
-              during experimental model runs, but final inferences should be based on MCMC sampling.")   
+      if(attributes(input)$fit_type == "vb"){
+         warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
+              but often failed to recover strong true effects. ")  
+         } else{
+         stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling.")  
+      }    
     }
 
     ###################################################### Create samples 
@@ -114,7 +114,6 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
             flow_rate=flow_rate
         )
 
-
     if(dim(input$data$fpr_set)[2]>1)
     measurement_samples$false_positive_rate_coeffs = fpr_effects
 
@@ -123,8 +122,6 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     if(dim(input$data$theta_set)[2]>1)
     measurement_samples$theta_coeffs = theta_effects
-
-
 
     srm_samples = list(
             block_parameters=B,
@@ -153,24 +150,11 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
         samples$predicted_network_sample = posterior::draws_of(stanfit$"p_tie_out") 
         }
 
-    ###################################################### Create summary stats 
-   sum_stats = function(y, x, z){
-      bob = rep(NA, 6)
-       dig = 3
-      bob[1] = y
-      bob[2] = round(median(x),dig)
-      bob[3] = round(HPDI(x, z)[1],dig)
-      bob[4] = round(HPDI(x, z)[2],dig)
-      bob[5] = round(mean(x),dig)
-      bob[6] = round(sd(x),dig)
-
-      return(bob)
-      }
-     
+    ###################################################### Create summary stats   
      results_list = list()
     ################### FPR model
      Q = dim(input$data$fpr_set)[2]-1
-     results_fpr = matrix(NA, nrow=(6+(Q*3)), ncol=6)
+     results_fpr = matrix(NA, nrow=(6+(Q*3)), ncol=7)
 
      results_fpr[1,] = sum_stats("false positive rate intercept, layer 1", samples$measurement_model_samples$false_positive_rate_intercept[,1], HPDI)
      results_fpr[2,] = sum_stats("false positive rate intercept, layer 2", samples$measurement_model_samples$false_positive_rate_intercept[,2], HPDI)
@@ -192,7 +176,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ################### RTT model
      Q = dim(input$data$rtt_set)[2]-1
-     results_rtt = matrix(NA, nrow=(6+(Q*3)), ncol=6)
+     results_rtt = matrix(NA, nrow=(6+(Q*3)), ncol=7)
 
      results_rtt[1,] = sum_stats("recall rate of true ties intercept, layer 1", samples$measurement_model_samples$recall_of_true_ties_intercept[,1], HPDI)
      results_rtt[2,] = sum_stats("recall rate of true ties intercept, layer 2", samples$measurement_model_samples$recall_of_true_ties_intercept[,2], HPDI)
@@ -214,7 +198,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ################### recall model
      Q = input$data$N_periods
-     results_recall = matrix(NA, nrow=(2+Q*2), ncol=6)
+     results_recall = matrix(NA, nrow=(2+Q*2), ncol=7)
 
      results_recall[1,] = sum_stats("maximal effect, true flows on recall of true ties", c(samples$measurement_model_samples$effect_max), HPDI)
      results_recall[2,] = sum_stats("decay rate, true flows on recall of true ties", c(samples$measurement_model_samples$effect_decay), HPDI)
@@ -232,7 +216,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     ################### Theta model
      Q = dim(input$data$theta_set)[2]-1
-     results_theta = matrix(NA, nrow=(2+(Q)), ncol=6)
+     results_theta = matrix(NA, nrow=(2+(Q)), ncol=7)
 
      results_theta[1,] = sum_stats("theta intercept, layer 1 to 2", c(samples$measurement_model_samples$theta_intercept), HPDI)
      results_theta[2,] = sum_stats("theta sd, layer 1 to 2", c(samples$measurement_model_samples$theta_sd), HPDI)
@@ -248,18 +232,14 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     measurement_results = rbind(results_fpr, results_rtt, results_recall, results_theta)
 
-
-
- 
-
     ################### SRM model
     Q1 = dim(input$data$focal_set)[2]-1
     Q2 = dim(input$data$target_set)[2]-1
     Q3 = dim(input$data$dyad_set)[3]-1
 
-     results_srm_focal = matrix(NA, nrow=(1+Q1) , ncol=6)
-     results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=6)
-     results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=6)
+     results_srm_focal = matrix(NA, nrow=(1+Q1) , ncol=7)
+     results_srm_target = matrix(NA, nrow=(1+Q2) , ncol=7)
+     results_srm_dyadic = matrix(NA, nrow=(1+Q3) , ncol=7)
 
    ######### Calculate all focal effects
      results_srm_focal[1,] = sum_stats("focal effects sd", samples$srm_model_samples$focal_target_sd[,1], HPDI)
@@ -294,7 +274,7 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_list[[7]] = results_srm_dyadic
 
      ######### Calculate all other effects
-     results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=6)
+     results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=7)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
 
@@ -316,7 +296,6 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
         stop("Factors not sorted correctly.")
       }
 
-
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
        ticker = ticker + 1  
@@ -327,18 +306,18 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_list[[8]] = results_srm_base
 
      for(i in 1:8)
-     colnames(results_list[[i]]) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD") 
+     colnames(results_list[[i]]) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
 
      names(results_list) = c("False positive rate", "Recall of true ties", "Flow effects", "Theta: question-order effects", "Focal effects: Out-degree", "Target effects: In-degree", "Dyadic effects", "Other estimates")
           
    results_out = rbind(measurement_results, results_srm_focal, results_srm_target,results_srm_dyadic, results_srm_base)
    
    df = data.frame(results_out)
-   colnames(df) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD") 
+   colnames(df) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
 
    res_final = list(summary=df, summary_list=results_list)
 
-  if(include_samples==TRUE){
+   if(include_samples==TRUE){
     res_final$samples=samples
    }
 
@@ -347,4 +326,3 @@ summarize_lnmf_results = function(input, include_samples=TRUE, HPDI=0.9){
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
-

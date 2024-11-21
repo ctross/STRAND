@@ -3,35 +3,23 @@
 #' This function allows users to analyse empirical or simulated data using using a Bayesian latent network model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. The self-report network data and 'true' flows (e.g., observations of exchanges or interactions) are jointly modelled.
 #'
-#' It is important to note that all individuals' block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
+#' It is important to note that all individual block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
 #'
-#' @param 
-#' data A data object of class STRAND, prepared using the make_strand_data() function. The data object must include all covariates used in the formulas listed below.
-#' @param 
-#' fpr_regression A formula for the predictors of false positive rate. Specified as in lm(), e.g.: ~ Age + Education
-#' @param 
-#' rtt_regression A formula for the predictors of the recall rate of true ties. Specified as in lm(), e.g.: ~ Age + Education
-#' @param 
-#' theta_regression A formula for the predictors of theta, the probability that a given individual duplicates a response from layer 1 into layer 2. Specified as in lm(), e.g.: ~ 1
-#' @param 
-#' block_regression A formula for the block-level predictors. This should be specified as in lm(), e.g.: ~ Ethnicity + Sex. Dont use interactions, however.
-#' @param 
-#' focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
-#' @param 
-#' target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
-#' @param 
-#' dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(),, e.g.: ~ Kinship + Friendship
-#' @param 
-#' mode A string giving the mode stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
+#' @param data A data object of class STRAND, prepared using the make_strand_data() function. The data object must include all covariates used in the formulas listed below.
+#' @param fpr_regression A formula for the predictors of false positive rate. Specified as in lm(), e.g.: ~ Age + Education
+#' @param rtt_regression A formula for the predictors of the recall rate of true ties. Specified as in lm(), e.g.: ~ Age + Education
+#' @param theta_regression A formula for the predictors of theta, the probability that a given individual duplicates a response from layer 1 into layer 2. Specified as in lm(), e.g.: ~ 1
+#' @param block_regression A formula for the block-level predictors. This should be specified as in lm(), e.g.: ~ Ethnicity + Sex. Dont use interactions, however.
+#' @param focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
+#' @param target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
+#' @param dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(),, e.g.: ~ Kinship + Friendship
+#' @param mode A string giving the mode stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
-#' @param 
-#' return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
-#' @param 
-#' stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
+#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
-#' @param 
-#' priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
+#' @param priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
 #' @export
 #' @examples
@@ -64,10 +52,9 @@ fit_latent_network_plus_flows_model = function(data,
                                     mode="mcmc",
                                     return_predicted_network=FALSE,
                                     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init = NULL),
                                     priors=NULL
                                     ){
-
     ############################################################################# Check inputs
     if(attributes(data)$class != "STRAND Data Object"){
         stop("fit_latent_network_plus_flows_model() requires a data object of class: STRAND Data Object. Please use make_strand_data() to build your data list.")
@@ -105,11 +92,16 @@ fit_latent_network_plus_flows_model = function(data,
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
 
-    if(sum(data$mask) !=0 ){
-        stop("Censoring mask is not supported for latent network models.")
+    if(!all(data$mask[,,1] == data$mask[,,2])){
+        stop("A censoring mask layer is only supported in latent network models if the same mask is used for both layers.")
     }
-    
 
+    if(data$link_mode != 1){
+        stop("Latent network models must use logit link.")
+    }
+
+    if(sum(data$mask[,,1])>0) warning("The censoring mask layer only applies to the self-report layers. If flow layers are censored too, you must develop your own custom solution.")
+    
 ############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)
     dyad_names = names(data$dyadic_predictors)
@@ -181,9 +173,7 @@ fit_latent_network_plus_flows_model = function(data,
     data$priors = priors
       }
 
-
     ############################################################################# Fit model
-    
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","latent_network_model_flows.stan"))
 
     if(mode=="mcmc"){
@@ -196,13 +186,14 @@ fit_latent_network_plus_flows_model = function(data,
         iter_warmup = stan_mcmc_parameters$iter_warmup,
         iter_sampling = stan_mcmc_parameters$iter_sampling,
         max_treedepth = stan_mcmc_parameters$max_treedepth,
-        adapt_delta = stan_mcmc_parameters$adapt_delta
+        adapt_delta = stan_mcmc_parameters$adapt_delta,
+        init = stan_mcmc_parameters$init
         )
        }
 
     if(mode=="vb"){
      print("Variational inference is fast, but not always dependable. We recommend using vb only for test runs.")   
-     fit = model$variational(data = unclass(data), seed = 123, output_samples = 2000)
+     fit = model$pathfinder(data = unclass(data))
      }
 
     if(mode=="optim"){
@@ -221,4 +212,3 @@ fit_latent_network_plus_flows_model = function(data,
     
     return(bob)
 }
-
