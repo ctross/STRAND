@@ -30,25 +30,50 @@ Quickstart guides for these packages can be found [**here, for cmdstanr**](https
 
 Finally, we note that some users will see a warning message: "Declaration of arrays by placing brackets after a variable name is deprecated and will be removed in Stan 2.32.0." This message is ignorable, we will update the Stan code inside STRAND once deprication occurs at Stan 2.32.0.
 
-Use:
---------------
-
+Uses:
+========
 Example models, with test data, can be found here. Note that analysis of large network data sets can be quite slow using MCMC. 
 
+Basic single-layer network models
+--------------
 Binary/Bernoulli outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
 
 Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Example.R)
 
 Binomial outcomes with measurement error (runs in about 20 minutes): [**Binomial + ME models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Measurement_Error_Example.R)
 
-Count outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
+Poisson outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
 
+
+Double-sampled single-layer network models
+--------------
 Double-sampled binary outcomes (find out for yourself): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
 
-An example on both simulating and fitting networks (includes interactions): [**Interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
+
+Multiplex network models
+--------------
+Multiplex Binary/Bernoulli outcomes (runs in about 3 hours): [**Multiplex Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example.R)
+
+Multiplex Binomial outcomes (runs in about 30 minutes): [**Multiplex Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Binomial_Example.R)
+
+Multiplex Poisson outcomes (runs in about 4 hours): [**Multiplex Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Poisson_Simulation_Example.R)
+
+
+
+Miscellaneous features
+--------------
+
+An example on both simulating and fitting networks (includes interactions): [**Simulating data and fitting interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
+
+An example on both simulating and fitting multiplex networks: [**Simulating data and fitting multiplex models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Binomial_Simulation_Example.R)
 
 An example on accounting for structural-zeros/censored-data. For example, there may be N groups of individuals in a dataset, where each group is in a separate enclosure, and thus only with-group ties can be modeled: [**Structural Zeros**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Callithrix_Example.R).
 
 An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
-Note: each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it! 
+Probit versus logit links for binary outcomes: [**Does anything depend on the choice of link function?**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Probit_v_Logit_Example.R)
+Probit versus logit links for multiplex binary outcomes: [**Does anything depend on the choice of link function?**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Probit_v_Logit_Example.R)
+
+Note:
+========
+Each of the models included in this package have been fit to real emprical datsets, and tested across a wide-range of simulated data to ensure their quality. However, this package is still rather new. If you come across any weird behavior, or notice any bugs, please open an issue, and we will work to address it! 
