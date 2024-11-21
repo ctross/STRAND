@@ -6,7 +6,8 @@
 #' @param B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
 #' @param V Number of blocking variables in B.
 #' @param groups Dataframe of the block IDs of each individual for each variable in B.
-#' @param mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param link_mode Link mode: can be "logit", "probit", or "log". For pois, you must use log.
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
@@ -33,7 +34,7 @@
 #' A = simulate_sbm_network(N_id = N_id, B=list(B=B), V=V, groups = data.frame(clique=factor(clique)),
 #'                          individual_predictor=matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1), 
 #'                          individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
-#'                          mode="bernoulli"
+#'                          outcome_mode="bernoulli"
 #'                                )
 #'
 #' Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
@@ -47,7 +48,8 @@ simulate_sbm_network = function(N_id = 100,                           # N people
                                     B = NULL,                         # Block tie probabilities
                                     V = 3,                            # Blocking variables
                                     groups=NULL,                      # Group IDs
-                                    mode="bernoulli",                 # outcome mode
+                                    outcome_mode="bernoulli",         # outcome mode
+                                    link_mode = "logit",              # link mode
                                     individual_predictors = NULL,     # A matrix of covariates
                                     dyadic_predictors = NULL,         # An array of covariates
                                     individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
@@ -108,7 +110,8 @@ for ( i in 1:(N_id-1) ){
  dr[j,i] = dr_scrap[2] + sum(B_j_i)
 
 # Simulate outcomes
-if(mode=="bernoulli"){
+if(outcome_mode=="bernoulli"){
+ if(link_mode=="logit"){
  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
@@ -116,20 +119,41 @@ if(mode=="bernoulli"){
  y_true[j,i] = rbern( 1 , p[j,i] )
  }
 
- if(mode=="poisson"){
+ if(link_mode=="probit"){
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbern( 1 , p[i,j] )
+
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbern( 1 , p[j,i] )
+ }
+ }
+
+if(outcome_mode=="binomial"){
+ if(link_mode=="logit"){
+ p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
+
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
+ }
+
+ if(link_mode=="probit"){
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
+
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
+ }
+ }
+
+if(outcome_mode=="poisson"){
+ if(link_mode=="log"){
  p[i,j] = exp( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rpois( 1 , p[i,j] )
 
  p[j,i] = exp( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rpois( 1 , p[j,i] )
  }
-
- if(mode=="binomial"){
- p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
- y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
-
- p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
- y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
  }
         }
     }

@@ -12,10 +12,11 @@ simulate_sbm_plus_srm_network(
   sr_mu = c(0, 0),
   sr_sigma = c(0.3, 1.5),
   sr_rho = 0.6,
-  dr_mu = c(0, 0),
+  dr_mu = 0,
   dr_sigma = 1,
   dr_rho = 0.7,
-  mode = "bernoulli",
+  outcome_mode = "bernoulli",
+  link_mode = "logit",
   individual_predictors = NULL,
   dyadic_predictors = NULL,
   individual_effects = NULL,
@@ -43,7 +44,9 @@ simulate_sbm_plus_srm_network(
 
 \item{dr_rho}{Correlation of dyad effects (i.e., dyadic reciprocity).}
 
-\item{mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+
+\item{link_mode}{Link mode: can be "logit", "probit", or "log". For pois, you must use log.}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -83,7 +86,7 @@ A = simulate_sbm_plus_srm_network(N_id = N_id, B=list(B=B), V=V,
                          individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
                          sr_sigma = c(1.4, 0.8), sr_rho = 0.5,
                          dr_sigma = 1.2, dr_rho = 0.8,
-                         mode="bernoulli"
+                         outcome_mode="bernoulli"
                                )
 
 Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))

@@ -13,7 +13,8 @@
 #' @param dr_sigma Standard deviation for dyadic random effects.
 #' @param sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
 #' @param dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
-#' @param mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
+#' @param link_mode Link mode: can be "logit", "probit", or "log". For pois, you must use log.
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
@@ -43,7 +44,7 @@
 #'                          individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
 #'                          sr_sigma = c(1.4, 0.8), sr_rho = 0.5,
 #'                          dr_sigma = 1.2, dr_rho = 0.8,
-#'                          mode="bernoulli"
+#'                          outcome_mode="bernoulli"
 #'                                )
 #'
 #' Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
@@ -63,7 +64,8 @@ simulate_sbm_plus_srm_network = function(N_id = 99,                            #
                                              dr_mu = 0,                        # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                              dr_sigma = 1,                     # Variance of dyad effects 
                                              dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
-                                             mode="bernoulli",                 # outcome mode
+                                             outcome_mode="bernoulli",         # outcome mode
+                                             link_mode = "logit",              # link mode
                                              individual_predictors = NULL,     # A matrix of covariates
                                              dyadic_predictors = NULL,         # An array of covariates
                                              individual_effects = NULL,        # The effects of predictors on sender effects (row 1) and receiver effects (row 2)
@@ -129,7 +131,8 @@ for ( i in 1:(N_id-1) ){
  dr[j,i] = dr_scrap[2] + sum(B_j_i)
 
 # Simulate outcomes
-if(mode=="bernoulli"){
+if(outcome_mode=="bernoulli"){
+ if(link_mode=="logit"){
  p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rbern( 1 , p[i,j] )
 
@@ -137,20 +140,41 @@ if(mode=="bernoulli"){
  y_true[j,i] = rbern( 1 , p[j,i] )
  }
 
- if(mode=="poisson"){
+ if(link_mode=="probit"){
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbern( 1 , p[i,j] )
+
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbern( 1 , p[j,i] )
+ }
+ }
+
+ if(outcome_mode=="binomial"){
+  if(link_mode=="logit"){
+ p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
+
+ p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
+ }
+
+ if(link_mode=="probit"){
+ p[i,j] = pnorm( sr[i,1] + sr[j,2] + dr[i,j])
+ y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
+
+ p[j,i] = pnorm( sr[j,1] + sr[i,2] + dr[j,i])
+ y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
+ }
+ }
+
+ if(outcome_mode=="poisson"){
+  if(link_mode=="log"){
  p[i,j] = exp( sr[i,1] + sr[j,2] + dr[i,j])
  y_true[i,j] = rpois( 1 , p[i,j] )
 
  p[j,i] = exp( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rpois( 1 , p[j,i] )
  }
-
- if(mode=="binomial"){
- p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j])
- y_true[i,j] = rbinom( 1 , size=samps[i,j], prob=p[i,j] )
-
- p[j,i] = inv_logit( sr[j,1] + sr[i,2] + dr[j,i])
- y_true[j,i] = rbinom( 1 , size=samps[j,i], prob=p[j,i] )
  }
         }
     }

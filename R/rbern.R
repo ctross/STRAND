@@ -2,10 +2,8 @@
 #'
 #' See McElreaths Rethinking package for details
 #'
-#' @param 
-#' n Number of samples
-#' @param 
-#' prob Probability
+#' @param n Number of samples
+#' @param prob Probability
 #' @return Binary samples
 #' @export
 

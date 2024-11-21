@@ -15,5 +15,5 @@ HPDI(samples, prob = 0.89)
 A vector of intervals.
 }
 \description{
-This is a simple helper function to get density intervals. See McElreath's Rethinking for details/
+This is a simple helper function to get density intervals. See McElreaths Rethinking for details.
 }

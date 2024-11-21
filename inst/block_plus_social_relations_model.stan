@@ -24,6 +24,7 @@ data{
     matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
     int export_network;                         //# Controls export of predictions
     int outcome_mode;                           //# Are outcomes binomial
+    int link_mode;
 }
 
 transformed data{
@@ -93,6 +94,14 @@ parameters{
     vector[N_params[1]-1] focal_effects;
     vector[N_params[2]-1] target_effects;
     vector[N_params[3]-1] dyad_effects;    
+}
+
+transformed parameters{
+    matrix[2*N_responses, 2*N_responses] G_corr; 
+    matrix[2*N_responses, 2*N_responses] D_corr; 
+
+    G_corr = tcrossprod(sr_L); 
+    D_corr = tcrossprod(dr_L);  
 }
 
 model{
@@ -168,11 +177,23 @@ model{
          }
 
       if(outcome_mode==1){
-      outcomes[i,j,1] ~ bernoulli_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_mode==1){
+         outcomes[i,j,1] ~ bernoulli_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        }
+        if(link_mode==2){
+         outcomes[i,j,1] ~ bernoulli(Phi(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+        }
        }
+
       if(outcome_mode==2){
-      outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        if(link_mode==1){
+         outcomes[i,j,1] ~ binomial_logit(exposure[i,j,1], sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        }
+        if(link_mode==2){
+         outcomes[i,j,1] ~ binomial(exposure[i,j,1], Phi(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]));  //# Then model the outcomes
+        }
        }
+
       if(outcome_mode==3){
       outcomes[i,j,1] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
        }
@@ -238,11 +259,23 @@ generated quantities{
             if ( i != j ) {
       // consider each possible state of true tie and compute prob of data
       if(outcome_mode==1){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        if(link_mode==1){
+         p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
+        if(link_mode==2){
+         p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
        }
+
       if(outcome_mode==2){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        if(link_mode==1){
+         p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
+        if(link_mode==2){
+         p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
        }
+
       if(outcome_mode==3){
        p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]);  
        }

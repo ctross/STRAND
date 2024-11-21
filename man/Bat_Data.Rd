@@ -15,7 +15,7 @@ Finally, there is covariate data on Sex.
 data(Bat_Data)
 }
 \description{
-Data on blood sharing observations. Kinship data is based on SPAGeDi software estimates from the authors' STR data. See the reference to the original study below for full methodological information.
+Data on blood sharing observations. Kinship data is based on SPAGeDi software estimates from the authors STR data. See the reference to the original study below for full methodological information.
 }
 \examples{
 data(Bat_Data)

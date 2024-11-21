@@ -13,7 +13,8 @@ fit_block_model(
   mode = "mcmc",
   return_predicted_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
-    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
+    init = NULL),
   priors = NULL
 )
 }

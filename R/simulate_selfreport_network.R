@@ -37,6 +37,8 @@
 #' @param N_periods Number of time-periods in which observed transfers are sampled. 
 #' @param flow_rate A vector of length N_periods, each element controls the probability that a true tie will result in a transfer in a given time period.
 #' @param decay_curve A vector of length N_periods, each element controls the increment log-odds of recalling a true tie at time T, as a function of a transfer occuring in period t.
+#' @param outcome_mode Outcome mode: must be "bernoulli"
+#' @param link_mode Link mode: can be "logit" or "probit".
 #' @return A list of data formatted for use in Stan models.
 #' @export
 #' @examples
@@ -122,8 +124,13 @@ simulate_selfreport_network = function(  N_id = 99,                        # Num
                                          N_responses = 2,
                                          N_periods = 12, 
                                          flow_rate = rbeta(12, 3, 30),
-                                         decay_curve = rev(1.5*exp(-seq(1,4, length.out=12)))
+                                         decay_curve = rev(1.5*exp(-seq(1,4, length.out=12))),
+                                         outcome_mode="bernoulli",
+                                         link_mode="logit"
                                          ){
+
+if(outcome_mode != "bernoulli"){stop("outcome_mode must be 'bernoulli'.")}
+if(!link_mode %in% c("logit", "probit")){stop("If outcome_mode is 'bernoulli', you must set link_mode to 'logit' or 'probit'.")}  
 
 # Reports of food transferred from i to j in layer 1 & from j to i in layer 2
 statement_flows = array( NA , dim=c( N_id , N_id ,  N_responses ) )
@@ -138,7 +145,8 @@ G_net = simulate_sbm_plus_srm_network(N_id = N_id, B=B, V=V, groups=groups,
                                       dyadic_predictors = dyadic_predictors,        
                                       individual_effects = individual_effects,        
                                       dyadic_effects = dyadic_effects,
-                                      mode="bernoulli"
+                                      outcome_mode=outcome_mode,
+                                      link_mode=link_mode
                                       )
 
 group_id = G_net$group_ids

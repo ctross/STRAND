@@ -13,18 +13,18 @@ rmvnorm2(
 )
 }
 \arguments{
-\item{n}{Number of samples}
+\item{n}{Number of samples.}
 
-\item{Mu}{Mean vector}
+\item{Mu}{Mean vector.}
 
-\item{sigma}{variance vector}
+\item{sigma}{Variance vector.}
 
-\item{Rho}{Correlation matrix}
+\item{Rho}{Correlation matrix.}
 
 \item{method}{See details in Rethinking.}
 }
 \value{
-MV normal samples
+MV normal samples.
 }
 \description{
 See McElreaths Rethinking package for details

@@ -13,7 +13,7 @@ simulate_sbm_plus_srm_network_with_measurement_bias(
   sr_mu = c(0, 0),
   sr_sigma = c(0.3, 1.5),
   sr_rho = 0.6,
-  dr_mu = c(0, 0),
+  dr_mu = 0,
   dr_sigma = 1,
   dr_rho = 0.7,
   exposure_mu = 1.9,
@@ -22,7 +22,8 @@ simulate_sbm_plus_srm_network_with_measurement_bias(
   censoring_mu = 1.9,
   censoring_sigma = 0.01,
   N_trials = 20,
-  mode = "binomial",
+  outcome_mode = "binomial",
+  link_mode = "logit",
   individual_predictors = NULL,
   dyadic_predictors = NULL,
   exposure_predictors = NULL,
@@ -66,7 +67,9 @@ simulate_sbm_plus_srm_network_with_measurement_bias(
 
 \item{N_trials}{Number of binomial trials in follow-up detectability experiment.}
 
-\item{mode}{Outcome mode: only "binomial" is supported.}
+\item{outcome_mode}{Outcome mode: only "binomial" is supported.}
+
+\item{link_mode}{Link mode: can be "logit", "probit".}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 

@@ -31,6 +31,7 @@ data{
     matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
     int export_network;                         //# Controls export of predictions
     int outcome_mode;                           //# Are outcomes binomial? Must be for this model!
+    int link_mode; 
 }
 
 transformed data{
@@ -133,6 +134,14 @@ parameters{
     vector[N_params[3]-1] dyad_effects;    
 }
 
+transformed parameters{
+    matrix[2*N_responses, 2*N_responses] G_corr; 
+    matrix[2*N_responses, 2*N_responses] D_corr; 
+
+    G_corr = tcrossprod(sr_L); 
+    D_corr = tcrossprod(dr_L);  
+}
+
 model{
   //# Local storage to make code more readable
     array[N_id] vector[2] sr;                                  //# Sender and receiver effects
@@ -212,12 +221,19 @@ model{
     }
 
     //# likelihood
-
+    if(link_mode==1){
     for(i in 1:N_id){
       psi[i] = inv_logit(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors[i])));
       theta[i] = inv_logit(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors[i])));
       eta[i] = 1 - theta[i];
-    }
+    }}
+
+    if(link_mode==2){
+    for(i in 1:N_id){
+      psi[i] = Phi(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors[i])));
+      theta[i] = Phi(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors[i])));
+      eta[i] = 1 - theta[i];
+    }}
 
     sampled ~ binomial(sampled_exposure, psi);
     undetected ~ binomial(detected_exposure, theta);
@@ -231,11 +247,22 @@ model{
          }
 
       if(outcome_mode==1){
-      outcomes[i,j,1] ~ bernoulli(inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
+        if(link_mode==1){
+        outcomes[i,j,1] ~ bernoulli(inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
        }
+       if(link_mode==2){
+        outcomes[i,j,1] ~ bernoulli(Phi(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
+       }
+     }
+
       if(outcome_mode==2){
-      outcomes[i,j,1] ~ binomial(exposure[i,j,1], inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
+        if(link_mode==1){
+         outcomes[i,j,1] ~ binomial(exposure[i,j,1], inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
        }
+        if(link_mode==2){
+         outcomes[i,j,1] ~ binomial(exposure[i,j,1], Phi(sum(br) + sr[i,1] + sr[j,2] + dr[i,j])*eta[i]*eta[j]);  //# Then model the outcomes
+       }
+      }
 
        }
       }
@@ -298,10 +325,21 @@ generated quantities{
             if ( i != j ) {
       // consider each possible state of true tie and compute prob of data
       if(outcome_mode==1){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        if(link_mode==1){
+         p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
+        if(link_mode==2){
+         p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+        }
        }
+
       if(outcome_mode==2){
-       p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+        if(link_mode==1){
+         p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+         }
+        if(link_mode==2){
+         p[i,j] = Phi( sr[i,1] + sr[j,2] + dr[i,j]);
+         }
        }
             }
         }//j

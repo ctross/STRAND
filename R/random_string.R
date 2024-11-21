@@ -2,11 +2,9 @@
 #' 
 #' This is a small helper function to create random ID codes.
 #'
-#' @param 
-#' N Number of ID codes to generate
-#' @param 
-#' length Length of ID codes
-#' @return A vector of unique ID codes
+#' @param N Number of ID codes to generate.
+#' @param length Length of ID codes.
+#' @return A vector of unique ID codes.
 #' @export
 #' @examples
 #' \dontrun{
@@ -17,7 +15,7 @@
 random_string = function(N=1, length=12){
     randomString = rep(NA, N)               
     for (i in 1:N){
-        randomString[i] <- paste(sample(c(0:9, letters, LETTERS), length, replace=TRUE), collapse="")
+        randomString[i] = paste(sample(c(0:9, letters, LETTERS), length, replace=TRUE), collapse="")
                   }
 
      if(sum(duplicated(randomString))>0){

@@ -1,0 +1,31 @@
+#' STRAND: Social network analysis and simulation in R using Stan
+#'
+#' The STRAND package provides four categories of important functions:
+#' network simulation functions, network analysis functions, summary functions, and results visualization functions.
+#'
+#' If you use STRAND, please cite us: 
+#'
+#' Ross, C. T., McElreath, R., and Redhead, D. (2024). Modelling animal network data in R using STRAND. Journal of Animal Ecology, 93(3), 254-266.
+#' 
+#' Redhead, D., McElreath, R., and Ross, C. T. (2023). Reliable network inference from unreliable data: A tutorial on latent network modeling using STRAND. Psychological methods.
+#' 
+#' @section Network simulation functions:
+#'The package can be used to simulate network data under stochastic block models, social relations models, and latent network models. 
+#'These tools allow for simulation not only of realistic human social networks, but also allow researchers to simulate the effects of 
+#'potential biases—like respondents falsely reporting ties or failing to recall real ties—on network level properties.
+#' @section Network analysis functions:
+#'Users can specify complex Bayesian social network models using simple lm() style syntax. 
+#'Single-sampled self report data can be modeled using stochastic block models or the social relations model, with or with-out covariates. 
+#'Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement.
+#' @section Summary functions:
+#' Users can summarize Stan results into tables with a simple interface.
+#' @section Visualization functions:
+#' Users can visualize Stan results with a simple interface.
+#'
+#' @keywords internal
+"_PACKAGE"
+NULL
+
+
+
+

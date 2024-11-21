@@ -16,7 +16,8 @@ fit_latent_network_plus_flows_model(
   mode = "mcmc",
   return_predicted_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
-    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL),
+    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
+    init = NULL),
   priors = NULL
 )
 }
@@ -56,7 +57,7 @@ This function allows users to analyse empirical or simulated data using using a 
 and a series of formulas following standard lm() style syntax. The self-report network data and 'true' flows (e.g., observations of exchanges or interactions) are jointly modelled.
 }
 \details{
-It is important to note that all individuals' block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
+It is important to note that all individual block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
 }
 \examples{
 \dontrun{

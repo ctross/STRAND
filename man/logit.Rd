@@ -13,5 +13,5 @@ logit(x)
 logit(x)
 }
 \description{
-See McElreaths Rethinking package for details
+See McElreaths Rethinking package for details.
 }
