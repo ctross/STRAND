@@ -72,6 +72,7 @@ An example on accounting for structural-zeros/censored-data. For example, there 
 An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
 Probit versus logit links for binary outcomes: [**Does anything depend on the choice of link function?**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Probit_v_Logit_Example.R)
+
 Probit versus logit links for multiplex binary outcomes: [**Does anything depend on the choice of link function?**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Probit_v_Logit_Example.R)
 
 Note:
