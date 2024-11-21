@@ -12,7 +12,7 @@ simulate_selfreport_network(
   sr_mu = c(0, 0),
   sr_sigma = c(1, 1),
   sr_rho = 0.6,
-  dr_mu = c(0, 0),
+  dr_mu = 0,
   dr_sigma = 1,
   dr_rho = 0.7,
   individual_predictors = NULL,
@@ -31,7 +31,9 @@ simulate_selfreport_network(
   N_responses = 2,
   N_periods = 12,
   flow_rate = rbeta(12, 3, 30),
-  decay_curve = rev(1.5 * exp(-seq(1, 4, length.out = 12)))
+  decay_curve = rev(1.5 * exp(-seq(1, 4, length.out = 12))),
+  outcome_mode = "bernoulli",
+  link_mode = "logit"
 )
 }
 \arguments{
@@ -94,6 +96,10 @@ Support is on the unit interval. If covariates are centered, this can be loosly 
 \item{flow_rate}{A vector of length N_periods, each element controls the probability that a true tie will result in a transfer in a given time period.}
 
 \item{decay_curve}{A vector of length N_periods, each element controls the increment log-odds of recalling a true tie at time T, as a function of a transfer occuring in period t.}
+
+\item{outcome_mode}{Outcome mode: must be "bernoulli"}
+
+\item{link_mode}{Link mode: can be "logit" or "probit".}
 }
 \value{
 A list of data formatted for use in Stan models.

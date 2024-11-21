@@ -17,11 +17,11 @@ summarize_strand_results(input, include_samples = TRUE, HPDI = 0.9)
 A STRAND results object including summary table, a summary list, and samples.
 }
 \description{
-This is a function to organize Stan output and provide summaries of key model parameters
+This is a function to organize Stan output and provide summaries of key model parameters.
 }
 \examples{
 \dontrun{
-res = summarize_strand_results(input=fit)
+res = summarize_strand_results(input = fit)
 }
 
 }

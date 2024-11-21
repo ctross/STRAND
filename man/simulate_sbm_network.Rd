@@ -9,7 +9,8 @@ simulate_sbm_network(
   B = NULL,
   V = 3,
   groups = NULL,
-  mode = "bernoulli",
+  outcome_mode = "bernoulli",
+  link_mode = "logit",
   individual_predictors = NULL,
   dyadic_predictors = NULL,
   individual_effects = NULL,
@@ -25,7 +26,9 @@ simulate_sbm_network(
 
 \item{groups}{Dataframe of the block IDs of each individual for each variable in B.}
 
-\item{mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+
+\item{link_mode}{Link mode: can be "logit", "probit", or "log". For pois, you must use log.}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 
@@ -61,7 +64,7 @@ B[3,2] = -4
 A = simulate_sbm_network(N_id = N_id, B=list(B=B), V=V, groups = data.frame(clique=factor(clique)),
                          individual_predictor=matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1), 
                          individual_effects=matrix(c(1.7, 0.3),ncol=1, nrow=2),
-                         mode="bernoulli"
+                         outcome_mode="bernoulli"
                                )
 
 Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))

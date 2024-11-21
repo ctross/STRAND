@@ -7,7 +7,8 @@
 make_strand_data(
   outcome = NULL,
   self_report = NULL,
-  outcome_mode = "bernoulli",
+  outcome_mode = NULL,
+  link_mode = NULL,
   ground_truth = NULL,
   block_covariates = NULL,
   individual_covariates = NULL,
@@ -15,7 +16,9 @@ make_strand_data(
   exposure = NULL,
   m_e_data = NULL,
   mask = NULL,
-  multiplex = FALSE
+  multiplex = FALSE,
+  longitudinal = FALSE,
+  check_data_organization = TRUE
 )
 }
 \arguments{
@@ -27,6 +30,8 @@ represents i's reports of transfers from j to i. Data should be binary, 0 or 1, 
 If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.}
 
 \item{outcome_mode}{Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.}
+
+\item{link_mode}{Can be either "logit", "probit", or "log"; "log" can only be used with "poisson" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.}
 
 \item{ground_truth}{A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.}
@@ -44,6 +49,10 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 \item{mask}{A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).}
 
 \item{multiplex}{If TRUE, then all layers in outcome are modeled jointly.}
+
+\item{longitudinal}{If TRUE, then checks for longitudinal data structure are performed.}
+
+\item{check_data_organization}{If TRUE, then checks that all colnames and rownames match. This will catch missorted data.}
 }
 \value{
 A list of data formatted for use by STRAND models.

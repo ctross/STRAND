@@ -7,12 +7,12 @@
 random_string(N = 1, length = 12)
 }
 \arguments{
-\item{N}{Number of ID codes to generate}
+\item{N}{Number of ID codes to generate.}
 
-\item{length}{Length of ID codes}
+\item{length}{Length of ID codes.}
 }
 \value{
-A vector of unique ID codes
+A vector of unique ID codes.
 }
 \description{
 This is a small helper function to create random ID codes.
