@@ -28,8 +28,6 @@ Quickstart guides for these packages can be found [**here, for cmdstanr**](https
 
 **STRAND** calls **Stan** models in the background, so you will need a C++ compiler in your toolchain. Users frequently rely on [**RTools**](https://cran.r-project.org/bin/windows/Rtools/).
 
-Finally, we note that some users will see a warning message: "Declaration of arrays by placing brackets after a variable name is deprecated and will be removed in Stan 2.32.0." This message is ignorable, we will update the Stan code inside STRAND once deprication occurs at Stan 2.32.0.
-
 Uses:
 ========
 Example models, with test data, can be found here. Note that analysis of large network data sets can be quite slow using MCMC. 
