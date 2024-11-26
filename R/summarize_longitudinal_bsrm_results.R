@@ -169,7 +169,7 @@ summarize_longitudinal_bsrm_results = function(input, include_samples=TRUE, HPDI
     ######### Calculate all corr and block effects
     layer_names_long = c(paste0(layer_names, " (out)"), paste0(layer_names, " (in)"))
     layer_names_long2 = c(paste0(layer_names, " (i to j)"), paste0(layer_names, " (j to i)"))
-     results_srm_base = matrix(NA, nrow = (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3], ncol=6)
+     results_srm_base = matrix(NA, nrow = (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3], ncol=7)
      ticker = 0
 
      for(m in 1:((N_responses*2)-1)){
