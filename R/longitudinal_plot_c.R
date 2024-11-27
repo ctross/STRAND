@@ -78,7 +78,7 @@ longitudinal_plot_c = function(input, parameters, type, normalized = FALSE, HPDI
 
    df2 = df 
 
-   colnames(df2) = c("Variable", "Median", "l", "h", "Mean", "SD", "short_names", "time_point", "time_point_int", "extra_short_names", "type")
+   colnames(df2) = c("Variable", "Median", "l", "h", "Mean", "SD", "P", "short_names", "time_point", "time_point_int", "extra_short_names", "type")
 
 
    df2$Diff = as.numeric(df2$h)-as.numeric(df2$l)   
