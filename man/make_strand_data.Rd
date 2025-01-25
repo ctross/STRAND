@@ -16,18 +16,21 @@ make_strand_data(
   exposure = NULL,
   m_e_data = NULL,
   mask = NULL,
+  diffusion_outcome = NULL,
+  diffusion_exposure = NULL,
+  diffusion_mask = NULL,
   multiplex = FALSE,
   longitudinal = FALSE,
   check_data_organization = TRUE
 )
 }
 \arguments{
-\item{outcome}{A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.}
-
-\item{self_report}{A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
-and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
+\item{outcome}{A named list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
+and a list of length 2 for double-sampled networks. For douple-sampled networks, data is presumed to be organized such that outcome[[1]][i,j] represents i's reports of transfers from i to j, and outcome[[2]][i,j]
 represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
-If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.}
+If an exposure variable is provided, outcome can take integer values and outcome_mode="binomial" can be set. For multiplex models, the list can be longer than 2, but all layers must be single sampled, and you must set multiplex = TRUE.}
+
+\item{self_report}{A named list of primary network data (e.g., self reports). This is a deprecated alias for outcome above.}
 
 \item{outcome_mode}{Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.}
 
@@ -36,17 +39,23 @@ If an exposure variable is provided, self_report can take integer values and out
 \item{ground_truth}{A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.}
 
-\item{block_covariates}{A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.}
+\item{block_covariates}{A data.frame of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). Each variable should be provided as a factor.}
 
 \item{individual_covariates}{An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.}
 
-\item{dyadic_covariates}{A list of N_id by N_id by N_dyadic_parameters matrices.}
+\item{dyadic_covariates}{A named list of N_id by N_id by N_dyadic_parameters matrices.}
 
-\item{exposure}{A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
+\item{exposure}{A named list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
 
 \item{m_e_data}{A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.}
 
 \item{mask}{A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).}
+
+\item{diffusion_outcome}{An N-vector of outcome data for a trait diffusing over a network.}
+
+\item{diffusion_exposure}{An N-vector matched with the diffusion_outcome matrix. If diffusion_outcome is a count data set with binomial outcomes, then this variable holds the sample size information.}
+
+\item{diffusion_mask}{An N-vector of indicators for diffusion outcomes that were masked.}
 
 \item{multiplex}{If TRUE, then all layers in outcome are modeled jointly.}
 

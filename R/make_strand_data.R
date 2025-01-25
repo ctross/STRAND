@@ -3,21 +3,24 @@
 #' This function organizes network data and covariates into a form that can be used by STRAND for model fitting. All 
 #' STRAND model fitting functions require their data to be supplied in the format exported here.
 #'
-#' @param outcome A list of primary network data (e.g., self reports). This argument is just another name for self_report as described below.
-#' @param self_report A list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
-#' and a list of length 2 for double-sampled networks. Data is presumed to be organized such that self_report[[1]][i,j] represents i's reports of transfers from i to j, and self_report[[2]][i,j]
+#' @param outcome A named list of primary network data (e.g., self reports). Each entry in the list must be an adjacency matrix. This will be a list of length 1 for single-sampled networks
+#' and a list of length 2 for double-sampled networks. For douple-sampled networks, data is presumed to be organized such that outcome[[1]][i,j] represents i's reports of transfers from i to j, and outcome[[2]][i,j]
 #' represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
-#' If an exposure variable is provided, self_report can take integer values and outcome_mode="binomial" can be set.
+#' If an exposure variable is provided, outcome can take integer values and outcome_mode="binomial" can be set. For multiplex models, the list can be longer than 2, but all layers must be single sampled, and you must set multiplex = TRUE.
+#' @param self_report A named list of primary network data (e.g., self reports). This is a deprecated alias for outcome above.
 #' @param outcome_mode Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.
 #' @param link_mode Can be either "logit", "probit", or "log"; "log" can only be used with "poisson" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.
 #' @param ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
-#' @param block_covariates A vector of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). This should be provided as a factor.
+#' @param block_covariates A data.frame of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). Each variable should be provided as a factor.
 #' @param individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
-#' @param dyadic_covariates A list of N_id by N_id by N_dyadic_parameters matrices.
-#' @param exposure A list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
+#' @param dyadic_covariates A named list of N_id by N_id by N_dyadic_parameters matrices.
+#' @param exposure A named list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
 #' @param m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.
 #' @param mask A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).
+#' @param diffusion_outcome An N-vector of outcome data for a trait diffusing over a network.
+#' @param diffusion_exposure An N-vector matched with the diffusion_outcome matrix. If diffusion_outcome is a count data set with binomial outcomes, then this variable holds the sample size information.
+#' @param diffusion_mask An N-vector of indicators for diffusion outcomes that were masked.
 #' @param multiplex If TRUE, then all layers in outcome are modeled jointly.
 #' @param longitudinal If TRUE, then checks for longitudinal data structure are performed.
 #' @param check_data_organization If TRUE, then checks that all colnames and rownames match. This will catch missorted data.
@@ -30,7 +33,7 @@
 #'
 
 make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, link_mode=NULL, ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
-                            exposure=NULL, m_e_data = NULL, mask=NULL, multiplex = FALSE, longitudinal = FALSE, check_data_organization = TRUE){
+                            exposure=NULL, m_e_data = NULL, mask=NULL, diffusion_outcome = NULL, diffusion_exposure = NULL, diffusion_mask = NULL, multiplex = FALSE, longitudinal = FALSE, check_data_organization = TRUE){
 
          ############################################################################# Check inputs
          # Renames self-report if needed
@@ -42,7 +45,102 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
            stop("Longitudinal models require single-layer networks.")
          }
 
-         ###################### Outcome mode
+         ######################################################## Check types
+         if(!is.null(outcome) & !is.list(outcome)){
+          stop("outcome must be a list of adjacency matrices, even if length is one.")
+         }
+
+         if(!is.null(self_report) & !is.list(self_report)){
+          stop("self_report must be a list of adjacency matrices, even if length is one.")
+         }
+
+         if(!is.null(outcome_mode) & (!outcome_mode %in% c("bernoulli", "binomial", "poisson"))){
+          stop("outcome_mode must be either bernoulli, binomial, or poisson.")
+         }
+
+         if(!is.null(link_mode) & (!link_mode %in% c("logit", "probit", "log"))){
+          stop("link_mode must be either logit, probit, or log.")
+         }
+
+         if(!is.null(ground_truth) & !is.list(ground_truth)){
+          stop("ground_truth must be a list of adjacency matrices, even if length is one.")
+         }
+
+         if(!is.null(block_covariates) & !is.data.frame(block_covariates)){
+          stop("block_covariates must be a data.frame.")
+         }
+
+         if(!is.null(individual_covariates) & !is.data.frame(individual_covariates)){
+          stop("individual_covariates must be a data.frame.")
+         }
+
+         if(!is.null(dyadic_covariates) & !is.list(dyadic_covariates)){
+          stop("dyadic_covariates must be a list of adjacency matrices, even if length is one.")
+         }
+
+        if(!is.null(exposure) & !is.list(exposure)){
+          stop("exposure must be a list of adjacency matrices, even if length is one.")
+         }
+
+        if(!is.null(m_e_data) & !is.list(m_e_data)){
+          stop("m_e_data must be a list.")
+         }
+
+        if(!is.null(mask) & !is.list(mask)){
+          stop("mask must be a list of adjacency matrices, even if length is one.")
+         }
+
+        if(!is.null(diffusion_outcome) & !is.list(diffusion_outcome)){
+          stop("diffusion_outcome must be a vector.")
+         }
+
+        if(!is.null(diffusion_exposure) & !is.list(diffusion_exposure)){
+          stop("diffusion_exposure must be a vector.")
+         }
+
+        if(!is.null(diffusion_mask) & !is.list(diffusion_mask)){
+          stop("diffusion_mask must be a vector.")
+         }
+
+         if(!multiplex %in% c(TRUE, FALSE)){
+          stop("multiplex must be either TRUE or FALSE.")
+         }
+
+         if(!longitudinal %in% c(TRUE, FALSE)){
+          stop("longitudinal must be either TRUE or FALSE.")
+         }
+
+         if(!check_data_organization %in% c(TRUE, FALSE)){
+          stop("check_data_organization must be either TRUE or FALSE.")
+         }
+      
+      ################################## Check names
+         if(!is.null(outcome) & is.list(outcome) & is.null(names(outcome))){
+          stop("outcome must be a *named* list of adjacency matrices, even if length is one. Please provide a name/label for each of the outcome matrices.  ")
+         }
+
+         if(!is.null(self_report) & is.list(self_report) & is.null(names(self_report))){
+          stop("self_report must be a *named* list of adjacency matrices, even if length is one. Please provide a name/label for each of the outcome matrices. ")
+         }
+
+         if(!is.null(ground_truth) & is.list(ground_truth) & is.null(names(ground_truth))){
+          stop("ground_truth must be a *named* list of adjacency matrices, even if length is one. Please provide a name/label for each of the ground_truth matrices. ")
+         }
+
+         if(!is.null(dyadic_covariates) & is.list(dyadic_covariates) & is.null(names(dyadic_covariates))){
+          stop("dyadic_covariates must be a *named* list of adjacency matrices, even if length is one.Please provide a name/label for each of the dyadic_covariates matrices. ")
+         }
+
+         if(!is.null(exposure) & is.list(exposure) & is.null(names(exposure))){
+          stop("exposure must be a *named* list of adjacency matrices, even if length is one. Please provide a name/label (matched to those of 'outcome') for each of the exposure matrices.")
+         }
+
+         if(!is.null(mask) & is.list(mask) & is.null(names(mask))){
+          stop("mask must be a *named* list of adjacency matrices, even if length is one. Please provide a name/label (matched to those of 'outcome') for each of the mask matrices.")
+         }
+
+
+      ###################### Outcome mode
          if(is.null(outcome_mode)) stop(" 'outcome_mode' must be declared.")
          if(is.null(link_mode)) stop(" 'link_mode' must be declared.")
 
@@ -101,8 +199,8 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
 
          # Check self_report data
          if(is.null(exposure)){
-         if(is.null(self_report)) stop("self_report must be a list of matrices.")
-         if(!is.list(self_report)) stop("self_report must be a list of matrices.")
+         if(is.null(self_report)) stop("outcome must be a list of matrices.")
+         if(!is.list(self_report)) stop("outcome must be a list of matrices.")
          for(i in 1:length(self_report)){
           if(outcome_mode=="bernoulli"){
           if(!all(self_report[[i]] %in% c(0,1))) stop("self_report must be binary 0 or 1")
@@ -111,12 +209,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          }
 
          if(!is.null(exposure)){
-           if(length(self_report) != length(exposure)) stop("self_report and exposure must be lists of matrices equal in length.")
+           if(length(self_report) != length(exposure)) stop("outcome and exposure must be lists of matrices equal in length.")
            if(sum(names(exposure)==names(outcome)) != length(names(exposure))) stop("Names of exposure and outcome must match. Order matters.")
          }
 
         if(!is.null(mask)){
-           if(length(self_report) != length(mask)) stop("self_report and mask must be lists of matrices equal in length.")
+           if(length(self_report) != length(mask)) stop("outcome and mask must be lists of matrices equal in length.")
            if(sum(names(mask)==names(outcome)) != length(names(mask))) stop("Names of mask and outcome must match. Order matters.")
          }
 
@@ -303,6 +401,20 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
           }
          }
 
+   ############################################ Diffusion models
+   if(is.null(diffusion_outcome)){
+    diffusion_outcome = rep(0, N_id)
+         } 
+
+   if(is.null(diffusion_exposure)){
+    diffusion_exposure = rep(1, N_id)
+         } 
+
+   if(is.null(diffusion_mask)){
+    diffusion_mask = rep(0, N_id)
+         } 
+
+   ###################################### Merge all
    model_dat = list(
      N_networktypes = N_networktypes,                                               
      N_id = N_id,                                                                                                          
@@ -324,7 +436,10 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
      sampled = m_e_data$sampled, 
      detected = m_e_data$detected,
      sampled_exposure = m_e_data$sampled_exposure, 
-     detected_exposure = m_e_data$detected_exposure
+     detected_exposure = m_e_data$detected_exposure,
+     diffusion_outcomes = diffusion_outcome,
+     diffusion_exposure = diffusion_exposure,
+     diffusion_mask = diffusion_mask
      )
 
    attr(model_dat, "class") = "STRAND Data Object"
