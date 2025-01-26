@@ -32,6 +32,7 @@ Uses:
 ========
 Example models, with test data, can be found here. Note that analysis of large network data sets can be quite slow using MCMC. 
 
+
 Basic single-layer network models
 --------------
 Binary/Bernoulli outcomes (runs in about 2 hours): [**Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example.R)
@@ -41,6 +42,9 @@ Binomial outcomes (runs in about 2 minutes): [**Binomial models**](https://githu
 Binomial outcomes with measurement error (runs in about 20 minutes): [**Binomial + ME models**](https://github.com/ctross/STRAND/blob/main/tutorials/Binomial_Measurement_Error_Example.R)
 
 Poisson outcomes (runs in about 20 seconds): [**Poisson models**](https://github.com/ctross/STRAND/blob/main/tutorials/Poisson_Example.R)
+
+Undirected networks (runs in about 20 minutes): [**Undirected networks**](https://github.com/ctross/STRAND/blob/main/tutorials/Undirected_Example.R)
+
 
 
 Double-sampled single-layer network models
