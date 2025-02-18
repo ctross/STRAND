@@ -1,3 +1,18 @@
+functions{
+  //# Function to build a dyadic reciprocity matrix by hand
+  matrix multiply_diag(matrix B, vector C){
+    matrix[rows(B),cols(B)] D = B;
+
+    for(i in 1:size(C))
+     D[i,i] = B[i,i]*C[i];
+    return D;
+  }
+
+  matrix build_dr_matrix(matrix A, matrix B, vector C){
+    return append_row(append_col(A, multiply_diag(B, C)), append_col(multiply_diag(B, C), A));
+  }
+}
+
 data{   
   //# Array dimension variables                                   
     int N_id;                                  //# Number of people                                                                                                   
@@ -20,7 +35,7 @@ data{
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
-  //# Accessory parameters 
+  //# Accessory paramters 
     matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
     int export_network;                         //# Controls export of predictions
     int outcome_mode;                           //# Are outcomes binomial
@@ -94,18 +109,22 @@ parameters{
     array[N_id] vector[2*N_responses] sr_raw;                
 
     //# Variation of dyadic effects
-    vector<lower=0>[N_responses] dr_sigma;              
-    cholesky_factor_corr[2*N_responses] dr_L;   
-    array[N_responses] matrix[N_id, N_id] dr_raw;   
+    vector<lower=0>[N_responses] dr_sigma; 
+    cholesky_factor_corr[N_responses] dr_A_L;
+    cholesky_factor_corr[N_responses] dr_B_L; 
+    vector<lower=-1, upper=1>[N_responses] dr_C;                    
+    array[N_responses] matrix[N_id, N_id] dr_raw; 
 
     //# Error in Gaussian model
-    vector<lower=0>[N_responses] error_sigma;   
+    vector<lower=0>[N_responses] error_sigma;      
 }
 
 transformed parameters{
-    matrix[2*N_responses, 2*N_responses] D_corr; 
+    matrix[2*N_responses, 2*N_responses] D_corr;
+    matrix[2*N_responses, 2*N_responses] dr_L;    
 
-    D_corr = tcrossprod(dr_L);  
+    D_corr = build_dr_matrix(tcrossprod(dr_A_L), tcrossprod(dr_B_L), dr_C);  
+    dr_L = cholesky_decompose(D_corr);
 }
 
 model{
@@ -117,13 +136,6 @@ model{
     array[N_group_vars] matrix[max_N_groups, max_N_groups] B;  //# Block effects, in array form
     vector[N_group_vars] br;                                   //# Sum of block effects per dyad    
     vector[2*N_responses] scrap;                                           //# Local storage                    
-    
-    //# Stitch together the dyadic matrix
-    for(m in 1:(N_responses-1)){
-    for(n in (m+1):N_responses){
-     target += normal_lpdf(D_corr[m+N_responses, n+N_responses] | D_corr[m, n],   bandage_penalty);
-     target += normal_lpdf(D_corr[m, n+N_responses]   | D_corr[n, m+N_responses], bandage_penalty);
-    }}
 
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
@@ -135,14 +147,17 @@ model{
     for(l in 1:N_responses)
     to_vector(dr_raw[l]) ~ normal(0,1);
     dr_sigma ~ exponential(priors[16,1]);
-    dr_L ~ lkj_corr_cholesky(priors[18,1]);
+
+    dr_A_L ~ lkj_corr_cholesky(priors[18,1]);
+    dr_B_L ~ lkj_corr_cholesky(priors[18,1]);
+    dr_C ~ uniform(-1,1) ;
+    
     
     for(i in 1:N_id){
       sr_multi[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i];
      }
 
     
-
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
 
@@ -231,7 +246,7 @@ model{
        }
        
       if(outcome_mode==3){
-        outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+      outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
        }
 
       if(outcome_mode==4){

@@ -34,6 +34,8 @@ summarize_longitudinal_bsrm_results = function(input, include_samples=TRUE, HPDI
     N_responses = input$data$N_responses
     layer_names = attr(input$data,"layer_names")
 
+    outcome_mode = input$data$outcome_mode 
+
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
     ################### Network model parameters
@@ -44,6 +46,8 @@ summarize_longitudinal_bsrm_results = function(input, include_samples=TRUE, HPDI
     dr_L = posterior::draws_of(stanfit$"dr_L")
     dr_raw = posterior::draws_of(stanfit$"dr_raw") 
     dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
+
+    error_sigma = posterior::draws_of(stanfit$"error_sigma")
 
     G_corr = posterior::draws_of(stanfit$"G_corr")
     D_corr = posterior::draws_of(stanfit$"D_corr")
@@ -91,6 +95,7 @@ summarize_longitudinal_bsrm_results = function(input, include_samples=TRUE, HPDI
             focal_target_random_effects=sr_raw,
 
             dyadic_sd = dr_sigma,
+            error_sd = error_sigma,
             dyadic_L = dr_L,
             dyadic_random_effects=dr_raw,
 
@@ -169,8 +174,15 @@ summarize_longitudinal_bsrm_results = function(input, include_samples=TRUE, HPDI
     ######### Calculate all corr and block effects
     layer_names_long = c(paste0(layer_names, " (out)"), paste0(layer_names, " (in)"))
     layer_names_long2 = c(paste0(layer_names, " (i to j)"), paste0(layer_names, " (j to i)"))
-     results_srm_base = matrix(NA, nrow = (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3], ncol=7)
-     ticker = 0
+     results_srm_base = matrix(NA, nrow = (1 + (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3]), ncol=7)
+     ticker = 1
+     
+     if(outcome_mode == 4){
+        results_srm_base[ticker,] = sum_stats(paste0("error sd - ", layer_names[q]), samples$srm_model_samples$error_sd[,q], HPDI)
+        } else{
+        results_srm_base[ticker,] = c(paste0("error sd - ", layer_names[q]), rep(NA,6))     
+        }
+     
 
      for(m in 1:((N_responses*2)-1)){
      for(n in (m+1):(N_responses*2)){

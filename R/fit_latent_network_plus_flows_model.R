@@ -100,6 +100,10 @@ fit_latent_network_plus_flows_model = function(data,
         stop("Latent network models must use logit link.")
     }
 
+    if(data$outcome_mode==4){
+        stop("Gaussian outcomes not supported for this model type.")
+    }
+
     if(sum(data$mask[,,1])>0) warning("The censoring mask layer only applies to the self-report layers. If flow layers are censored too, you must develop your own custom solution.")
     
 ############################################################################# Prepare data and parse formulas

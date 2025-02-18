@@ -6,8 +6,9 @@
 #' @param B List of matrices that hold intercept and offset terms. Log-odds. The first matrix should be  1 x 1 with the value being the intercept term.
 #' @param V Number of blocking variables in B.
 #' @param groups Dataframe of the block IDs of each individual for each variable in B.
-#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
-#' @param link_mode Link mode: can be "logit", "probit", or "log". For pois, you must use log.
+#' @param error_sigma Standard deviation for measurement error in Gaussian models.
+#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", "binomial", or "gaussian".
+#' @param link_mode Link mode: can be "logit", "probit", "log", or "identity". For poisson, you must use log. For Gaussian you must use identity.
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
@@ -48,6 +49,7 @@ simulate_sbm_network = function(N_id = 100,                           # N people
                                     B = NULL,                         # Block tie probabilities
                                     V = 3,                            # Blocking variables
                                     groups=NULL,                      # Group IDs
+                                    error_sigma = 0.01,               # Error variance in Gaussian model
                                     outcome_mode="bernoulli",         # outcome mode
                                     link_mode = "logit",              # link mode
                                     individual_predictors = NULL,     # A matrix of covariates
@@ -153,6 +155,16 @@ if(outcome_mode=="poisson"){
 
  p[j,i] = exp( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rpois( 1 , p[j,i] )
+ }
+ }
+
+ if(outcome_mode=="gaussian"){
+ if(link_mode=="identity"){
+ p[i,j] = sr[i,1] + sr[j,2] + dr[i,j]
+ y_true[i,j] = rnorm( 1 , p[i,j], error_sigma )
+
+ p[j,i] = sr[j,1] + sr[i,2] + dr[j,i]
+ y_true[j,i] = rnorm( 1 , p[j,i], error_sigma )
  }
  }
         }

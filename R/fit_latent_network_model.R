@@ -103,6 +103,10 @@ fit_latent_network_model = function(data,
     if(data$link_mode != 1){
         stop("Latent network models must use: link_mode='logit'.")
     }
+
+    if(data$outcome_mode==4){
+        stop("Gaussian outcomes not supported for this model type.")
+    }
     
     ############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)

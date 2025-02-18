@@ -32,6 +32,8 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
     ###################################################### Create samples 
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
+    outcome_mode = input$data$outcome_mode 
+
     ################### Extract effects from sample set
     if(dim(input$data$block_set)[2]>0)
     block_effects = posterior::draws_of(stanfit$"block_effects")
@@ -44,6 +46,8 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
     if(dim(input$data$dyad_set)[3]>1)
     dyad_effects = posterior::draws_of(stanfit$"dyad_effects")
+
+    error_sigma = posterior::draws_of(stanfit$"error_sigma")
 
     ################### Get index data for block-model samples
     block_indexes = c()
@@ -64,7 +68,8 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
      
     ################## Now build up full list of samples
     srm_samples = list(
-       block_parameters = B
+       block_parameters = B,
+       error_sd = error_sigma
         )
 
     if(dim(input$data$focal_set)[2]>1)
@@ -128,7 +133,15 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_list[[3]] = results_srm_dyadic
 
      ######### Calculate all block-model effects
-     results_srm_base = matrix(NA, nrow=dim(block_effects)[2], ncol=7)
+     results_srm_base = matrix(NA, nrow = (1 + dim(block_effects)[2]), ncol=7)
+
+        if(outcome_mode == 4){
+        results_srm_base[1,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
+        } else{
+        results_srm_base[1,] = c("error sd - ", rep(NA,6))     
+        }
+
+     
  
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
      
@@ -151,7 +164,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
        ticker = ticker + 1  
-      results_srm_base[ ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
+      results_srm_base[ 1 + ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
                                                                          samples$srm_model_samples$block_parameters[[q]][,b1,b2], HPDI)
      }}
 
