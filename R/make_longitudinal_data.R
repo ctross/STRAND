@@ -54,6 +54,10 @@ make_longitudinal_data = function(long_data,
     exposure  = array(NA, c(dim(thin_dat[[1]]$exposure)[c(1:2)],length(thin_dat)))
     mask  = array(NA, c(dim(thin_dat[[1]]$mask)[c(1:2)],length(thin_dat)))
 
+    diffusion_outcomes  = array(NA, c(length(thin_dat[[1]]$diffusion_outcomes),length(thin_dat)))
+    diffusion_exposure  = array(NA, c(length(thin_dat[[1]]$diffusion_exposure),length(thin_dat)))
+    diffusion_mask  = array(NA, c(length(thin_dat[[1]]$diffusion_mask),length(thin_dat)))
+
     for(i in 1:length(thin_dat)){
      dyad_set[ , , , i] = thin_dat[[i]]$dyad_set
      focal_set[ , , i] = thin_dat[[i]]$focal_set
@@ -63,6 +67,10 @@ make_longitudinal_data = function(long_data,
      outcomes[ , , i]  = thin_dat[[i]]$outcomes
      exposure[ , , i]  = thin_dat[[i]]$exposure
      mask[ , , i]  = thin_dat[[i]]$mask
+
+     diffusion_outcomes[ , i]  = thin_dat[[i]]$diffusion_outcomes
+     diffusion_exposure[ , i]  = thin_dat[[i]]$diffusion_exposure
+     diffusion_mask[ , i]  = thin_dat[[i]]$diffusion_mask
     }
 
     dimnames(dyad_set) = dimnames(thin_dat[[1]]$dyad_set)
@@ -74,6 +82,7 @@ make_longitudinal_data = function(long_data,
     dimnames(exposure) = dimnames(thin_dat[[1]]$exposure)
     dimnames(mask) = dimnames(thin_dat[[1]]$mask)
 
+
     dat_out = thin_dat[[1]]
 
     dat_out$dyad_set = dyad_set
@@ -83,9 +92,18 @@ make_longitudinal_data = function(long_data,
     dat_out$outcomes = outcomes
     dat_out$exposure = exposure
     dat_out$mask = mask
+
+    dat_out$diffusion_outcomes = diffusion_outcomes
+    dat_out$diffusion_exposure = diffusion_exposure
+    dat_out$diffusion_mask = diffusion_mask
     
     attr(dat_out, "class") = "STRAND Data Object"
-    attr(dat_out, "supported_models") = c("Longitudinal")
+    if(sum(diffusion_outcomes)>0){
+        attr(dat_out, "supported_models") = c("Longitudinal","NBDA")
+        } else{
+        attr(dat_out, "supported_models") = c("Longitudinal")        
+        }
+   
     attr(dat_out, "layer_names") = names(long_data)
 
     data = dat_out

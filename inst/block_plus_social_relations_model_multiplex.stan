@@ -20,12 +20,14 @@ data{
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
-  //# Accessory paramters 
+  //# Accessory parameters 
     matrix[22, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
     int export_network;                         //# Controls export of predictions
     int outcome_mode;                           //# Are outcomes binomial
     int link_mode;                              //# Link type
     real bandage_penalty;                       //# Stitching strength
+    vector[N_responses] prior_error_mu;         //# Error priors for Gaussian outcomes
+    vector[N_responses] prior_error_sigma;      //#
 }
 
 transformed data{
@@ -94,14 +96,15 @@ parameters{
     //# Variation of dyadic effects
     vector<lower=0>[N_responses] dr_sigma;              
     cholesky_factor_corr[2*N_responses] dr_L;   
-    array[N_responses] matrix[N_id, N_id] dr_raw;    
+    array[N_responses] matrix[N_id, N_id] dr_raw;   
+
+    //# Error in Gaussian model
+    vector<lower=0>[N_responses] error_sigma;   
 }
 
 transformed parameters{
-    matrix[2*N_responses, 2*N_responses] G_corr; 
     matrix[2*N_responses, 2*N_responses] D_corr; 
 
-    G_corr = tcrossprod(sr_L); 
     D_corr = tcrossprod(dr_L);  
 }
 
@@ -182,6 +185,8 @@ model{
      target_effects[l] ~ normal(priors[13,1], priors[13,2]);
      dyad_effects[l] ~ normal(priors[14,1], priors[14,2]);
 
+     error_sigma[l] ~ normal(prior_error_mu[l], prior_error_sigma[l]);
+
      for(i in 1:N_id){
      sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors[i]));
      sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors[i]));  
@@ -226,7 +231,11 @@ model{
        }
        
       if(outcome_mode==3){
-      outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+        outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+       }
+
+      if(outcome_mode==4){
+      outcomes[i,j,l] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
        }
 
        }
@@ -236,3 +245,9 @@ model{
   }
 
  }
+
+generated quantities{
+    matrix[2*N_responses, 2*N_responses] G_corr; 
+
+    G_corr = tcrossprod(sr_L); 
+}

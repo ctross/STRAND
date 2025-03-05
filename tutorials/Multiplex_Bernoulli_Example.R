@@ -381,3 +381,4 @@ fit_2$fit$summary("block_effects")
 bayesplot::color_scheme_set("mix-blue-red")
 bayesplot::mcmc_trace(fit_2$fit$draws(), pars = c("focal_effects[1,1]","target_effects[1,2]","sr_L[2,1]","dr_L[2,1]"))
 
+

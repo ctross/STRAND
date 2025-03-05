@@ -16,6 +16,7 @@ simulate_multiplex_network(
   dr_mu,
   dr_sigma,
   dr_Rho,
+  error_sigma = 0.01,
   outcome_mode = "bernoulli",
   link_mode = "logit",
   individual_predictors = NULL,
@@ -47,9 +48,11 @@ simulate_multiplex_network(
 
 \item{dr_Rho}{Correlation of dyad effects (i.e., dyadic reciprocity). Needs to be a valid correlation matrix, 2*N_layers by 2*N_layers.}
 
-\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+\item{error_sigma}{Standard deviation for measurement error in Gaussian models.}
 
-\item{link_mode}{Link mode: can be "logit", "probit", or "log". For Poisson, you must use "log".}
+\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", "binomial", or "gaussian".}
+
+\item{link_mode}{Link mode: can be "logit", "probit", "log", or "identity". For poisson, you must use log. For Gaussian you must use identity.}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 

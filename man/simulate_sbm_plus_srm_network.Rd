@@ -15,6 +15,7 @@ simulate_sbm_plus_srm_network(
   dr_mu = 0,
   dr_sigma = 1,
   dr_rho = 0.7,
+  error_sigma = 0.01,
   outcome_mode = "bernoulli",
   link_mode = "logit",
   individual_predictors = NULL,
@@ -44,9 +45,11 @@ simulate_sbm_plus_srm_network(
 
 \item{dr_rho}{Correlation of dyad effects (i.e., dyadic reciprocity).}
 
-\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", or "binomial".}
+\item{error_sigma}{Standard deviation for measurement error in Gaussian models.}
 
-\item{link_mode}{Link mode: can be "logit", "probit", or "log". For pois, you must use log.}
+\item{outcome_mode}{Outcome mode: can be "bernoulli", "poisson", "binomial", or "gaussian".}
+
+\item{link_mode}{Link mode: can be "logit", "probit", "log", or "identity". For poisson, you must use log. For Gaussian you must use identity.}
 
 \item{individual_predictors}{An N_id by N_individual_parameters matrix of covariates.}
 

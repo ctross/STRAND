@@ -28,6 +28,8 @@ data{
     real bandage_penalty;                            //# Stitching strength
     int random_effects_mode;                         //# Mode for random effects
     int coefficient_mode;                            //# Mode for other effects
+    vector[N_responses] prior_error_mu;              //# Error priors for Gaussian outcomes
+    vector[N_responses] prior_error_sigma;           //#
 }
 
 transformed data{
@@ -98,7 +100,10 @@ parameters{
     //# Variation of dyadic effects
     vector<lower=0>[N_responses] dr_sigma;              
     cholesky_factor_corr[2*N_responses] dr_L;   
-    array[N_responses] matrix[N_id, N_id] dr_raw;    
+    array[N_responses] matrix[N_id, N_id] dr_raw; 
+
+    //# Error in Gaussian model
+    vector<lower=0>[N_responses] error_sigma;    
 }
 
 transformed parameters{
@@ -241,6 +246,8 @@ model{
      target_effects[l] ~ normal(priors[13,1], priors[13,2]);
      dyad_effects[l] ~ normal(priors[14,1], priors[14,2]);
 
+     error_sigma[l] ~ normal(prior_error_mu[l], prior_error_sigma[l]);
+
      for(i in 1:N_id){                                                                
      sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors[i, ,l]));
      sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors[i, ,l]));  
@@ -285,6 +292,10 @@ model{
 
       if(outcome_mode==3){
          outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+       }
+
+      if(outcome_mode==4){
+         outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
        }
 
        }

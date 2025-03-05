@@ -14,8 +14,9 @@
 #' @param dr_sigma Standard deviation for dyadic random effects. This should be a vector N_layers long.
 #' @param sr_Rho Correlation of sender-receiver effects (i.e., generalized reciprocity). Needs to be a valid correlation matrix, 2*N_layers by 2*N_layers. 
 #' @param dr_Rho Correlation of dyad effects (i.e., dyadic reciprocity). Needs to be a valid correlation matrix, 2*N_layers by 2*N_layers. 
-#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
-#' @param link_mode Link mode: can be "logit", "probit", or "log". For Poisson, you must use "log".
+#' @param error_sigma Standard deviation for measurement error in Gaussian models.
+#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", "binomial", or "gaussian".
+#' @param link_mode Link mode: can be "logit", "probit", "log", or "identity". For poisson, you must use log. For Gaussian you must use identity.
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param individual_effects A list of 2 by N_individual_parameters matrix of slopes. The list runs over layers. In each element, the first row gives effects of focal characteristics (on out-degree). 
@@ -37,6 +38,7 @@ simulate_multiplex_network = function(N_id = 99,                        # Number
                                       dr_mu,                            # Average i to j dyad effect and j to i dyad effect log odds
                                       dr_sigma,                         # Variance of dyad effects 
                                       dr_Rho,                           # Correlation of i to j dyad effect and j to i dyad effect 
+                                      error_sigma = 0.01,               # Error variance in Gaussian model
                                       outcome_mode="bernoulli",         # outcome mode
                                       link_mode = "logit",              # link mode
                                       individual_predictors = NULL,     # A matrix of covariates
@@ -137,6 +139,15 @@ if(outcome_mode=="bernoulli"){
 
  p[l,j,i] = exp(sr[l,j,1] + sr[l,i,2] + dr[l,j,i])
  y_true[l,j,i] = rpois( 1 , p[l,j,i] )
+ }}
+
+if(outcome_mode=="gaussian"){
+  if(link_mode=="identity"){
+ p[l,i,j] = sr[l,i,1] + sr[l,j,2] + dr[l,i,j]
+ y_true[l,i,j] = rnorm( 1 , p[l,i,j] , error_sigma)
+
+ p[l,j,i] = sr[l,j,1] + sr[l,i,2] + dr[l,j,i]
+ y_true[l,j,i] = rnorm( 1 , p[l,j,i] , error_sigma)
  }}
  
  }

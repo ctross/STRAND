@@ -76,6 +76,12 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
     if(data$N_block_predictors==0 & block_regression != ~ 1){
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
+
+    if(data$outcome_mode==4){
+        stop("Gaussian outcomes not supported for this model type.")
+    }
+
+    
     
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)
