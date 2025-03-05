@@ -13,8 +13,9 @@
 #' @param dr_sigma Standard deviation for dyadic random effects.
 #' @param sr_rho Correlation of sender-receiver effects (i.e., generalized reciprocity).
 #' @param dr_rho Correlation of dyad effects (i.e., dyadic reciprocity).
-#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", or "binomial".
-#' @param link_mode Link mode: can be "logit", "probit", or "log". For pois, you must use log.
+#' @param error_sigma Standard deviation for measurement error in Gaussian models.
+#' @param outcome_mode Outcome mode: can be "bernoulli", "poisson", "binomial", or "gaussian".
+#' @param link_mode Link mode: can be "logit", "probit", "log", or "identity". For poisson, you must use log. For Gaussian you must use identity.
 #' @param individual_predictors An N_id by N_individual_parameters matrix of covariates.
 #' @param dyadic_predictors An N_id by N_id by N_dyadic_parameters array of covariates.
 #' @param individual_effects A 2 by N_individual_parameters matrix of slopes. The first row gives effects of focal characteristics (on out-degree). 
@@ -64,6 +65,7 @@ simulate_sbm_plus_srm_network = function(N_id = 99,                            #
                                              dr_mu = 0,                        # Average i to j dyad effect (cell 1) and j to i dyad effect (cell 2) log odds
                                              dr_sigma = 1,                     # Variance of dyad effects 
                                              dr_rho = 0.7,                     # Correlation of i to j dyad effect and j to i dyad effect 
+                                             error_sigma = 0.01,               # Error variance in Gaussian model
                                              outcome_mode="bernoulli",         # outcome mode
                                              link_mode = "logit",              # link mode
                                              individual_predictors = NULL,     # A matrix of covariates
@@ -174,6 +176,16 @@ if(outcome_mode=="bernoulli"){
 
  p[j,i] = exp( sr[j,1] + sr[i,2] + dr[j,i])
  y_true[j,i] = rpois( 1 , p[j,i] )
+ }
+ }
+
+if(outcome_mode=="gaussian"){
+  if(link_mode=="identity"){
+ p[i,j] = sr[i,1] + sr[j,2] + dr[i,j]
+ y_true[i,j] = rnorm( 1 , p[i,j], error_sigma )
+
+ p[j,i] = sr[j,1] + sr[i,2] + dr[j,i]
+ y_true[j,i] = rnorm( 1 , p[j,i], error_sigma )
  }
  }
         }

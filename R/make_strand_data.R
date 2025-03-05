@@ -8,8 +8,8 @@
 #' represents i's reports of transfers from j to i. Data should be binary, 0 or 1, unless an alternative outcome_mode is provided. If outcome_mode="poisson", then data can be integer values.
 #' If an exposure variable is provided, outcome can take integer values and outcome_mode="binomial" can be set. For multiplex models, the list can be longer than 2, but all layers must be single sampled, and you must set multiplex = TRUE.
 #' @param self_report A named list of primary network data (e.g., self reports). This is a deprecated alias for outcome above.
-#' @param outcome_mode Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.
-#' @param link_mode Can be either "logit", "probit", or "log"; "log" can only be used with "poisson" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.
+#' @param outcome_mode Can be either "bernoulli", "binomial", "poisson", or "gaussian" based on the kind of network data being modeled.
+#' @param link_mode Can be either "logit", "probit", "log", or "identity"; "log" must be used with "poisson" outcomes; "identity" must be used with "gaussian" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.
 #' @param ground_truth A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 #' Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.
 #' @param block_covariates A data.frame of group IDs (e.g., ethnicity, class, religion, etc.) corresponding to the individuals in the 'self_report' network(s). Each variable should be provided as a factor.
@@ -46,6 +46,14 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          }
 
          ######################################################## Check types
+         if(is.null(outcome_mode)){
+          stop("outcome_mode must be either bernoulli, binomial, poisson, or gaussian.")
+         }
+
+         if(is.null(link_mode)){
+          stop("link_mode must be either logit, probit, log, or identity.")
+         }
+
          if(!is.null(outcome) & !is.list(outcome)){
           stop("outcome must be a list of adjacency matrices, even if length is one.")
          }
@@ -54,12 +62,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
           stop("self_report must be a list of adjacency matrices, even if length is one.")
          }
 
-         if(!is.null(outcome_mode) & (!outcome_mode %in% c("bernoulli", "binomial", "poisson"))){
-          stop("outcome_mode must be either bernoulli, binomial, or poisson.")
+         if(!is.null(outcome_mode) & (!outcome_mode %in% c("bernoulli", "binomial", "poisson", "gaussian"))){
+          stop("outcome_mode must be either bernoulli, binomial, poisson, or gaussian.")
          }
 
-         if(!is.null(link_mode) & (!link_mode %in% c("logit", "probit", "log"))){
-          stop("link_mode must be either logit, probit, or log.")
+         if(!is.null(link_mode) & (!link_mode %in% c("logit", "probit", "log", "identity"))){
+          stop("link_mode must be either logit, probit, log, or identity.")
          }
 
          if(!is.null(ground_truth) & !is.list(ground_truth)){
@@ -90,15 +98,15 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
           stop("mask must be a list of adjacency matrices, even if length is one.")
          }
 
-        if(!is.null(diffusion_outcome) & !is.list(diffusion_outcome)){
+        if(!is.null(diffusion_outcome) & !is.vector(diffusion_outcome)){
           stop("diffusion_outcome must be a vector.")
          }
 
-        if(!is.null(diffusion_exposure) & !is.list(diffusion_exposure)){
+        if(!is.null(diffusion_exposure) & !is.vector(diffusion_exposure)){
           stop("diffusion_exposure must be a vector.")
          }
 
-        if(!is.null(diffusion_mask) & !is.list(diffusion_mask)){
+        if(!is.null(diffusion_mask) & !is.vector(diffusion_mask)){
           stop("diffusion_mask must be a vector.")
          }
 
@@ -182,6 +190,12 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
           if(link_mode != "log"){stop("If outcome_mode is 'poisson', you must set link_mode to 'log'.")}
           outcome_mode_numeric = 3
           link_mode_numeric = 3
+         }
+
+         if(outcome_mode=="gaussian"){
+          if(link_mode != "identity"){stop("If outcome_mode is 'gaussian', you must set link_mode to 'identity'.")}
+          outcome_mode_numeric = 4
+          link_mode_numeric = 4
          }
 
          if(is.null(outcome_mode_numeric)) stop("outcome_mode not supported")

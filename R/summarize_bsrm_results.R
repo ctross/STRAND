@@ -32,6 +32,8 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
     ###################################################### Create samples 
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
+    outcome_mode = input$data$outcome_mode 
+
     ################### Network model parameters
     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
     sr_L = posterior::draws_of(stanfit$"sr_L") 
@@ -40,6 +42,8 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
     dr_L = posterior::draws_of(stanfit$"dr_L")
     dr_raw = posterior::draws_of(stanfit$"dr_raw") 
     dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
+
+    error_sigma = posterior::draws_of(stanfit$"error_sigma")
     
     if(dim(input$data$block_set)[2]>0)
     block_effects = posterior::draws_of(stanfit$"block_effects")
@@ -79,7 +83,8 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
             dyadic_sd = dr_sigma,
             dyadic_L = dr_L,
-            dyadic_random_effects=dr_raw
+            dyadic_random_effects=dr_raw,
+            error_sd = error_sigma
         )
 
     if(dim(input$data$focal_set)[2]>1)
@@ -142,9 +147,16 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
      results_list[[3]] = results_srm_dyadic
 
     ######### Calculate all block effects
-     results_srm_base = matrix(NA, nrow=2 + dim(block_effects)[2], ncol=7)
+     results_srm_base = matrix(NA, nrow=3 + dim(block_effects)[2], ncol=7)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
+
+        if(outcome_mode == 4){
+        results_srm_base[3,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
+        } else{
+        results_srm_base[3,] = c("error sd - ", rep(NA,6))     
+        }
+
  
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
 
@@ -172,7 +184,7 @@ summarize_bsrm_results = function(input, include_samples=TRUE, HPDI=0.9){
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
        ticker = ticker + 1  
-      results_srm_base[ 2+ ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
+      results_srm_base[ 3 + ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
                                                                          samples$srm_model_samples$block_parameters[[q]][,b1,b2], HPDI)
      }}
 

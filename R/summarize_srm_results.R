@@ -32,6 +32,8 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
     ###################################################### Create samples 
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
+    outcome_mode = input$data$outcome_mode 
+
     ################### Network model
     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
     sr_L = posterior::draws_of(stanfit$"sr_L") 
@@ -42,6 +44,7 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
     dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
 
     B = posterior::draws_of(stanfit$"B")
+    error_sigma = posterior::draws_of(stanfit$"error_sigma")
     
 
     if(dim(input$data$focal_set)[2]>1)
@@ -63,7 +66,8 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
 
             dyadic_sd = dr_sigma,
             dyadic_L = dr_L,
-            dyadic_random_effects=dr_raw
+            dyadic_random_effects=dr_raw,
+            error_sd = error_sigma
         )
 
     if(dim(input$data$focal_set)[2]>1)
@@ -122,10 +126,17 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
       }
      results_list[[3]] = results_srm_dyadic
 
-     results_srm_base = matrix(NA, nrow=3, ncol=7)
+     results_srm_base = matrix(NA, nrow=4, ncol=7)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
      results_srm_base[3,] = sum_stats("intercept, any to any", samples$srm_model_samples$block_parameters[,1,1], HPDI)
+     
+
+     if(outcome_mode == 4){
+        results_srm_base[4,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
+        } else{
+        results_srm_base[4,] = c("error sd - ", rep(NA,6))     
+        }
      
      results_list[[4]] = results_srm_base
 
