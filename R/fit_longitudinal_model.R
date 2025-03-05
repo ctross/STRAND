@@ -125,6 +125,9 @@ fit_longitudinal_model = function(long_data,
            prior_error_sigma[l] = gaussian_error_priors[[l]][2]   
            }          
     }
+    
+    data$prior_error_mu = prior_error_mu
+    data$prior_error_sigma = prior_error_sigma
 
     ############################################################################# Fit model
     if(bandage_penalty == -1){

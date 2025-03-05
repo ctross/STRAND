@@ -163,6 +163,9 @@ fit_multiplex_model = function(data,
            }          
     }
 
+    data$prior_error_mu = prior_error_mu
+    data$prior_error_sigma = prior_error_sigma
+
     ############################################################################# Fit model
     if(bandage_penalty == -1){
       data = build_multiplex_bindings_dr_multiplex(data)
