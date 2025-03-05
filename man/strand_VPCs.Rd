@@ -20,7 +20,7 @@ strand_VPCs(
 \arguments{
 \item{input}{A STRAND model object with social relations model parameters.}
 
-\item{n_partitions}{Should variance on latent scale be partioned into 3 factors (focal, target, dyadic+error) as in amen? Or 4 factors (focal, target, dyadic, error)?}
+\item{n_partitions}{Should variance on latent scale be partioned into 3 factors (focal, target, dyadic+error) as in amen? Or 4 factors (focal, target, dyadic, error)? Or 5 factors (focal, target, dyadic reciprocal, dyadic noise, error)?}
 
 \item{HPDI}{Highest Posterior Density Interval. Ranges in (0,1).}
 

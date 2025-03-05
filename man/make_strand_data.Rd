@@ -32,9 +32,9 @@ If an exposure variable is provided, outcome can take integer values and outcome
 
 \item{self_report}{A named list of primary network data (e.g., self reports). This is a deprecated alias for outcome above.}
 
-\item{outcome_mode}{Can be either "bernoulli", "binomial", or "poisson", based on the kind of network data being modeled.}
+\item{outcome_mode}{Can be either "bernoulli", "binomial", "poisson", or "gaussian" based on the kind of network data being modeled.}
 
-\item{link_mode}{Can be either "logit", "probit", or "log"; "log" can only be used with "poisson" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.}
+\item{link_mode}{Can be either "logit", "probit", "log", or "identity"; "log" must be used with "poisson" outcomes; "identity" must be used with "gaussian" outcomes; "logit" is default for Bernoulli and Binomial outcomes; "probit" is basically the same as "logit", but the model fits slower.}
 
 \item{ground_truth}{A list of secondary network data about equivalent latent relationships (i.e., from focal observations). Each entry in the list must be an adjacency matrix. 
 Data is presumed to be organized such that ground_truth[[t]][i,j] represents observed transfers from i to j at time-point t.}

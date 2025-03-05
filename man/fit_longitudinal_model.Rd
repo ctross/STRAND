@@ -10,10 +10,12 @@ fit_longitudinal_model(
   focal_regression,
   target_regression,
   dyad_regression,
+  gaussian_error_priors = c(0, 0.5),
   coefficient_mode = "varying",
   random_effects_mode = "fixed",
   mode = "mcmc",
   bandage_penalty = 0.01,
+  eta = 4,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
     init = NULL),
@@ -31,6 +33,8 @@ fit_longitudinal_model(
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
 
+\item{gaussian_error_priors}{Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal. The 2-vector will be cloned to each layer. To supply layer-specific values, supply a list of 2-vectors. One vector per layer.}
+
 \item{coefficient_mode}{Set to "fixed" if all time-points should have the same coeffcients. Set to "varying" if each time-point should have its own coefficient.}
 
 \item{random_effects_mode}{Set to "fixed" if all time-points should have the same coeffcients. Set to "varying" if each time-point should have its own coefficient. Setting to "varying essentially" reduces the longitudinal model to a multiplex model.}
@@ -39,7 +43,9 @@ fit_longitudinal_model(
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.}
 
-\item{bandage_penalty}{A parameter that controls how tightly stiched together correlation structure parameters are. Default is 0.01 for tight stiching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance.}
+\item{bandage_penalty}{A parameter that controls how tightly stiched together correlation structure parameters are. Default is 0.01 for tight stiching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance. Setting "bandage_penalty=-1" deploys a different Stan model, which fixes the dyadic matrix perfectly. You must set init=0 below, for this model to initialize.}
+
+\item{eta}{Prior on LKJ Cholesky factor, if bandage_penalty = -1.}
 
 \item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.}

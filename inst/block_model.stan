@@ -23,8 +23,10 @@ data{
   //# Accessory paramters 
     matrix[22, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
     int export_network;                        //# Controls export of predictions
-    int outcome_mode;                          //# Are outcomes binomial
+    int outcome_mode;                          //# Are outcomes binomial?
     int link_mode; 
+    real prior_error_mu;
+    real prior_error_sigma;
 }
 
 transformed data{
@@ -83,7 +85,10 @@ parameters{
   //# Effects of covariates
     vector[N_params[1]-1] focal_effects;
     vector[N_params[2]-1] target_effects;
-    vector[N_params[3]-1] dyad_effects;  
+    vector[N_params[3]-1] dyad_effects; 
+
+  //# Error in Gaussian model
+    real<lower=0> error_sigma;      
 }
 
 model{
@@ -114,6 +119,8 @@ model{
     focal_effects ~ normal(priors[12,1], priors[12,2]);
     target_effects ~ normal(priors[13,1], priors[13,2]);
     dyad_effects ~ normal(priors[14,1], priors[14,2]);
+
+    error_sigma ~ normal(prior_error_mu, prior_error_sigma);
 
   //# Now build up the fixed part of the sender and receiver effects and store them for each person
     for(i in 1:N_id){
@@ -165,6 +172,10 @@ model{
 
       if(outcome_mode==3){
          outcomes[i,j,1] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);  //# Then model the outcomes
+       }
+
+      if(outcome_mode==4){
+         outcomes[i,j,1] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma);  //# Then model the outcomes
        }
 
        }
@@ -238,6 +249,10 @@ generated quantities{
 
       if(outcome_mode==3){
        p[i,j] = exp(sr[i,1] + sr[j,2] + dr[i,j]);  
+       }
+
+      if(outcome_mode==4){
+       p[i,j] = sr[i,1] + sr[j,2] + dr[i,j];  
        }
             }
         }
