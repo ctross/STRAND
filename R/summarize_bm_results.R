@@ -138,7 +138,7 @@ summarize_bm_results = function(input, include_samples=TRUE, HPDI=0.9){
         if(outcome_mode == 4){
         results_srm_base[1,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
         } else{
-        results_srm_base[1,] = c("error sd - ", rep(NA,6))     
+        results_srm_base[1,] = c("error sd", rep(NA,6))     
         }
 
      

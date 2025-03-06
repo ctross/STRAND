@@ -135,7 +135,7 @@ summarize_srm_results = function(input, include_samples=TRUE, HPDI=0.9){
      if(outcome_mode == 4){
         results_srm_base[4,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
         } else{
-        results_srm_base[4,] = c("error sd - ", rep(NA,6))     
+        results_srm_base[4,] = c("error sd", rep(NA,6))     
         }
      
      results_list[[4]] = results_srm_base
