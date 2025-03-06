@@ -107,6 +107,10 @@ fit_latent_network_model = function(data,
     if(data$outcome_mode==4){
         stop("Gaussian outcomes not supported for this model type.")
     }
+
+    if(attributes(data)$directed == "undirected"){
+        stop("You have an undirected outcome. This model is not supported.")
+    }
     
     ############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)

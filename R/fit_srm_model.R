@@ -64,6 +64,11 @@ fit_social_relations_model = function(data,
     if(data$N_dyadic_predictors==0 & dyad_regression != ~ 1){
         stop("No individual covariate data has been provided. dyad_regression must equal ~ 1 ")
     }
+
+    if(attributes(data)$directed == "undirected" & (focal_regression != target_regression) ){
+        warning("You have an undirected outcome, but focal_regression and target_regression are not equal. 
+        In undirected models, these should be the same. Rethink your model.")
+    }
     
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)
