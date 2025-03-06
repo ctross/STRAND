@@ -70,6 +70,11 @@ fit_block_model = function(data,
     if(data$N_block_predictors==0 & block_regression != ~ 1){
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
+
+    if(attributes(data)$directed == "undirected" & (focal_regression != target_regression) ){
+        warning("You have an undirected outcome, but focal_regression and target_regression are not equal. 
+        In undirected models, these should be the same. Rethink your model.")
+    }
     
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)

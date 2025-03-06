@@ -81,6 +81,10 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
         stop("Gaussian outcomes not supported for this model type.")
     }
 
+    if(attributes(data)$directed == "undirected" & (focal_regression != target_regression) ){
+        warning("You have an undirected outcome, but focal_regression and target_regression are not equal. 
+        In undirected models, these should be the same. Rethink your model.")
+    }
     
     
     ############################################################################# Prepare data and parse formulas

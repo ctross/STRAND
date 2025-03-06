@@ -81,6 +81,11 @@ fit_longitudinal_model = function(long_data,
     if(!random_effects_mode %in% c("fixed", "varying")){
         stop("random_effects_mode must be set to 'fixed' or 'varying'.")
     }
+
+    if(attributes(data)$directed == "undirected" & (focal_regression != target_regression) ){
+        warning("You have an undirected outcome, but focal_regression and target_regression are not equal. 
+        In undirected models, these should be the same. Rethink your model.")
+    }
     
     ############### Priors
     data$export_network = 0

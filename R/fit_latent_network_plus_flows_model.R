@@ -105,6 +105,10 @@ fit_latent_network_plus_flows_model = function(data,
     }
 
     if(sum(data$mask[,,1])>0) warning("The censoring mask layer only applies to the self-report layers. If flow layers are censored too, you must develop your own custom solution.")
+
+    if(attributes(data)$directed == "undirected"){
+        stop("You have an undirected outcome. This model is not supported.")
+    }
     
 ############################################################################# Prepare data and parse formulas
     ind_names = colnames(data$individual_predictors)

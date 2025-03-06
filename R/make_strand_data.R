@@ -21,6 +21,7 @@
 #' @param diffusion_outcome An N-vector of outcome data for a trait diffusing over a network.
 #' @param diffusion_exposure An N-vector matched with the diffusion_outcome matrix. If diffusion_outcome is a count data set with binomial outcomes, then this variable holds the sample size information.
 #' @param diffusion_mask An N-vector of indicators for diffusion outcomes that were masked.
+#' @param directed If TRUE, then STRAND will treat the outcomes as directed. If set to FALSE, STRAND will treat the outcomes as undirected; this leads to some addition checks on model definition.
 #' @param multiplex If TRUE, then all layers in outcome are modeled jointly.
 #' @param longitudinal If TRUE, then checks for longitudinal data structure are performed.
 #' @param check_data_organization If TRUE, then checks that all colnames and rownames match. This will catch missorted data.
@@ -33,7 +34,8 @@
 #'
 
 make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, link_mode=NULL, ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
-                            exposure=NULL, m_e_data = NULL, mask=NULL, diffusion_outcome = NULL, diffusion_exposure = NULL, diffusion_mask = NULL, multiplex = FALSE, longitudinal = FALSE, check_data_organization = TRUE){
+                            exposure=NULL, m_e_data = NULL, mask=NULL, diffusion_outcome = NULL, diffusion_exposure = NULL, diffusion_mask = NULL, multiplex = FALSE, longitudinal = FALSE, 
+                            directed = TRUE, check_data_organization = TRUE){
 
          ############################################################################# Check inputs
          # Renames self-report if needed
@@ -428,6 +430,38 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
     diffusion_mask = rep(0, N_id)
          } 
 
+   ############################################ Check if directed
+    directed_flags = rep(NA, N_responses)
+    for(q in 1:N_responses){
+     directed_flags[q] = ifelse(all(outcomes[,,q] == t(outcomes[,,q])), "undirected", "directed")
+         }
+     directed_flag = ifelse(all(directed_flags == "directed"), "directed", "undirected") 
+
+      if(directed_flag=="directed" & directed == FALSE){
+        stop("All outcome networks are directed, but 'directed' argument set to FALSE.")
+      }
+
+      if(directed_flag=="undirected" & directed == TRUE){
+       warning("At least one outcome network is undirected, but 'directed' argument set to TRUE. 
+       Consider setting 'directed=FALSE' so that STRAND performs relevant checks.
+       If outcome networks are undirected, then dyadic covariates should be symmetric, and focal and target regressions equivalent.") 
+      }
+      
+      if(N_dyadic_predictors>0){
+          dyadic_directed_flags = rep(NA, N_dyadic_predictors)
+        for(q in 1:N_dyadic_predictors){
+          dyadic_directed_flags[q] = ifelse(all(dyadic_predictors[[q]] == t(dyadic_predictors[[q]])), "undirected", "directed") 
+        }
+        dyadic_directed_flag = ifelse(any(dyadic_directed_flags == "directed"), "directed", "undirected") 
+
+      if(dyadic_directed_flag=="directed" & directed == FALSE){
+        warning("At least one dyadic covariate layer is directed, but 'directed' argument set to FALSE. 
+        If outcome networks are undirected, then dyadic covariates should typically be symmetric too. Rethink your model.") 
+      }
+
+      }
+      
+
    ###################################### Merge all
    model_dat = list(
      N_networktypes = N_networktypes,                                               
@@ -461,7 +495,8 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
    attr(model_dat, "layer_names") = layer_names
    attr(model_dat, "group_ids_character") = group_ids_character
    attr(model_dat, "group_ids_levels") = group_ids_levels
-   colnames(attr(model_dat, "group_ids_character"))=colnames(model_dat$block_predictors)
+   attr(model_dat, "directed") = ifelse(directed == TRUE, "directed", "undirected")
+   colnames(attr(model_dat, "group_ids_character")) = colnames(model_dat$block_predictors)
    names(attr(model_dat, "group_ids_levels")) = colnames(attr(model_dat, "group_ids_character"))
    
   return(model_dat)
