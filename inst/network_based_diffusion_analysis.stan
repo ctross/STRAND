@@ -1,6 +1,7 @@
 // Test
 // Test2
 // Test3
+//Test4
 functions{
     //# Shifted and scaled inv_logit link
      real inv_logit_shifted(real x) {
