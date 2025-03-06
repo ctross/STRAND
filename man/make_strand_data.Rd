@@ -21,6 +21,7 @@ make_strand_data(
   diffusion_mask = NULL,
   multiplex = FALSE,
   longitudinal = FALSE,
+  directed = TRUE,
   check_data_organization = TRUE
 )
 }
@@ -60,6 +61,8 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 \item{multiplex}{If TRUE, then all layers in outcome are modeled jointly.}
 
 \item{longitudinal}{If TRUE, then checks for longitudinal data structure are performed.}
+
+\item{directed}{If TRUE, then STRAND will treat the outcomes as directed. If set to FALSE, STRAND will treat the outcomes as undirected; this leads to some addition checks on model definition.}
 
 \item{check_data_organization}{If TRUE, then checks that all colnames and rownames match. This will catch missorted data.}
 }
