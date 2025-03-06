@@ -173,14 +173,17 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
     ######### Calculate all corr and block effects
     layer_names_long = c(paste0(layer_names, " (out)"), paste0(layer_names, " (in)"))
     layer_names_long2 = c(paste0(layer_names, " (i to j)"), paste0(layer_names, " (j to i)"))
-     results_srm_base = matrix(NA, nrow = (1+ (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3]), ncol=7)
-     ticker = 1
-
+     results_srm_base = matrix(NA, nrow = (N_responses + (2*N_responses*(2*N_responses-1)) + N_responses*dim(block_effects)[3]), ncol=7)
+     ticker = 0
+     
+    for(q in 1:N_responses){
+        ticker = ticker + 1 
      if(outcome_mode == 4){
         results_srm_base[ticker,] = sum_stats(paste0("error sd - ", layer_names[q]), samples$srm_model_samples$error_sd[,q], HPDI)
         } else{
         results_srm_base[ticker,] = c(paste0("error sd - ", layer_names[q]), rep(NA,6))     
         }
+     }
 
      for(m in 1:((N_responses*2)-1)){
      for(n in (m+1):(N_responses*2)){
