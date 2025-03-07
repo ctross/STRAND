@@ -59,11 +59,11 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
     lims = c(-1,1)
 
     if(input$data$link_mode==1){
-       error_sd = matrix(1, nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
+       error_sd = matrix(sqrt(0.33333 * (3.14159^2)), nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
     }
 
     if(input$data$link_mode==2){
-       error_sd = matrix(sqrt(0.33333 * (3.14159^2)), nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
+       error_sd = matrix(1, nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
     }
 
     if(input$data$link_mode==3){
