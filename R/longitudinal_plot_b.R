@@ -1,7 +1,7 @@
 #' Plot longitudinal random effects - dyadic reciprocity
 #'
 #' @param input A STRAND model object, obtained by fitting a longitudinal combined stochastic block and social relations model.
-#' @param results A results data.frame or matrix with colnames: c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric") 
+#' @param results A results data.frame or matrix with colnames: c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric", "P") 
 #' @param plot Should a plot be displayed?
 #' @param save_plot Should a plot be exported to working directory? If so, set save_plot="desired_filename.pdf".
 #' @param height Height of exported plot.
@@ -18,10 +18,10 @@ longitudinal_plot_b = function(input, results, plot = TRUE, save_plot = NULL, he
   palette = terrain.colors(nrow(results)) 
     } 
 
-  colnames(results) = c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric")   
+  colnames(results) = c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric","P")   
    
 p = ggplot2::ggplot(results, ggplot2::aes(x=LayerNumeric, y=as.numeric(Median), ymin=as.numeric(L), ymax=as.numeric(H), group=Target, color=Target))+ 
-     ggplot2::geom_linerange(size=1, position = ggplot2::position_dodge(width = 0.3)) + 
+     ggplot2::geom_linerange(linewidth=1, position = ggplot2::position_dodge(width = 0.3)) + 
      ggplot2::geom_point(size=2, position = ggplot2::position_dodge(width = 0.3))+
      ggplot2::geom_hline(ggplot2::aes(yintercept=0),color="black",linetype="dashed")+
      ggplot2::labs(y="Effect size", x="Time step") + 
