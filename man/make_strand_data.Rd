@@ -22,6 +22,7 @@ make_strand_data(
   multiplex = FALSE,
   longitudinal = FALSE,
   directed = TRUE,
+  imputation = FALSE,
   check_data_organization = TRUE
 )
 }
@@ -63,6 +64,8 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 \item{longitudinal}{If TRUE, then checks for longitudinal data structure are performed.}
 
 \item{directed}{If TRUE, then STRAND will treat the outcomes as directed. If set to FALSE, STRAND will treat the outcomes as undirected; this leads to some addition checks on model definition.}
+
+\item{imputation}{If TRUE, then checks for NAs in data are omitted, and supported models will impute the missings.}
 
 \item{check_data_organization}{If TRUE, then checks that all colnames and rownames match. This will catch missorted data.}
 }

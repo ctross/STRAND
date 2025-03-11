@@ -17,7 +17,7 @@ longitudinal_plot_b(
 \arguments{
 \item{input}{A STRAND model object, obtained by fitting a longitudinal combined stochastic block and social relations model.}
 
-\item{results}{A results data.frame or matrix with colnames: c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric")}
+\item{results}{A results data.frame or matrix with colnames: c("Variable", "Layer", "Target" , "Base" , "Median", "L", "H", "Mean","SD","LayerNumeric", "P")}
 
 \item{plot}{Should a plot be displayed?}
 
