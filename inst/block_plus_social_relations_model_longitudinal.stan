@@ -295,7 +295,7 @@ model{
        }
 
       if(outcome_mode==4){
-         outcomes[i,j,l] ~ poisson_log(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
+         outcomes[i,j,l] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
        }
 
        }
