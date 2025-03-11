@@ -23,6 +23,7 @@
 #' @param diffusion_mask An N-vector of indicators for diffusion outcomes that were masked.
 #' @param directed If TRUE, then STRAND will treat the outcomes as directed. If set to FALSE, STRAND will treat the outcomes as undirected; this leads to some addition checks on model definition.
 #' @param multiplex If TRUE, then all layers in outcome are modeled jointly.
+#' @param imputation If TRUE, then checks for NAs in data are omitted, and supported models will impute the missings.
 #' @param longitudinal If TRUE, then checks for longitudinal data structure are performed.
 #' @param check_data_organization If TRUE, then checks that all colnames and rownames match. This will catch missorted data.
 #' @return A list of data formatted for use by STRAND models.
@@ -35,7 +36,7 @@
 
 make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, link_mode=NULL, ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
                             exposure=NULL, m_e_data = NULL, mask=NULL, diffusion_outcome = NULL, diffusion_exposure = NULL, diffusion_mask = NULL, multiplex = FALSE, longitudinal = FALSE, 
-                            directed = TRUE, check_data_organization = TRUE){
+                            directed = TRUE, imputation = FALSE, check_data_organization = TRUE){
 
          ############################################################################# Check inputs
          # Renames self-report if needed
@@ -219,7 +220,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          if(!is.list(self_report)) stop("outcome must be a list of matrices.")
          for(i in 1:length(self_report)){
           if(outcome_mode=="bernoulli"){
-          if(!all(self_report[[i]] %in% c(0,1))) stop("self_report must be binary 0 or 1")
+          if(!all(self_report[[i]] %in% c(0,1,NA))) stop("self_report must be binary 0 or 1")
           }
          }
          }
@@ -351,7 +352,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          group_ids_levels = vector("list", N_block_types)
 
          for(i in 1:N_block_types){
-          N_groups_per_type[i] = max(as.numeric(block_covariates[,i]))
+          N_groups_per_type[i] = max(as.numeric(block_covariates[,i]),na.rm=TRUE)
           group_ids_character[,i] = as.character(block_covariates[,i]) 
           group_ids[,i] = as.numeric(block_covariates[,i])
           group_ids_levels[[i]] = levels(block_covariates[,i])
@@ -433,7 +434,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
    ############################################ Check if directed
     directed_flags = rep(NA, N_responses)
     for(q in 1:N_responses){
-     directed_flags[q] = ifelse(all(outcomes[,,q] == t(outcomes[,,q])), "undirected", "directed")
+     directed_flags[q] = ifelse(all(outcomes[,,q] == t(outcomes[,,q])) & sum(outcomes[,,q])>0, "undirected", "directed")
          }
      directed_flag = ifelse(all(directed_flags == "directed"), "directed", "undirected") 
 
@@ -487,8 +488,17 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
      detected_exposure = m_e_data$detected_exposure,
      diffusion_outcomes = diffusion_outcome,
      diffusion_exposure = diffusion_exposure,
-     diffusion_mask = diffusion_mask
+     diffusion_mask = diffusion_mask,
+     imputation = ifelse(imputation==TRUE, 1, 0)
      )
+    
+    if(imputation == FALSE){
+    for(q in 1:length(model_dat)){
+      if(sum(is.na(model_dat[[q]]))>0){
+       stop(paste0("Variable: ", names(model_dat)[q], " contains missing values. Set: imputation=TRUE, or rebuild your data objects."))
+      }
+     }
+    }
 
    attr(model_dat, "class") = "STRAND Data Object"
    attr(model_dat, "supported_models") = supported_models
