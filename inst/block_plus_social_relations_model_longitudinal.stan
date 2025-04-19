@@ -21,15 +21,13 @@ data{
     array[N_id,N_id,N_responses] int mask;           //# Censoring mask for each outcome for each timepoint
 
   //# Accessory paramters 
-    matrix[22, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
+    matrix[23, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
     int export_network;                              //# Controls export of predictions
     int outcome_mode;                                //# Are outcomes binomial
     int link_mode;                                   //# Link type
     real bandage_penalty;                            //# Stitching strength
     int random_effects_mode;                         //# Mode for random effects
     int coefficient_mode;                            //# Mode for other effects
-    vector[N_responses] prior_error_mu;              //# Error priors for Gaussian outcomes
-    vector[N_responses] prior_error_sigma;           //#
 }
 
 transformed data{
@@ -191,13 +189,13 @@ model{
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
-    sr_sigma ~ exponential(priors[15,1]);
+    sr_sigma ~ normal(priors[15,1], priors[15,2]);
     sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     //# Dyadic priors for social relations model
     for(l in 1:N_responses)
     to_vector(dr_raw[l]) ~ normal(0,1);
-    dr_sigma ~ exponential(priors[16,1]);
+    dr_sigma ~ normal(priors[16,1], priors[16,2]);
     dr_L ~ lkj_corr_cholesky(priors[18,1]);
     
     for(i in 1:N_id){
@@ -246,7 +244,7 @@ model{
      target_effects[l] ~ normal(priors[13,1], priors[13,2]);
      dyad_effects[l] ~ normal(priors[14,1], priors[14,2]);
 
-     error_sigma[l] ~ normal(prior_error_mu[l], prior_error_sigma[l]);
+     error_sigma[l] ~ normal(priors[23,1], priors[23,2]);
 
      for(i in 1:N_id){                                                                
      sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors[i, ,l]));

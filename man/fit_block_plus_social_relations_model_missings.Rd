@@ -10,7 +10,6 @@ fit_block_plus_social_relations_model_missings(
   focal_regression,
   target_regression,
   dyad_regression,
-  gaussian_error_priors = c(0, 0.5),
   mode = "mcmc",
   return_predicted_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
@@ -29,8 +28,6 @@ fit_block_plus_social_relations_model_missings(
 \item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
-
-\item{gaussian_error_priors}{Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal.}
 
 \item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
@@ -55,7 +52,7 @@ It is important to note that all individuals block (or group) assignment must be
 }
 \examples{
 \dontrun{
-fit = fit_block_plus_social_relations_model(data=model_dat,
+fit = fit_block_plus_social_relations_model_missings(data=model_dat,
                                             block_regression = ~ Ethnicity,
                                             focal_regression = ~ Age * NoFood,
                                             target_regression = ~ Age * NoFood,

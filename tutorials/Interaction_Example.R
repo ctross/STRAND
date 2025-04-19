@@ -17,7 +17,7 @@ library(ggplot2)
 N_id = 100
 
 # Covariates
-Kinship = rlkjcorr( 1 , N_id , eta=1.5 )
+Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
 Mass = rbern(N_id, 0.4)
 
@@ -120,10 +120,10 @@ vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Ta
 vis_2
 
 ##### Check all of the block parameters
-B_2_Pred = matrix(res$summary_list$`Other estimates`[4:12,2], nrow=3, ncol=3, byrow=TRUE) # Blue, Red, White
+B_2_Pred = matrix(res$summary_list$`Other estimates`[5:13,2], nrow=3, ncol=3, byrow=TRUE) # Blue, Red, White
 plot(B_2_Pred~B_2)
 
-B_3_Pred = matrix(res$summary_list$`Other estimates`[13:16,2], nrow=2, ncol=2, byrow=TRUE) # Charm, Strange
+B_3_Pred = matrix(res$summary_list$`Other estimates`[14:17,2], nrow=2, ncol=2, byrow=TRUE) # Charm, Strange
 plot(B_3_Pred~B_3)
 
 # NOTE: The block offsets are only identified relative to one-another. Calculate contrasts to look for differences between parameters.

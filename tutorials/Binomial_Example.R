@@ -21,8 +21,10 @@ exposure = list(Grooming = Baboon_Data$Exposure)
 
 # Dyadic variable: transpose of Presenting
 dyad = list(Presenting = t(Baboon_Data$Presenting),
-            Threatening = t(Baboon_Data$Threatening))
+            Threatening = standardize(t(Baboon_Data$Threatening),center=FALSE)
+            )
 
+Baboon_Data$Individual$Age = standardize(Baboon_Data$Individual$Age)
 indiv = Baboon_Data$Individual
 
 block = data.frame(Sex = as.factor(indiv$Sex))
@@ -94,7 +96,7 @@ df$Submodel = factor(df$Submodel)
 df$Method = df$Site 
 
 p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, color=Method,
-        ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
+        ymin = L, ymax = H)) + ggplot2::geom_linerange(linewidth = 1, position = position_dodge(width = 0.6)) + 
         ggplot2::geom_point(size = 2,, position = position_dodge(width = 0.6)) + ggplot2::facet_grid(. ~Submodel, scales = "free", space = "free") +
          ggplot2::geom_hline(ggplot2::aes(yintercept = 0), 
         color = "black", linetype = "dashed") + ggplot2::labs(y = "Regression parameters", 
@@ -139,7 +141,7 @@ df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Erro
 df$Type = df$Site 
 
 p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, color=Type,
-        ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
+        ymin = L, ymax = H)) + ggplot2::geom_linerange(linewidth = 1, position = position_dodge(width = 0.6)) + 
         ggplot2::geom_point(size = 2,, position = position_dodge(width = 0.6)) + ggplot2::facet_grid(. ~Submodel, scales = "free", space = "free") +
          ggplot2::geom_hline(ggplot2::aes(yintercept = 0), 
         color = "black", linetype = "dashed") + ggplot2::labs(y = "Regression parameters", 

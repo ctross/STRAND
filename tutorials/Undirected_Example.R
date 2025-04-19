@@ -7,6 +7,7 @@
 # Clear working space
 rm(list = ls())
 set.seed(1)
+
 # Load libraries
 library(STRAND)
 library(rethinking)
@@ -16,11 +17,12 @@ library(ggplot2)
 # as just a special case of directed networks where reciprocity parameters are unity.
 
 # Make data with this sample size
-N_id = 95
+N_id = 75
 
 # Covariates
-Kinship = rlkjcorr( 1 , N_id , eta=1.5 )                 # Dyadic covariates should be symmetric for undirected networks
+Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ) )   # Dyadic covariates should be symmetric for undirected networks
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1) #
+Random = matrix(rnorm(N_id^2,0,1),nrow=N_id, ncol=N_id)
 
 Mass = rbern(N_id, 0.4)
 
@@ -38,7 +40,7 @@ dr_mu = 0
 dr_sigma = 3.5
 dr_rho = 0.999                   # Rho should be 1 in limit in "Undirected" networks
 sr_effects_1 = c(1.9, 1.9)       # Sender and receiver effects should be the same in "Undirected" networks
-dr_effects_1 = c(-1.9, 2.1)       
+dr_effects_1 = c(-1.2, 1.1)       
 
 # Block structure
 group_probs_block_size = c(0.25, c(0.5, 0.5)*(1-0.25))
@@ -97,28 +99,56 @@ rownames(G$network2) = colnames(G$network2) = name_vec
 rownames(G$samps2) = colnames(G$samps2) = name_vec
 rownames(Kinship) = colnames(Kinship) = name_vec
 rownames(Dominant) = colnames(Dominant) = name_vec
+rownames(Random) = colnames(Random) = name_vec
 rownames(groups_f) = name_vec
 rownames(individual) = name_vec
 
+# Now make the data object with directed=FALSE so that strand runs some extra checks, and flags some poterntial errors with a warning
+
+# The next call throws a warning, because Random is directed
+model_dat = make_strand_data(outcome=list(Outcome = G$network2),  
+                             block_covariates=groups_f, 
+                             individual_covariates=individual, 
+                             dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant, Random=Random),
+                             exposure = list(Outcome = G$samps2),  
+                             outcome_mode = "binomial", 
+                             link_mode="logit",
+                             directed = FALSE)
+
+# The next call passes, since we drop Random
 model_dat = make_strand_data(outcome=list(Outcome = G$network2),  
                              block_covariates=groups_f, 
                              individual_covariates=individual, 
                              dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),
                              exposure = list(Outcome = G$samps2),  
                              outcome_mode = "binomial", 
-                             link_mode="logit")
+                             link_mode="logit",
+                             directed = FALSE)
 
-# Model the data with STRAND
-fit =  fit_block_plus_social_relations_model(data=model_dat,
-                            block_regression = ~ Merica,
-                              focal_regression = ~ Mass,             # Make sure to include the same individual predictors for both focal and target effects
-                              target_regression = ~ Mass,            #
+# Model the data with STRAND. The next model runs, but it will print a warning message that focal_regression and target_regression should be equal.
+fit0 =  fit_block_plus_social_relations_model(data=model_dat,
+                              block_regression = ~ Merica,
+                              focal_regression = ~ Mass,             # These are different, so STRAND prints a warning
+                              target_regression = ~ 1,               # 
                               dyad_regression = ~ Kinship + Dominant,
                               mode="mcmc",
                               stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                          iter_warmup = 1000, iter_sampling = 1000,
-                                                          max_treedepth = NULL, adapt_delta = 0.95)
+                                                          iter_warmup = 2, iter_sampling = 2,
+                                                          max_treedepth = 12, adapt_delta = 0.95)
 )
+
+# Model the data with STRAND. The next model runs without warnings.
+fit =  fit_block_plus_social_relations_model(data=model_dat,
+                            block_regression = ~ Merica,
+                              focal_regression = ~ Mass,             # Make sure to include the same individual predictors for both focal and target effects
+                              target_regression = ~ Mass,            # 
+                              dyad_regression = ~ Kinship + Dominant,
+                              mode="mcmc",
+                              stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                                          iter_warmup = 1000, iter_sampling = 500,
+                                                          max_treedepth = 12, adapt_delta = 0.95)
+)
+
 
 # Check parameter recovery
 res = summarize_strand_results(fit)

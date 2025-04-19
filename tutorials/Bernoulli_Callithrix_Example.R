@@ -47,7 +47,7 @@ Callithrix_Data[[1]]$NoOpportunity
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
 mask = list(Aggressed = Callithrix_Data[[1]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the likelihood of the model.
-dyad = list(RankDiff = Callithrix_Data[[1]]$RankDiff)
+dyad = list(RankDiff = standardize(Callithrix_Data[[1]]$RankDiff))
 indiv =  Callithrix_Data[[1]]$Individual
 
 model_dat_cm = make_strand_data(outcome = outcome,
@@ -77,7 +77,7 @@ res_cm_mask = summarize_strand_results(fit_cm_1)
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[2]]$Aggressed)
 mask = list(Aggressed = Callithrix_Data[[2]]$NoOpportunity) # 0s are possible ties, 1s are censored/impossible. The mask will remove such terms from the model.
-dyad = list(RankDiff = Callithrix_Data[[2]]$RankDiff)
+dyad = list(RankDiff = standardize(Callithrix_Data[[2]]$RankDiff))
 indiv =  Callithrix_Data[[2]]$Individual
 
 model_dat_spp = make_strand_data(outcome = outcome,
@@ -109,7 +109,7 @@ res_spp_mask = summarize_strand_results(fit_spp_1)
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[1]]$Aggressed)
 
-dyad = list(RankDiff = Callithrix_Data[[1]]$RankDiff,
+dyad = list(RankDiff = standardize(Callithrix_Data[[1]]$RankDiff),
             NoOpportunity = Callithrix_Data[[1]]$NoOpportunity)
 
 indiv = Callithrix_Data[[1]]$Individual
@@ -140,7 +140,7 @@ res_cm_interaction = summarize_strand_results(fit_cm_2)
 # Create the STRAND data object
 outcome = list(Aggressed = Callithrix_Data[[2]]$Aggressed)
 
-dyad = list(RankDiff = Callithrix_Data[[2]]$RankDiff,
+dyad = list(RankDiff = standardize(Callithrix_Data[[2]]$RankDiff),
             NoOpportunity = Callithrix_Data[[2]]$NoOpportunity)
 
 indiv = Callithrix_Data[[2]]$Individual
@@ -174,6 +174,7 @@ res_cm_interaction_tab  = strand_caterpillar_plot(res_cm_interaction, submodels=
 res_spp_interaction_tab = strand_caterpillar_plot(res_spp_interaction, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, only_slopes=TRUE, site="S++", export_as_table = TRUE)
 
 vis_1 = rbind(res_cm_mask_tab, res_spp_mask_tab, res_cm_interaction_tab, res_spp_interaction_tab)
+vis_1 = vis_1[which(!vis_1$Variable %in% c("error sd")),]
 
 vis_1$Variable =
 c("Female", "Female", 
@@ -422,6 +423,7 @@ p6 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, c
 
 p6
 
+# Masking approach and interaction approach work similarly
 
 ###############################################################################################################
 ############################### Model fit diagnostics

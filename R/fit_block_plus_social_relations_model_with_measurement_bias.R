@@ -101,7 +101,8 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
      }
 
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
-     dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
      dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
 
@@ -171,6 +172,10 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
 
     ############################################################################# Fit model
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_with_measurement_bias.stan"))
+
+     data$individual_predictors = NULL
+     data$dyadic_predictors = NULL
+     data$block_predictors = NULL
 
     if(mode=="mcmc"){
       fit = model$sample(

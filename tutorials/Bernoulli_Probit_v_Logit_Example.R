@@ -25,16 +25,16 @@ data(Colombia_Data)
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = Colombia_Data$Relatedness, 
-            Distance = Colombia_Data$Distance
+dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
+            Distance = standardize(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = Colombia_Data$Individual$Age, 
-                    BMI = Colombia_Data$Individual$BMI
+indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
+                    BMI = standardize(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -56,8 +56,8 @@ fit_logit = fit_block_plus_social_relations_model(data=dat_logit,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                                          iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          iter_warmup = 700, iter_sampling = 700,
+                                                                          max_treedepth = 12, adapt_delta = .98)
 )
 
 # Summaries
@@ -68,16 +68,16 @@ set.seed(4)
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = Colombia_Data$Relatedness, 
-            Distance = Colombia_Data$Distance
+dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
+            Distance = standardize(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = Colombia_Data$Individual$Age, 
-                    BMI = Colombia_Data$Individual$BMI
+indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
+                    BMI = standardize(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -95,7 +95,7 @@ dat_probit = make_strand_data(outcome = outcome,
 #   Rejecting initial value:
 #   Log probability evaluates to log(0), i.e. negative infinity.
 #   Stan can’t start sampling from this initial value.
-# So we need to set init<2 in order to have it run.
+#   So we need to set init<2 in order to have it run.
 
 fit_probit = fit_block_plus_social_relations_model(data=dat_probit,
                                             block_regression = ~ Sex + Ethnicity,
@@ -104,8 +104,8 @@ fit_probit = fit_block_plus_social_relations_model(data=dat_probit,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                                          iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98, init = 0.5)
+                                                                          iter_warmup = 700, iter_sampling = 700,
+                                                                          max_treedepth = 12, adapt_delta = .98, init = 0.5)
 )
 
 # Summaries
@@ -221,6 +221,8 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
         "lines")) + scale_color_manual(values=c("Logit" = colors[1], "Probit" = colors[3])) + theme(legend.position="bottom")
 
 p
+
+# Link function doesnt matter
 
 ###############################################################################################################
 ############################### Model fit diagnostics

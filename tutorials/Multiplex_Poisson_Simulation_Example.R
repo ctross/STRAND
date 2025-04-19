@@ -22,7 +22,7 @@ library(rethinking)
  N_layers = 3   # Network layers
 
 # Covariates
- Kinship = rlkjcorr( 1 , N_id , eta=1.5 )
+ Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -198,11 +198,12 @@ fit = fit_multiplex_model(data=dat,
                                                         max_treedepth = NULL, adapt_delta = 0.95)
 )
 
-res = summarize_strand_results(fit)
+res = summarize_multiplex_bsrm_results(fit)
 
 
 ######################################################### Visualize results
 df_plt = res$summary
+df_plt = df_plt[which(!df_plt$Variable %in% c("error sd - Feeding", "error sd - Fighting", "error sd - Grooming")),]
 
 recip_to_long = function(X){
   len_X = nrow(X)

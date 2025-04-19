@@ -10,7 +10,6 @@
 #' @param focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
-#' @param gaussian_error_priors Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal. The 2-vector will be cloned to each layer. To supply layer-specific values, supply a list of 2-vectors. One vector per layer.
 #' @param coefficient_mode Set to "fixed" if all time-points should have the same coeffcients. Set to "varying" if each time-point should have its own coefficient.
 #' @param random_effects_mode Set to "fixed" if all time-points should have the same coeffcients. Set to "varying" if each time-point should have its own coefficient. Setting to "varying essentially" reduces the longitudinal model to a multiplex model.
 #' @param mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
@@ -46,7 +45,6 @@ fit_longitudinal_model = function(long_data,
                                   focal_regression,
                                   target_regression,
                                   dyad_regression,
-                                  gaussian_error_priors = c(0, 0.5),
                                   coefficient_mode="varying",
                                   random_effects_mode="fixed",
                                   mode="mcmc",
@@ -114,25 +112,6 @@ fit_longitudinal_model = function(long_data,
         data$coefficient_mode = 1
     }
 
-    prior_error_mu = rep(NA, data$N_responses)
-    prior_error_sigma = rep(NA, data$N_responses)
-
-    if(is.vector(gaussian_error_priors)){
-        for(l in 1:data$N_responses){
-           prior_error_mu[l] = gaussian_error_priors[1]             
-           prior_error_sigma[l] = gaussian_error_priors[2]   
-           }          
-    }
-
-    if(is.list(gaussian_error_priors)){
-        for(l in 1:data$N_responses){
-           prior_error_mu[l] = gaussian_error_priors[[l]][1]             
-           prior_error_sigma[l] = gaussian_error_priors[[l]][2]   
-           }          
-    }
-    
-    data$prior_error_mu = prior_error_mu
-    data$prior_error_sigma = prior_error_sigma
 
     ############################################################################# Fit model
     if(bandage_penalty == -1){
@@ -144,6 +123,10 @@ fit_longitudinal_model = function(long_data,
         } else{
       model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_longitudinal.stan"))      
         }
+
+     data$individual_predictors = NULL
+     data$dyadic_predictors = NULL
+     data$block_predictors = NULL
 
     if(mode=="mcmc"){
       fit = model$sample(

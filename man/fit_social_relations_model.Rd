@@ -9,7 +9,6 @@ fit_social_relations_model(
   focal_regression,
   target_regression,
   dyad_regression,
-  gaussian_error_priors = c(0, 0.5),
   mode = "mcmc",
   return_predicted_network = FALSE,
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
@@ -26,8 +25,6 @@ fit_social_relations_model(
 \item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(),, e.g.: ~ Kinship + Friendship}
-
-\item{gaussian_error_priors}{Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal.}
 
 \item{mode}{A string giving the mode stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,

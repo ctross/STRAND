@@ -65,6 +65,7 @@ plot(Net, edge.arrow.size =0.3, edge.curved = 0.3, vertex.label=NA, vertex.size 
 # Prep dyadic data
 # Add colnames and rownames
 animal_names = paste("Bonobo", 1:N_id)
+SizeDiff = as.matrix(SizeDiff[,,1])
 colnames(SizeDiff) = rownames(SizeDiff) = animal_names
 colnames(A$net) = rownames(A$net) = animal_names
 colnames(A$true_samps) = rownames(A$true_samps) = animal_names
@@ -116,6 +117,7 @@ fit =  fit_block_plus_social_relations_model_with_measurement_bias(data=model_da
 ######################################## Estimates
 res = summarize_strand_results(fit)
 
+# Parameter estimates look good, in spite of censoring based on coloration
 
 ####################################### Variance partition and reciprocity
 VPCs_1 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")  # STRAND STYLE, separates error and dyadic effects

@@ -10,7 +10,6 @@ fit_multiplex_model(
   focal_regression,
   target_regression,
   dyad_regression,
-  gaussian_error_priors = c(0, 0.5),
   mode = "mcmc",
   bandage_penalty = 0.01,
   eta = 4,
@@ -30,8 +29,6 @@ fit_multiplex_model(
 \item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
-
-\item{gaussian_error_priors}{Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal. The 2-vector will be cloned to each layer. To supply layer-specific values, supply a list of 2-vectors. One vector per layer.}
 
 \item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,

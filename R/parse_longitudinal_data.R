@@ -45,7 +45,8 @@ parse_longitudinal_data = function(data,
      }
 
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
-     dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
      dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
 

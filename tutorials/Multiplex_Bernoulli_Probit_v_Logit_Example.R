@@ -33,16 +33,16 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = RICH$Relatedness, 
+ Relatedness = standardize(RICH$Relatedness), 
  Friends = RICH$Friends,
  Marriage = RICH$Marriage
 )
 
 # Individual data in data-frame
 ind = data.frame(
- Age = RICH$Individual$Age, 
+ Age = standardize(RICH$Individual$Age), 
  FoodInsecure = RICH$Individual$FoodInsecure,
- Wealth = RICH$Individual$Wealth,
+ Wealth = standardize(RICH$Individual$Wealth),
  Depressed = RICH$Individual$Depressed
 )
 
@@ -63,6 +63,17 @@ dat = make_strand_data(
  multiplex = TRUE
 )
 
+# Merge data probit
+dat2 = make_strand_data(
+ outcome = outcome,
+ block_covariates = groups, 
+ individual_covariates = ind, 
+ dyadic_covariates = dyad,
+ outcome_mode="bernoulli",
+ link_mode = "probit",
+ multiplex = TRUE
+)
+
 # Model 1
 fit_1 = fit_multiplex_model(
  data=dat,
@@ -79,17 +90,6 @@ fit_1 = fit_multiplex_model(
    iter_sampling = 1000, 
    max_treedepth = NULL, 
    adapt_delta = 0.98)
-)
-
-# Merge data probit
-dat2 = make_strand_data(
- outcome = outcome,
- block_covariates = groups, 
- individual_covariates = ind, 
- dyadic_covariates = dyad,
- outcome_mode="bernoulli",
- link_mode = "probit",
- multiplex = TRUE
 )
 
 # Model 2
@@ -249,3 +249,4 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
 
 p
 
+# Basically identical.

@@ -4,13 +4,13 @@
  library(PlvsVltra) # For colors
  color_set = plvs_vltra("mystic_mausoleum", rev=FALSE, elements=NULL, show=FALSE)
 
- library(STRAND)
  library(stringr)
  library(ggplot2)
  library(psych)
  library(rethinking)
  library(Matrix)
  library(igraph)
+ library(STRAND)
 
 ###################################### Make simulated longitudinal data
  set.seed(666)
@@ -18,6 +18,7 @@
 # Base settings
  N_id = 125       # Individuals in network
  N_timesteps = 5  # Network layers
+ labels = paste("ind", 1:N_id)
 
 # Individual covariates - Fixed
  Mass = rbern(N_id, 0.4)
@@ -25,8 +26,8 @@
  Strength = rnorm(N_id, 0, 1)
 
 # Dyadic covariates - Fixed
- Distance = rlkjcorr(1, N_id, eta=1.5)
- Dominance = ceiling(rlkjcorr(1, N_id, eta=1.5) - 0.1)
+ Distance = standardize(as.matrix(rlkjcorr(1, N_id, eta=1.5)))
+ Dominance = as.matrix(ceiling(rlkjcorr(1, N_id, eta=1.5) - 0.1))
  colnames(Distance) = rownames(Distance) = labels
  colnames(Dominance) = rownames(Dominance) = labels
 
@@ -313,7 +314,8 @@ A = simulate_longitudinal_network(
                        individual_covariates = individual_predictors[[t]], 
                        dyadic_covariates = dyadic_predictors_temp,
                        longitudinal = TRUE,
-                       outcome_mode="bernoulli")
+                       outcome_mode = "bernoulli",
+                       link_mode = "logit")
  }
 
  names(long_dat) = paste("Time", c(1:5))
@@ -410,7 +412,7 @@ out = longitudinal_plot(fit_4, type="coefficient",
      ggplot2::coord_flip() + 
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="none") + ggplot2::theme(legend.title = ggplot2::element_blank())
-
+p0
      ggsave("Covariate_Recovery.pdf", p0, height=5, width=12)
 
 ########################################################### Dyadic recovery
@@ -438,7 +440,7 @@ out = longitudinal_plot(fit_4, type="coefficient",
     # ggplot2::coord_flip() + 
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="bottom") + ggplot2::theme(legend.title = ggplot2::element_blank())
-
+p1
  ggsave("Dyadic_Recovery.pdf", p1, height=6.5, width=6.5)
 
 ########################################################### Generalized recovery
@@ -466,7 +468,7 @@ out = longitudinal_plot(fit_4, type="generalized",
     # ggplot2::coord_flip() + 
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="bottom") + ggplot2::theme(legend.title = ggplot2::element_blank())  
-
+p2
  ggsave("Generalized_Recovery.pdf", p2, height=6.5, width=6.5)
 
 ######################################################### Visualize results

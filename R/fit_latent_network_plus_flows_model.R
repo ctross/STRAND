@@ -92,7 +92,7 @@ fit_latent_network_plus_flows_model = function(data,
         stop("No block covariate data has been provided. block_regression must equal ~ 1 ")
     }
 
-    if(!all(data$mask[,,1] == data$mask[,,2])){
+    if(!all(data$mask[,,1] == t(data$mask[,,2]))){
         stop("A censoring mask layer is only supported in latent network models if the same mask is used for both layers.")
     }
 
@@ -124,7 +124,8 @@ fit_latent_network_plus_flows_model = function(data,
      }
 
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
-     dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
+     dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
      dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
 
@@ -183,6 +184,10 @@ fit_latent_network_plus_flows_model = function(data,
 
     ############################################################################# Fit model
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","latent_network_model_flows.stan"))
+
+     data$individual_predictors = NULL
+     data$dyadic_predictors = NULL
+     data$block_predictors = NULL
 
     if(mode=="mcmc"){
       fit = model$sample(

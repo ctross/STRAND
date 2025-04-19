@@ -64,7 +64,7 @@ data{
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
   //# Accessory paramters 
-    matrix[22, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
+    matrix[23, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
     int export_network;                        //# Controls export of predictions
 }
 
@@ -110,8 +110,10 @@ transformed data{
    S = 0;
    for(i in 1:N_id){
    for(j in 1:N_id){
-     if(i != j)
-   S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
+     if(i != j){
+       if(mask[i,j,1]==0){
+         S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
+       }}
    }}
 
    penalty = S^(1/priors[19,1]);
@@ -252,7 +254,7 @@ model{
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
 
-    sr_sigma ~ exponential(priors[15,1]);
+    sr_sigma ~ normal(priors[15,1], priors[15,2]);
     sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     for(i in 1:N_id){
@@ -266,7 +268,7 @@ model{
 
     //# Dyadic priors for social relations model
     to_vector(dr_raw) ~ normal(0,1);
-    dr_sigma ~ exponential(priors[16,1]);
+    dr_sigma ~ normal(priors[16,1], priors[16,2]);
     dr_L ~ lkj_corr_cholesky(priors[18,1]);
 
     for(i in 1:(N_id-1)){

@@ -86,6 +86,10 @@ fit_NBDA_model = function(long_data,
     ############################################################################# Fit model
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","network_based_diffusion_analysis.stan"))
 
+     data$individual_predictors = NULL
+     data$dyadic_predictors = NULL
+     data$block_predictors = NULL
+
     if(mode=="mcmc"){
       fit = model$sample(
         data = unclass(data),

@@ -21,12 +21,10 @@ data{
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
   //# Accessory paramters 
-    matrix[22, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
+    matrix[23, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
     int export_network;                        //# Controls export of predictions
     int outcome_mode;                          //# Are outcomes binomial?
     int link_mode; 
-    real prior_error_mu;
-    real prior_error_sigma;
 }
 
 transformed data{
@@ -120,7 +118,7 @@ model{
     target_effects ~ normal(priors[13,1], priors[13,2]);
     dyad_effects ~ normal(priors[14,1], priors[14,2]);
 
-    error_sigma ~ normal(prior_error_mu, prior_error_sigma);
+    error_sigma ~ normal(priors[23,1], priors[23,2]);
 
   //# Now build up the fixed part of the sender and receiver effects and store them for each person
     for(i in 1:N_id){
