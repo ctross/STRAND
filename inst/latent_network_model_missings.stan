@@ -63,6 +63,27 @@ data{
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
+    int N_missing_focal_set;  
+    int N_missing_target_set;  
+    int N_missing_dyad_set;  
+    int N_missing_fpr_set;
+    int N_missing_rtt_set;
+    int N_missing_theta_set;
+
+    array[N_missing_focal_set,2] int locations_missing_focal_set;  
+    array[N_missing_target_set,2] int locations_missing_target_set;  
+    array[N_missing_dyad_set,3] int locations_missing_dyad_set;  
+    array[N_missing_fpr_set,2] int locations_missing_fpr_set;  
+    array[N_missing_rtt_set,2] int locations_missing_rtt_set;  
+    array[N_missing_theta_set,2] int locations_missing_theta_set;  
+
+    matrix[2, N_params[1]-1] focal_lims;  
+    matrix[2, N_params[2]-1] target_lims;  
+    matrix[2, N_params[3]-1] fpr_lims;
+    matrix[2, N_params[4]-1] rtt_lims; 
+    matrix[2, N_params[5]-1] theta_lims;
+    matrix[2, N_params[6]-1] dyad_lims;
+
   //# Accessory paramters 
     matrix[23, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
     int export_network;                        //# Controls export of predictions
@@ -72,13 +93,13 @@ transformed data{
  real S;
  real penalty;
 
- matrix[N_id, N_params[1]-1] focal_individual_predictors; 
- matrix[N_id, N_params[2]-1] target_individual_predictors; 
- matrix[N_id, N_params[3]-1] fpr_individual_predictors; 
- matrix[N_id, N_params[4]-1] rtt_individual_predictors; 
- matrix[N_id, N_params[5]-1] theta_individual_predictors; 
+ matrix[N_id, N_params[1]-1] focal_predictors; 
+ matrix[N_id, N_params[2]-1] target_predictors; 
+ matrix[N_id, N_params[3]-1] fpr_predictors; 
+ matrix[N_id, N_params[4]-1] rtt_predictors; 
+ matrix[N_id, N_params[5]-1] theta_predictors; 
 
- array[N_id, N_id, N_params[6]-1] real dyad_individual_predictors;
+ array[N_id, N_id, N_params[6]-1] real dyad_predictors;
 
  //# Store some key indexes
     array[max_N_groups, N_group_vars] int N_per_group;      //# Number of people in each block-type for each group variable
@@ -111,9 +132,10 @@ transformed data{
    for(i in 1:N_id){
    for(j in 1:N_id){
      if(i != j){
-       if(mask[i,j,1]==0){
-         S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
-       }}
+      if(mask[i,j,1]==0){
+       S += (outcomes[i,j,1] + outcomes[j,i,2])/2.0;
+      }
+     }
    }}
 
    penalty = S^(1/priors[19,1]);
@@ -121,33 +143,79 @@ transformed data{
  //# Make pruned data
   if(N_params[1]>1){
   for(i in 2:N_params[1]){
-  focal_individual_predictors[ , i-1] = focal_set[,i];  
+  focal_predictors[ , i-1] = focal_set[,i];  
    }}
 
   if(N_params[2]>1){
   for(i in 2:N_params[2]){
-  target_individual_predictors[ , i-1] = target_set[,i];  
+  target_predictors[ , i-1] = target_set[,i];  
    }}
 
   if(N_params[3]>1){
   for(i in 2:N_params[3]){
-  fpr_individual_predictors[ , i-1] = fpr_set[,i];  
+  fpr_predictors[ , i-1] = fpr_set[,i];  
    }}
 
   if(N_params[4]>1){
   for(i in 2:N_params[4]){
-  rtt_individual_predictors[ , i-1] = rtt_set[,i];  
+  rtt_predictors[ , i-1] = rtt_set[,i];  
    }}
 
   if(N_params[5]>1){
   for(i in 2:N_params[5]){
-  theta_individual_predictors[ , i-1] = theta_set[,i];  
+  theta_predictors[ , i-1] = theta_set[,i];  
    }}
 
   if(N_params[6]>1){
   for(i in 2:N_params[6]){
-  dyad_individual_predictors[ , , i-1] = dyad_set[,,i];  
+  dyad_predictors[ , , i-1] = dyad_set[,,i];  
    }}
+
+  //# Missing data parameter limits
+    vector[N_missing_focal_set] imp_focal_set_L;  
+    vector[N_missing_target_set] imp_target_set_L;  
+    vector[N_missing_dyad_set] imp_dyad_set_L;  
+    vector[N_missing_fpr_set] imp_fpr_set_L;  
+    vector[N_missing_rtt_set] imp_rtt_set_L;
+    vector[N_missing_theta_set] imp_theta_set_L;    
+
+    vector[N_missing_focal_set] imp_focal_set_H;  
+    vector[N_missing_target_set] imp_target_set_H;  
+    vector[N_missing_dyad_set] imp_dyad_set_H;  
+    vector[N_missing_fpr_set] imp_fpr_set_H;  
+    vector[N_missing_rtt_set] imp_rtt_set_H;
+    vector[N_missing_theta_set] imp_theta_set_H;  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     imp_focal_set_L[q] = focal_lims[1, locations_missing_focal_set[q, 2] - 1];
+     imp_focal_set_H[q] = focal_lims[2, locations_missing_focal_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_target_set){
+     imp_target_set_L[q] = target_lims[1, locations_missing_target_set[q, 2] - 1];
+     imp_target_set_H[q] = target_lims[2, locations_missing_target_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     imp_dyad_set_L[q] = dyad_lims[1, locations_missing_dyad_set[q, 3] - 1];
+     imp_dyad_set_H[q] = dyad_lims[2, locations_missing_dyad_set[q, 3] - 1];
+    }
+
+    for(q in 1:N_missing_fpr_set){
+     imp_fpr_set_L[q] = fpr_lims[1, locations_missing_fpr_set[q, 2] - 1];
+     imp_fpr_set_H[q] = fpr_lims[2, locations_missing_fpr_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_rtt_set){
+     imp_rtt_set_L[q] = rtt_lims[1, locations_missing_rtt_set[q, 2] - 1];
+     imp_rtt_set_H[q] = rtt_lims[2, locations_missing_rtt_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_theta_set){
+     imp_theta_set_L[q] = theta_lims[1, locations_missing_theta_set[q, 2] - 1];
+     imp_theta_set_H[q] = theta_lims[2, locations_missing_theta_set[q, 2] - 1];
+    }
 }
 
 parameters{
@@ -184,7 +252,15 @@ parameters{
     //# Effects of covariate
     vector[N_params[1]-1] focal_effects;
     vector[N_params[2]-1] target_effects;
-    vector[N_params[6]-1] dyad_effects;  
+    vector[N_params[6]-1] dyad_effects; 
+
+    //# Missing data parameters
+    vector<lower=0, upper=1>[N_missing_focal_set] imp_focal_set;  
+    vector<lower=0, upper=1>[N_missing_target_set] imp_target_set;  
+    vector<lower=0, upper=1>[N_missing_dyad_set] imp_dyad_set;  
+    vector<lower=0, upper=1>[N_missing_fpr_set] imp_fpr_set;  
+    vector<lower=0, upper=1>[N_missing_rtt_set] imp_rtt_set;
+    vector<lower=0, upper=1>[N_missing_theta_set] imp_theta_set;    
 }
 
 transformed parameters{
@@ -209,6 +285,46 @@ model{
 
   array[N_group_vars] matrix[max_N_groups, max_N_groups] B;  //# Block effects, in array form
   vector[N_group_vars] br;                                   //# Sum of block effects per dyad 
+
+  matrix[N_id, N_params[1]-1] focal_predictors_mixed = focal_predictors;
+  matrix[N_id, N_params[2]-1] target_predictors_mixed = target_predictors;
+  matrix[N_id, N_params[3]-1] fpr_predictors_mixed = fpr_predictors;
+  matrix[N_id, N_params[4]-1] rtt_predictors_mixed = rtt_predictors;
+  matrix[N_id, N_params[5]-1] theta_predictors_mixed = theta_predictors;
+  array[N_id, N_id, N_params[6]-1] real dyad_predictors_mixed = dyad_predictors;
+
+    //# Priors on imputed values
+     imp_focal_set ~ uniform(0, 1);  
+     imp_target_set ~ uniform(0, 1);   
+     imp_dyad_set ~ uniform(0, 1);
+     imp_fpr_set ~ uniform(0, 1);   
+     imp_rtt_set ~ uniform(0, 1); 
+     imp_theta_set ~ uniform(0, 1); 
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
+    
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }
+
+    for(q in 1:N_missing_fpr_set){
+     fpr_predictors_mixed[locations_missing_fpr_set[q,1], locations_missing_fpr_set[q,2]-1] = imp_fpr_set_L[q] + (imp_fpr_set_H[q] - imp_fpr_set_L[q]) * imp_fpr_set[q];
+    }
+
+    for(q in 1:N_missing_rtt_set){
+     rtt_predictors_mixed[locations_missing_rtt_set[q,1], locations_missing_rtt_set[q,2]-1] = imp_rtt_set_L[q] + (imp_rtt_set_H[q] - imp_rtt_set_L[q]) * imp_rtt_set[q];
+    }
+
+    for(q in 1:N_missing_theta_set){
+     theta_predictors_mixed[locations_missing_theta_set[q,1], locations_missing_theta_set[q,2]-1] = imp_theta_set_L[q] + (imp_theta_set_H[q] - imp_theta_set_L[q]) * imp_theta_set[q];
+    }
 
     //# Priors on effects of covariates
      focal_effects ~ normal(priors[12,1], priors[12,2]);
@@ -241,13 +357,13 @@ model{
     vector[N_networktypes] rtt_terms;
 
      for(k in 1:N_networktypes){
-      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
-      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
+      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_predictors_mixed[i])); 
+      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_predictors_mixed[i])); 
      }
 
     fpr[i] = false_positive_rate + fpr_sigma .* fpr_raw[i] + fpr_terms;
     rtt[i] = recall_of_true_ties + rtt_sigma .* rtt_raw[i] + rtt_terms;
-    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_predictors_mixed[i])));
     }    
 
     //# Sender-receiver priors for social relations model
@@ -260,8 +376,8 @@ model{
     for(i in 1:N_id){
      vector[2] sr_terms;
 
-     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
-     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors_mixed[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors_mixed[i]));  
 
      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
      }
@@ -276,8 +392,8 @@ model{
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ]));
-     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ]));
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[i, j, ]));
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[j, i, ]));
      }}
 
     for(i in 1:N_id){
@@ -352,6 +468,40 @@ generated quantities{
                 matrix[N_id, N_id] p;
                 array[N_group_vars] matrix[max_N_groups, max_N_groups] B;
 
+    matrix[N_id, N_params[1]-1] focal_predictors_mixed = focal_predictors;
+    matrix[N_id, N_params[2]-1] target_predictors_mixed = target_predictors;
+    matrix[N_id, N_params[3]-1] fpr_predictors_mixed = fpr_predictors;
+    matrix[N_id, N_params[4]-1] rtt_predictors_mixed = rtt_predictors;
+    matrix[N_id, N_params[5]-1] theta_predictors_mixed = theta_predictors;
+    array[N_id, N_id, N_params[6]-1] real dyad_predictors_mixed = dyad_predictors;
+
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
+    
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }
+
+    for(q in 1:N_missing_fpr_set){
+     fpr_predictors_mixed[locations_missing_fpr_set[q,1], locations_missing_fpr_set[q,2]-1] = imp_fpr_set_L[q] + (imp_fpr_set_H[q] - imp_fpr_set_L[q]) * imp_fpr_set[q];
+    }
+
+    for(q in 1:N_missing_rtt_set){
+     rtt_predictors_mixed[locations_missing_rtt_set[q,1], locations_missing_rtt_set[q,2]-1] = imp_rtt_set_L[q] + (imp_rtt_set_H[q] - imp_rtt_set_L[q]) * imp_rtt_set[q];
+    }
+
+    for(q in 1:N_missing_theta_set){
+     theta_predictors_mixed[locations_missing_theta_set[q,1], locations_missing_theta_set[q,2]-1] = imp_theta_set_L[q] + (imp_theta_set_H[q] - imp_theta_set_L[q]) * imp_theta_set[q];
+    }
+
+
     for(i in 1:N_group_vars){
      B[i,1:N_groups_per_var[i], 1:N_groups_per_var[i]] = to_matrix(block_effects[(block_indexes[i]+1):(block_indexes[i+1])], N_groups_per_var[i], N_groups_per_var[i]);
     }
@@ -360,8 +510,8 @@ generated quantities{
     for(i in 1:N_id){
      vector[2] sr_terms;
 
-     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_individual_predictors[i]));
-     sr_terms[2] = dot_product(target_effects,  to_vector(target_individual_predictors[i]));  
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors_mixed[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors_mixed[i]));  
 
      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
      }
@@ -380,8 +530,8 @@ generated quantities{
         br2[q] = B[q,block_set[j,q], block_set[i,q]];
          }
 
-     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[i, j, ])) + sum(br1);
-     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_individual_predictors[j, i, ])) + sum(br2);
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[i, j, ])) + sum(br1);
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[j, i, ])) + sum(br2);
     }}
 
     for(i in 1:N_id){
@@ -393,13 +543,13 @@ generated quantities{
     vector[N_networktypes] rtt_terms;
 
      for(k in 1:N_networktypes){
-      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_individual_predictors[i])); 
-      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_individual_predictors[i])); 
+      fpr_terms[k] = dot_product(fpr_effects[k],  to_vector(fpr_predictors_mixed[i])); 
+      rtt_terms[k] = dot_product(rtt_effects[k],  to_vector(rtt_predictors_mixed[i])); 
      }
 
     fpr[i] = false_positive_rate + fpr_sigma .* fpr_raw[i] + fpr_terms;
     rtt[i] = recall_of_true_ties + rtt_sigma .* rtt_raw[i] + rtt_terms;
-    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_individual_predictors[i])));
+    theta[i] = inv_logit(theta_mean + theta_sigma * theta_raw[i] + dot_product(theta_effects,  to_vector(theta_predictors_mixed[i])));
     }  
 
     for ( i in 1:N_id ) {

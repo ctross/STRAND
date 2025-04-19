@@ -1,3 +1,115 @@
+functions {
+  vector lb_ub_lp(vector y, real lb, real ub) {
+     target += log(ub - lb) + log_inv_logit(y) + log1m_inv_logit(y);
+    return lb + (ub - lb) * inv_logit(y);
+  }
+  
+  real lb_ub_lp(real y, real lb, real ub) {
+     target += log(ub - lb) + log_inv_logit(y) + log1m_inv_logit(y);
+    return lb + (ub - lb) * inv_logit(y);
+  }
+  
+  matrix cholesky_corr_constrain_lp(int K, vector raw, int N_blocks,
+                                    array[,] int res_index,
+                                    array[] int res_id, vector lb, vector ub) {
+    matrix[K, K] L = rep_matrix(0, K, K);
+    int cnt = 1;
+    int N_res = num_elements(res_id);
+    vector[N_blocks] x_cache;
+    array[N_blocks] int res_id_cnt = ones_int_array(N_blocks);
+    int res_row = 1;
+    
+    L[1, 1] = 1;
+    L[2, 1] = lb_ub_lp(raw[cnt], lb[cnt], ub[cnt]);
+    L[2, 2] = sqrt(1 - L[2, 1] ^ 2);
+    cnt += 1;
+    
+    if (res_index[res_row, 1] == 2) {
+      x_cache[res_id[res_row]] = L[2, 1];
+      res_id_cnt[res_id[res_row]] += 1;
+      res_row += 1;
+    }
+    
+    for (i in 3 : K) {
+      if (res_index[res_row, 1] == i && res_index[res_row, 2] == 1) {
+        if (res_id_cnt[res_id[res_row]] == 1) {
+          L[i, 1] = lb_ub_lp(raw[cnt], lb[cnt], ub[cnt]);
+          x_cache[res_id[res_row]] = L[i, 1];
+          res_id_cnt[res_id[res_row]] += 1;
+          cnt += 1;
+        } else {
+          L[i, 1] = x_cache[res_id[res_row]];
+        }
+        res_row += 1;
+      } else {
+        L[i, 1] = lb_ub_lp(raw[cnt], lb[cnt], ub[cnt]);
+        cnt += 1;
+      }
+      
+      L[i, 2] = sqrt(1 - L[i, 1] ^ 2);
+      real l_ij_old = log1m(L[i, 1] ^ 2);
+      for (j in 2 : i - 1) {
+        real b1 = dot_product(L[j, 1 : (j - 1)], L[i, 1 : (j - 1)]);
+        real stick_length = exp(0.5 * l_ij_old);
+        real low = max({-stick_length, (lb[cnt] - b1) / L[j, j]});
+        real up = min({stick_length, (ub[cnt] - b1) / L[j, j]});
+        
+        if (res_index[res_row, 1] == i && res_index[res_row, 2] == j) {
+          if (res_id_cnt[res_id[res_row]] == 1) {
+            L[i, j] = lb_ub_lp(raw[cnt], low, up);
+            x_cache[res_id[res_row]] = L[i, j] * L[j, j] + b1;
+            res_id_cnt[res_id[res_row]] += 1;
+            cnt += 1;
+          } else {
+            L[i, j] = (x_cache[res_id[res_row]] - b1) / L[j, j];
+            target += -log(L[j, j]);
+          }
+          res_row = res_row == N_res ? N_res : res_row + 1;
+        } else {
+          L[i, j] = lb_ub_lp(raw[cnt], low, up);
+          cnt += 1;
+        }
+        l_ij_old = log_diff_exp(l_ij_old, 2 * log(abs(L[i, j])));
+      }
+      L[i, i] = exp(0.5 * l_ij_old);
+    }
+    return L;
+  }
+
+ vector corr_unconstrain_lp(vector x) {
+  int N = num_elements(x);
+  vector[N] tanh_x = tanh(x);
+   target += sum(log1m(square(tanh_x)));
+  return tanh_x;
+}
+ 
+ matrix cholesky_corr_unconstrain_lp(int K, vector y) {
+  int k_choose_2 = (K * (K - 1)) %/% 2;
+  vector[k_choose_2] z = corr_unconstrain_lp(y);
+  matrix[K, K] x = rep_matrix(0, K, K);
+  int iter = 0;
+  
+  x[1, 1] = 1;
+  
+  for (i in 2 : K) {
+    real sum_sqs;
+    iter += 1;
+    x[i, 1] = z[iter];
+    sum_sqs = square(x[i, 1]);
+    if (i > 2) {
+      for (j in 2 : i - 1) {
+        iter += 1;
+        target += 0.5 * log1m(sum_sqs);
+        x[i, j] = z[iter] * sqrt(1.0 - sum_sqs);
+        sum_sqs += square(x[i, j]);
+      }
+    }
+    x[i, i] = sqrt(1.0 - sum_sqs);
+  }
+  return x;
+  }
+}
+
 data{   
   //# Array dimension variables                                   
     int N_id;                                                //# Number of people                                                                                                   
@@ -20,7 +132,40 @@ data{
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome for each timepoint
     array[N_id,N_id,N_responses] int mask;           //# Censoring mask for each outcome for each timepoint
 
-  //# Accessory paramters 
+    int N_missing_focal_set;  
+    int N_missing_target_set;  
+    int N_missing_dyad_set;  
+
+    array[N_missing_focal_set,3] int locations_missing_focal_set;  
+    array[N_missing_target_set,3] int locations_missing_target_set;  
+    array[N_missing_dyad_set,4] int locations_missing_dyad_set;  
+
+    matrix[2, N_params[1]-1] focal_lims;  
+    matrix[2, N_params[2]-1] target_lims;  
+    matrix[2, N_params[3]-1] dyad_lims;  
+
+  //# Dyadic and generalized reciprocity control parameters
+    real<lower=0> eta;
+    
+    int<lower=0> N_dr_params;                       //# Used if random_effects_mode is set to varying
+    int<lower=0> N_dr_indices;                      //#
+    int<lower=0> N_dr_bindings;                     //#
+    array[N_dr_indices, 2] int dr_indices;          //#
+    array[N_dr_indices] int dr_id;                  //#
+
+    int<lower=0> N_dr_params_l;                     //# Used if random_effects_mode is set to fixed
+    int<lower=0> N_dr_indices_l;                    //#
+    int<lower=0> N_dr_bindings_l;                   //#
+    array[N_dr_indices_l, 2] int dr_indices_l;      //#
+    array[N_dr_indices_l] int dr_id_l;              //#
+
+    int<lower=0> N_sr_params_l;                     //#
+    int<lower=0> N_sr_indices_l;                    //#
+    int<lower=0> N_sr_bindings_l;                   //#
+    array[N_sr_indices_l, 2] int sr_indices_l;      //#
+    array[N_sr_indices_l] int sr_id_l;              //#
+
+  //# Accessory parameters 
     matrix[23, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
     int export_network;                              //# Controls export of predictions
     int outcome_mode;                                //# Are outcomes binomial
@@ -31,7 +176,16 @@ data{
 }
 
 transformed data{
-  //# Refactor to the first predictor slot, becuase it is unity
+  //# Dyadic reciprocity control parameters
+   int<lower=0> N_off_diag = ((2*N_responses) * ((2*N_responses) - 1)) %/% 2;
+   vector[N_off_diag] lb;
+   vector[N_off_diag] ub;
+
+  //# Number of free parameters in the cov matrix depends on random_effects_mode
+   int N_dr_params_in_mode;
+   int N_sr_params_in_mode;
+
+  //# Refactor to the first predictor slot, because it is unity
     array[N_id, N_params[1]-1, N_responses] real focal_predictors;            //# Same as focal_set without first column
     array[N_id, N_params[2]-1, N_responses] real target_predictors;           //# Same as target_set without first column
     array[N_id, N_id, N_params[3]-1, N_responses] real dyad_predictors;       //# Same as dyad_set without first shelf
@@ -40,6 +194,22 @@ transformed data{
     array[max_N_groups, N_group_vars, N_responses] int N_per_group;      //# Number of people in each block-type for each group variable
     array[N_group_vars+1] int block_indexes;                             //# The indexes of each block parameter when stored as a vector instead of ragged array
     int block_param_size;                                                //# Total number of block-level parameters
+
+  //# Dyadic reciprocity control parameters
+    lb = rep_vector(-1, N_off_diag);
+    ub = rep_vector(1, N_off_diag);
+
+    //# If random_effects_mode = 1, for time-variant
+    if(random_effects_mode==1){
+     N_dr_params_in_mode = N_dr_params;
+     N_sr_params_in_mode = N_off_diag;
+    }
+
+    //# If random_effects_mode = 2, for time-invariant
+    if(random_effects_mode==2){
+     N_dr_params_in_mode = N_dr_params_l;
+     N_sr_params_in_mode = N_sr_params_l;
+    }
 
   //# Get size of parameters for block model
     block_param_size = 0;                             //# Start at zero
@@ -79,6 +249,31 @@ transformed data{
      dyad_predictors[ , , i-1, l] = dyad_set[ , , i, l];  
      }}
    }
+
+    //# Missing data parameter limits
+    vector[N_missing_focal_set] imp_focal_set_L;  
+    vector[N_missing_target_set] imp_target_set_L;  
+    vector[N_missing_dyad_set] imp_dyad_set_L;  
+
+    vector[N_missing_focal_set] imp_focal_set_H;  
+    vector[N_missing_target_set] imp_target_set_H;  
+    vector[N_missing_dyad_set] imp_dyad_set_H;  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     imp_focal_set_L[q] = focal_lims[1, locations_missing_focal_set[q, 2] - 1];
+     imp_focal_set_H[q] = focal_lims[2, locations_missing_focal_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_target_set){
+     imp_target_set_L[q] = target_lims[1, locations_missing_target_set[q, 2] - 1];
+     imp_target_set_H[q] = target_lims[2, locations_missing_target_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     imp_dyad_set_L[q] = dyad_lims[1, locations_missing_dyad_set[q, 3] - 1];
+     imp_dyad_set_H[q] = dyad_lims[2, locations_missing_dyad_set[q, 3] - 1];
+    }
 }
 
 parameters{
@@ -92,32 +287,35 @@ parameters{
 
     //# Variation of sender-receiver effects
     vector<lower=0>[2*N_responses] sr_sigma;            
-    cholesky_factor_corr[2*N_responses] sr_L;  
+    vector[N_sr_params_in_mode] sr_par_set;  
     array[N_id] vector[2*N_responses] sr_raw;                
 
     //# Variation of dyadic effects
-    vector<lower=0>[N_responses] dr_sigma;              
-    cholesky_factor_corr[2*N_responses] dr_L;   
-    array[N_responses] matrix[N_id, N_id] dr_raw; 
+    vector<lower=0>[N_responses] dr_sigma; 
+    vector[N_dr_params_in_mode] dr_par_set;                 
+    array[N_responses] matrix[N_id, N_id] dr_raw;  
 
     //# Error in Gaussian model
-    vector<lower=0>[N_responses] error_sigma;    
+    vector<lower=0>[N_responses] error_sigma; 
+
+    //# Missing data parameters
+    vector<lower=0, upper=1>[N_missing_focal_set] imp_focal_set;  
+    vector<lower=0, upper=1>[N_missing_target_set] imp_target_set;  
+    vector<lower=0, upper=1>[N_missing_dyad_set] imp_dyad_set;     
 }
 
 transformed parameters{
+    //# DR and GR stuff
+    matrix[2*N_responses, 2*N_responses] dr_L;    
+    matrix[2*N_responses, 2*N_responses] sr_L;    
+
     //# Block effects, stored as a vector to save space
     array[N_responses] vector[block_param_size] block_effects;
 
-    //# Effects of covariate
+    //# Effects of covariates
     array[N_responses] vector[N_params[1]-1] focal_effects;
     array[N_responses] vector[N_params[2]-1] target_effects;
     array[N_responses] vector[N_params[3]-1] dyad_effects;   
-
-    matrix[2*N_responses, 2*N_responses] G_corr; 
-    matrix[2*N_responses, 2*N_responses] D_corr; 
-
-    G_corr = tcrossprod(sr_L); 
-    D_corr = tcrossprod(dr_L);  
 
     //# If coefficient_mode = 1, for time-variant
     if(coefficient_mode == 1){
@@ -136,6 +334,18 @@ transformed parameters{
       target_effects[m] = target_effects_raw[1];
       dyad_effects[m] = dyad_effects_raw[1];
     }}
+
+    //# If random_effects_mode = 1, for time-variant
+    if(random_effects_mode==1){
+      dr_L = cholesky_corr_constrain_lp(2*N_responses, dr_par_set, N_dr_bindings, dr_indices, dr_id, lb, ub); 
+      sr_L = cholesky_corr_unconstrain_lp(2*N_responses, sr_par_set);  
+    }
+
+    //# If random_effects_mode = 2, for time-invariant
+    if(random_effects_mode==2){
+      dr_L = cholesky_corr_constrain_lp(2*N_responses, dr_par_set, N_dr_bindings_l, dr_indices_l, dr_id_l, lb, ub);  
+      sr_L = cholesky_corr_constrain_lp(2*N_responses, sr_par_set, N_sr_bindings_l, sr_indices_l, sr_id_l, lb, ub); 
+    }
 }
 
 model{
@@ -146,57 +356,41 @@ model{
     array[N_responses] matrix[N_id, N_id] dr_multi;            //# Dyadic effects long form
     array[N_group_vars] matrix[max_N_groups, max_N_groups] B;  //# Block effects, in array form
     vector[N_group_vars] br;                                   //# Sum of block effects per dyad    
-    vector[2*N_responses] scrap;                               //# Local storage                    
+    vector[2*N_responses] scrap;                               //# Local storage
+
+    array[N_id, N_params[1]-1, N_responses] real focal_predictors_mixed = focal_predictors;
+    array[N_id, N_params[2]-1, N_responses] real target_predictors_mixed = target_predictors;
+    array[N_id, N_id, N_params[3]-1, N_responses] real dyad_predictors_mixed = dyad_predictors;
+
+    //# Priors on imputed values
+     imp_focal_set ~ uniform(0, 1);  
+     imp_target_set ~ uniform(0, 1);   
+     imp_dyad_set ~ uniform(0, 1);  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1, locations_missing_focal_set[q,3]] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
     
-    //# Stitch together the dyadic matrix
-    for(m in 1:(N_responses-1)){
-    for(n in (m+1):N_responses){
-     target += normal_lpdf(D_corr[m+N_responses, n+N_responses] | D_corr[m, n], bandage_penalty);
-     target += normal_lpdf(D_corr[m, n+N_responses]   | D_corr[n, m+N_responses], bandage_penalty);
-    }}
-
-    //# Add stiches to the dyadic matrix for longitudinal symmetries
-    //# If random_effects_mode = 2, for time-invariant
-    if(random_effects_mode==2){
-     for(k in 1:(N_responses-1)){
-     for(m in 1:(N_responses-k)){
-      target += normal_lpdf(D_corr[m, m+k] | D_corr[1, k+1],   bandage_penalty);
-      target += normal_lpdf(D_corr[m, N_responses+m+k] | D_corr[1, N_responses+k+1], bandage_penalty);
-      }
-     }
-
-     for(m in 1:N_responses){
-      target += normal_lpdf(D_corr[m, m+N_responses] | D_corr[1, N_responses+1], bandage_penalty);
-      }
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1, locations_missing_target_set[q,3]] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
     }
 
-    //# Add stiches to the generalized matrix for longitudinal symmetries
-    //# If random_effects_mode = 2, for time-invariant
-    if(random_effects_mode==2){
-     for(k in 1:(N_responses-1)){
-     for(m in 1:(N_responses-k)){
-      target += normal_lpdf(G_corr[m, m+k] | G_corr[1, k+1], bandage_penalty);
-      target += normal_lpdf(G_corr[m, N_responses+m+k] | G_corr[1, N_responses+k+1], bandage_penalty);
-      target += normal_lpdf(G_corr[N_responses + m, N_responses + m+k] | G_corr[N_responses + 1, N_responses + k+1], bandage_penalty);
-      target += normal_lpdf(G_corr[m + k, N_responses + m] | G_corr[k + 1, N_responses + 1], bandage_penalty);
-      }}
-
-     for(m in 1:N_responses){
-      target += normal_lpdf(G_corr[m, m+N_responses] | G_corr[1, N_responses+1], bandage_penalty);
-     }
-    }
-
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1, locations_missing_dyad_set[q,4]] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }                                         
+    
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
     sr_sigma ~ normal(priors[15,1], priors[15,2]);
-    sr_L ~ lkj_corr_cholesky(priors[17,1]);
+    sr_L ~ lkj_corr_cholesky(eta);
 
     //# Dyadic priors for social relations model
     for(l in 1:N_responses)
     to_vector(dr_raw[l]) ~ normal(0,1);
-    dr_sigma ~ normal(priors[16,1], priors[16,2]);
-    dr_L ~ lkj_corr_cholesky(priors[18,1]);
+    dr_sigma ~ normal(priors[16,1], priors[16,2]); 
+    dr_L ~ lkj_corr_cholesky(eta);
     
     for(i in 1:N_id){
       sr_multi[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i];
@@ -247,14 +441,14 @@ model{
      error_sigma[l] ~ normal(priors[23,1], priors[23,2]);
 
      for(i in 1:N_id){                                                                
-     sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors[i, ,l]));
-     sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors[i, ,l]));  
+     sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors_mixed[i, ,l]));
+     sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors_mixed[i, ,l]));  
      }
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
-     dr[i,j] = dr_multi[l,i,j] + dot_product(dyad_effects[l],  to_vector(dyad_predictors[i, j, , l]));   
-     dr[j,i] = dr_multi[l,j,i] + dot_product(dyad_effects[l],  to_vector(dyad_predictors[j, i, , l]));
+     dr[i,j] = dr_multi[l,i,j] + dot_product(dyad_effects[l],  to_vector(dyad_predictors_mixed[i, j, , l]));   
+     dr[j,i] = dr_multi[l,j,i] + dot_product(dyad_effects[l],  to_vector(dyad_predictors_mixed[j, i, , l]));
      }}
 
     for(i in 1:N_id){
@@ -302,3 +496,11 @@ model{
     }
     }
  }
+
+generated quantities {
+  matrix[2*N_responses, 2*N_responses] D_corr;
+  matrix[2*N_responses, 2*N_responses] G_corr;
+
+  D_corr = multiply_lower_tri_self_transpose(dr_L);
+  G_corr = multiply_lower_tri_self_transpose(sr_L);
+}

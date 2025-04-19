@@ -14,14 +14,11 @@ data{
 
     array[N_id, N_id, N_params[3]] real dyad_set;
 
-    matrix [22, 2] priors;
+    matrix[23, 2] priors;
     
     int export_network;
     int outcome_mode;
-    int link_mode;
-
-    real prior_error_mu;
-    real prior_error_sigma;                           
+    int link_mode;                       
 }
 
 transformed data{
@@ -88,13 +85,13 @@ model{
      target_effects ~ normal(priors[13,1], priors[13,2]);
      dyad_effects ~ normal(priors[14,1], priors[14,2]);
 
-     error_sigma ~ normal(prior_error_mu, prior_error_sigma);
+     error_sigma ~ normal(priors[23,1], priors[23,2]);
 
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
 
-    sr_sigma ~ exponential(priors[15,1]);    
+    sr_sigma ~ normal(priors[15,1], priors[15,2]);    
     sr_L ~ lkj_corr_cholesky(priors[17,1]);
 
     for(i in 1:N_id){
@@ -108,7 +105,7 @@ model{
 
     //# Dyadic priors for social relations model
     to_vector(dr_raw) ~ normal(0,1);
-    dr_sigma ~ exponential(priors[16,1]);
+    dr_sigma ~ normal(priors[16,1], priors[16,2]);
     dr_L ~ lkj_corr_cholesky(priors[18,1]);
 
     for(i in 1:(N_id-1)){

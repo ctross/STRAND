@@ -20,6 +20,18 @@ data{
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome for each timepoint
     array[N_id,N_id,N_responses] int mask;           //# Censoring mask for each outcome for each timepoint
 
+    int N_missing_focal_set;  
+    int N_missing_target_set;  
+    int N_missing_dyad_set;  
+
+    array[N_missing_focal_set,3] int locations_missing_focal_set;  
+    array[N_missing_target_set,3] int locations_missing_target_set;  
+    array[N_missing_dyad_set,4] int locations_missing_dyad_set;  
+
+    matrix[2, N_params[1]-1] focal_lims;  
+    matrix[2, N_params[2]-1] target_lims;  
+    matrix[2, N_params[3]-1] dyad_lims;  
+
   //# Accessory paramters 
     matrix[23, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
     int export_network;                              //# Controls export of predictions
@@ -79,6 +91,31 @@ transformed data{
      dyad_predictors[ , , i-1, l] = dyad_set[ , , i, l];  
      }}
    }
+
+    //# Missing data parameter limits
+    vector[N_missing_focal_set] imp_focal_set_L;  
+    vector[N_missing_target_set] imp_target_set_L;  
+    vector[N_missing_dyad_set] imp_dyad_set_L;  
+
+    vector[N_missing_focal_set] imp_focal_set_H;  
+    vector[N_missing_target_set] imp_target_set_H;  
+    vector[N_missing_dyad_set] imp_dyad_set_H;  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     imp_focal_set_L[q] = focal_lims[1, locations_missing_focal_set[q, 2] - 1];
+     imp_focal_set_H[q] = focal_lims[2, locations_missing_focal_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_target_set){
+     imp_target_set_L[q] = target_lims[1, locations_missing_target_set[q, 2] - 1];
+     imp_target_set_H[q] = target_lims[2, locations_missing_target_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     imp_dyad_set_L[q] = dyad_lims[1, locations_missing_dyad_set[q, 3] - 1];
+     imp_dyad_set_H[q] = dyad_lims[2, locations_missing_dyad_set[q, 3] - 1];
+    }
 }
 
 parameters{
@@ -101,7 +138,12 @@ parameters{
     array[N_responses] matrix[N_id, N_id] dr_raw; 
 
     //# Error in Gaussian model
-    vector<lower=0>[N_responses] error_sigma;    
+    vector<lower=0>[N_responses] error_sigma;  
+
+    //# Missing data parameters
+    vector<lower=0, upper=1>[N_missing_focal_set] imp_focal_set;  
+    vector<lower=0, upper=1>[N_missing_target_set] imp_target_set;  
+    vector<lower=0, upper=1>[N_missing_dyad_set] imp_dyad_set;    
 }
 
 transformed parameters{
@@ -146,7 +188,29 @@ model{
     array[N_responses] matrix[N_id, N_id] dr_multi;            //# Dyadic effects long form
     array[N_group_vars] matrix[max_N_groups, max_N_groups] B;  //# Block effects, in array form
     vector[N_group_vars] br;                                   //# Sum of block effects per dyad    
-    vector[2*N_responses] scrap;                               //# Local storage                    
+    vector[2*N_responses] scrap;                               //# Local storage  
+
+    array[N_id, N_params[1]-1, N_responses] real focal_predictors_mixed = focal_predictors;
+    array[N_id, N_params[2]-1, N_responses] real target_predictors_mixed = target_predictors;
+    array[N_id, N_id, N_params[3]-1, N_responses] real dyad_predictors_mixed = dyad_predictors;
+
+    //# Priors on imputed values
+     imp_focal_set ~ uniform(0, 1);  
+     imp_target_set ~ uniform(0, 1);   
+     imp_dyad_set ~ uniform(0, 1);  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1, locations_missing_focal_set[q,3]] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
+    
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1, locations_missing_target_set[q,3]] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1, locations_missing_dyad_set[q,4]] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }                     
     
     //# Stitch together the dyadic matrix
     for(m in 1:(N_responses-1)){
@@ -247,14 +311,14 @@ model{
      error_sigma[l] ~ normal(priors[23,1], priors[23,2]);
 
      for(i in 1:N_id){                                                                
-     sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors[i, ,l]));
-     sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors[i, ,l]));  
+     sr[i,1] = sr_multi[i, l] + dot_product(focal_effects[l],  to_vector(focal_predictors_mixed[i, ,l]));
+     sr[i,2] = sr_multi[i, l + N_responses] + dot_product(target_effects[l],  to_vector(target_predictors_mixed[i, ,l]));  
      }
 
     for(i in 1:(N_id-1)){
     for(j in (i+1):N_id){
-     dr[i,j] = dr_multi[l,i,j] + dot_product(dyad_effects[l],  to_vector(dyad_predictors[i, j, , l]));   
-     dr[j,i] = dr_multi[l,j,i] + dot_product(dyad_effects[l],  to_vector(dyad_predictors[j, i, , l]));
+     dr[i,j] = dr_multi[l,i,j] + dot_product(dyad_effects[l],  to_vector(dyad_predictors_mixed[i, j, , l]));   
+     dr[j,i] = dr_multi[l,j,i] + dot_product(dyad_effects[l],  to_vector(dyad_predictors_mixed[j, i, , l]));
      }}
 
     for(i in 1:N_id){

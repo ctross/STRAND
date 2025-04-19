@@ -1,7 +1,3 @@
-// Test
-// Test2
-// Test3
-//Test4
 functions{
     //# Shifted and scaled inv_logit link
      real inv_logit_shifted(real x) {
@@ -46,7 +42,7 @@ data{
     array[N_id,N_responses] int diffusion_mask;      //# Censoring mask for each outcome for each timepoint
 
   //# Accessory parameters 
-    matrix[22, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
+    matrix[23, 2] priors;                            //# Priors in a matrix, see details in the make_priors() function
     int export_network;                              //# Controls export of predictions
     int outcome_mode;                                //# Are outcomes binomial
     int link_mode;                                   //# Link type

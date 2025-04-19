@@ -22,10 +22,30 @@ data{
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
+    int N_missing_focal_set;  
+    int N_missing_target_set;  
+    int N_missing_dyad_set;  
+    int N_missing_sampling_set;
+    int N_missing_censoring_set;
+
+    array[N_missing_focal_set,2] int locations_missing_focal_set;  
+    array[N_missing_target_set,2] int locations_missing_target_set;  
+    array[N_missing_dyad_set,3] int locations_missing_dyad_set;  
+    array[N_missing_sampling_set,2] int locations_missing_sampling_set;  
+    array[N_missing_censoring_set,2] int locations_missing_censoring_set;  
+
+    matrix[2, N_params[1]-1] focal_lims;  
+    matrix[2, N_params[2]-1] target_lims;  
+    matrix[2, N_params[3]-1] dyad_lims;
+    matrix[2, N_params[4]-1] sampling_lims;
+    matrix[2, N_params[5]-1] censoring_lims;  
+
     array[N_id] int sampled;                         //# Outcome for sampling
     array[N_id] int sampled_exposure;                //# Exposure for sampling
+    array[N_id] int sampled_mask;                    //# Mask for sampling
     array[N_id] int detected;                        //# Outcome for detectability
     array[N_id] int detected_exposure;               //# Exposure for detectability
+    array[N_id] int detected_mask;                   //# Mask for detectability
 
   //# Accessory paramters 
     matrix[23, 2] priors;                       //# Priors in a matrix, see details in the make_priors() function
@@ -100,6 +120,45 @@ transformed data{
      for(i in 2:N_params[3]){
      dyad_predictors[ , , i-1] = dyad_set[,,i];  
      }}
+
+    //# Missing data parameter limits
+    vector[N_missing_focal_set] imp_focal_set_L;  
+    vector[N_missing_target_set] imp_target_set_L;  
+    vector[N_missing_dyad_set] imp_dyad_set_L;  
+    vector[N_missing_sampling_set] imp_sampling_set_L;  
+    vector[N_missing_censoring_set] imp_censoring_set_L;  
+
+    vector[N_missing_focal_set] imp_focal_set_H;  
+    vector[N_missing_target_set] imp_target_set_H;  
+    vector[N_missing_dyad_set] imp_dyad_set_H;  
+    vector[N_missing_sampling_set] imp_sampling_set_H;  
+    vector[N_missing_censoring_set] imp_censoring_set_H;  
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     imp_focal_set_L[q] = focal_lims[1, locations_missing_focal_set[q, 2] - 1];
+     imp_focal_set_H[q] = focal_lims[2, locations_missing_focal_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_target_set){
+     imp_target_set_L[q] = target_lims[1, locations_missing_target_set[q, 2] - 1];
+     imp_target_set_H[q] = target_lims[2, locations_missing_target_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     imp_dyad_set_L[q] = dyad_lims[1, locations_missing_dyad_set[q, 3] - 1];
+     imp_dyad_set_H[q] = dyad_lims[2, locations_missing_dyad_set[q, 3] - 1];
+    }
+
+    for(q in 1:N_missing_sampling_set){
+     imp_sampling_set_L[q] = sampling_lims[1, locations_missing_sampling_set[q, 2] - 1];
+     imp_sampling_set_H[q] = sampling_lims[2, locations_missing_sampling_set[q, 2] - 1];
+    }
+
+    for(q in 1:N_missing_censoring_set){
+     imp_censoring_set_L[q] = censoring_lims[1, locations_missing_censoring_set[q, 2] - 1];
+     imp_censoring_set_H[q] = censoring_lims[2, locations_missing_censoring_set[q, 2] - 1];
+    }
 }
 
 parameters{
@@ -131,7 +190,14 @@ parameters{
     vector[N_params[2]-1] target_effects;
     vector[N_params[4]-1] sampling_effects;
     vector[N_params[5]-1] censoring_effects;
-    vector[N_params[3]-1] dyad_effects;    
+    vector[N_params[3]-1] dyad_effects;  
+
+    //# Missing data parameters
+    vector<lower=0, upper=1>[N_missing_focal_set] imp_focal_set;  
+    vector<lower=0, upper=1>[N_missing_target_set] imp_target_set;  
+    vector<lower=0, upper=1>[N_missing_dyad_set] imp_dyad_set;  
+    vector<lower=0, upper=1>[N_missing_sampling_set] imp_sampling_set;  
+    vector<lower=0, upper=1>[N_missing_censoring_set] imp_censoring_set;    
 }
 
 transformed parameters{
@@ -151,7 +217,41 @@ model{
     vector[2] scrap;                                           //# Local storage    
     vector[N_id] eta;   
     vector[N_id] theta; 
-    vector[N_id] psi;              
+    vector[N_id] psi;  
+
+    matrix[N_id, N_params[1]-1] focal_predictors_mixed = focal_predictors;
+    matrix[N_id, N_params[2]-1] target_predictors_mixed = target_predictors;
+    array[N_id, N_id, N_params[3]-1] real dyad_predictors_mixed = dyad_predictors;
+    matrix[N_id, N_params[4]-1] sampling_predictors_mixed = sampling_predictors;
+    matrix[N_id, N_params[5]-1] censoring_predictors_mixed = censoring_predictors;
+
+    //# Priors on imputed values
+     imp_focal_set ~ uniform(0, 1);  
+     imp_target_set ~ uniform(0, 1);   
+     imp_dyad_set ~ uniform(0, 1);
+     imp_sampling_set ~ uniform(0, 1);   
+     imp_censoring_set ~ uniform(0, 1); 
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
+    
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }
+
+    for(q in 1:N_missing_sampling_set){
+     sampling_predictors_mixed[locations_missing_sampling_set[q,1], locations_missing_sampling_set[q,2]-1] = imp_sampling_set_L[q] + (imp_sampling_set_H[q] - imp_sampling_set_L[q]) * imp_sampling_set[q];
+    }
+
+    for(q in 1:N_missing_censoring_set){
+     censoring_predictors_mixed[locations_missing_censoring_set[q,1], locations_missing_censoring_set[q,2]-1] = imp_censoring_set_L[q] + (imp_censoring_set_H[q] - imp_censoring_set_L[q]) * imp_censoring_set[q];
+    }                
     
     //# The first step, is to transform the vector of block effects into a list of matrices
     for(q in 1:N_group_vars){
@@ -186,8 +286,8 @@ model{
     for(i in 1:N_id){
      vector[2] sr_terms;
 
-     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors[i]));
-     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors[i]));  
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors_mixed[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors_mixed[i]));  
 
      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
      }
@@ -212,8 +312,8 @@ model{
      scrap[1] = dr_raw[i,j];
      scrap[2] = dr_raw[j,i];
      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
-     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors[i, j, ]));
-     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors[j, i, ]));
+     dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[i, j, ]));
+     dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[j, i, ]));
      }}
 
     for(i in 1:N_id){
@@ -223,20 +323,27 @@ model{
     //# likelihood
     if(link_mode==1){
     for(i in 1:N_id){
-      psi[i] = inv_logit(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors[i])));
-      theta[i] = inv_logit(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors[i])));
+      psi[i] = inv_logit(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors_mixed[i])));
+      theta[i] = inv_logit(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors_mixed[i])));
       eta[i] = 1 - theta[i];
     }}
 
     if(link_mode==2){
     for(i in 1:N_id){
-      psi[i] = Phi(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors[i])));
-      theta[i] = Phi(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors[i])));
+      psi[i] = Phi(s_mu + s_sigma*s_raw[i] + dot_product(sampling_effects,  to_vector(sampling_predictors_mixed[i])));
+      theta[i] = Phi(c_mu + c_sigma*c_raw[i] + dot_product(censoring_effects,  to_vector(censoring_predictors_mixed[i])));
       eta[i] = 1 - theta[i];
     }}
+    
+    for(i in 1:N_id){
+      if(sampled_mask[i]==0){
+       sampled[i] ~ binomial(sampled_exposure[i], psi[i]);
+     }}
 
-    sampled ~ binomial(sampled_exposure, psi);
-    undetected ~ binomial(detected_exposure, theta);
+    for(i in 1:N_id){ 
+      if(detected_mask[i]==0){
+       undetected[i] ~ binomial(detected_exposure[i], theta[i]);
+     }}
 
     for(i in 1:N_id){
      for(j in 1:N_id){
@@ -283,6 +390,34 @@ generated quantities{
      int tie;
      array[N_group_vars] matrix[max_N_groups, max_N_groups] B;
 
+    matrix[N_id, N_params[1]-1] focal_predictors_mixed = focal_predictors;
+    matrix[N_id, N_params[2]-1] target_predictors_mixed = target_predictors;
+    array[N_id, N_id, N_params[3]-1] real dyad_predictors_mixed = dyad_predictors;
+    matrix[N_id, N_params[4]-1] sampling_predictors_mixed = sampling_predictors;
+    matrix[N_id, N_params[5]-1] censoring_predictors_mixed = censoring_predictors;
+
+    //# Now map in missings
+    for(q in 1:N_missing_focal_set){
+     focal_predictors_mixed[locations_missing_focal_set[q,1], locations_missing_focal_set[q,2]-1] = imp_focal_set_L[q] + (imp_focal_set_H[q] - imp_focal_set_L[q]) * imp_focal_set[q];
+    }
+    
+    for(q in 1:N_missing_target_set){
+     target_predictors_mixed[locations_missing_target_set[q,1], locations_missing_target_set[q,2]-1] = imp_target_set_L[q] + (imp_target_set_H[q] - imp_target_set_L[q]) * imp_target_set[q];
+    }
+
+    for(q in 1:N_missing_dyad_set){
+     dyad_predictors_mixed[locations_missing_dyad_set[q,1], locations_missing_dyad_set[q,2], locations_missing_dyad_set[q,3]-1] = imp_dyad_set_L[q] + (imp_dyad_set_H[q] - imp_dyad_set_L[q]) * imp_dyad_set[q];
+    }
+
+    for(q in 1:N_missing_sampling_set){
+     sampling_predictors_mixed[locations_missing_sampling_set[q,1], locations_missing_sampling_set[q,2]-1] = imp_sampling_set_L[q] + (imp_sampling_set_H[q] - imp_sampling_set_L[q]) * imp_sampling_set[q];
+    }
+
+    for(q in 1:N_missing_censoring_set){
+     censoring_predictors_mixed[locations_missing_censoring_set[q,1], locations_missing_censoring_set[q,2]-1] = imp_censoring_set_L[q] + (imp_censoring_set_H[q] - imp_censoring_set_L[q]) * imp_censoring_set[q];
+    }                
+    
+
     for(i in 1:N_group_vars){
      B[i,1:N_groups_per_var[i], 1:N_groups_per_var[i]] = to_matrix(block_effects[(block_indexes[i]+1):(block_indexes[i+1])], N_groups_per_var[i], N_groups_per_var[i]);
     }
@@ -290,8 +425,8 @@ generated quantities{
     for(i in 1:N_id){
      vector[2] sr_terms;
 
-     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors[i]));
-     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors[i]));  
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors_mixed[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors_mixed[i]));  
 
      sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
      }
@@ -311,8 +446,8 @@ generated quantities{
         br2[q] = B[q,block_set[j,q], block_set[i,q]];
          }
 
-       dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors[i, j, ])) + sum(br1);
-       dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors[j, i, ])) + sum(br2);
+       dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[i, j, ])) + sum(br1);
+       dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors_mixed[j, i, ])) + sum(br2);
     }}
 
     for(i in 1:N_id){
