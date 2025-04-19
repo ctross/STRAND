@@ -17,16 +17,16 @@ data(Colombia_Data)
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = Colombia_Data$Relatedness, 
-            Distance = Colombia_Data$Distance
+dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
+            Distance = standardize(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = Colombia_Data$Individual$Age, 
-                    BMI = Colombia_Data$Individual$BMI
+indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
+                    BMI = standardize(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -96,7 +96,7 @@ df$Submodel = factor(df$Submodel)
 df$Method = df$Site 
 
 p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, color=Method,
-        ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
+        ymin = L, ymax = H)) + ggplot2::geom_linerange(linewidth = 1, position = position_dodge(width = 0.6)) + 
         ggplot2::geom_point(size = 2,, position = position_dodge(width = 0.6)) + ggplot2::facet_grid(. ~Submodel, scales = "free", space = "free") +
          ggplot2::geom_hline(ggplot2::aes(yintercept = 0), 
         color = "black", linetype = "dashed") + ggplot2::labs(y = "Regression parameters", 
@@ -111,8 +111,8 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-vpc1 = strand_VPCs(fit, n_partitions = 4) # Split variance into focal, target, dyadic, and error componants.
-vpc2 = strand_VPCs(fit, n_partitions = 3) # Split variance into focal, target, and dyadic+error componants.
+vpc1 = strand_VPCs(fit, n_partitions = 4) # Split variance into focal, target, dyadic, and error components.
+vpc2 = strand_VPCs(fit, n_partitions = 3) # Split variance into focal, target, and dyadic+error components.
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -140,7 +140,7 @@ df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Erro
 df$Type = df$Site 
 
 p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, color=Type,
-        ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
+        ymin = L, ymax = H)) + ggplot2::geom_linerange(linewidth = 1, position = position_dodge(width = 0.6)) + 
         ggplot2::geom_point(size = 2,, position = position_dodge(width = 0.6)) + ggplot2::facet_grid(. ~Submodel, scales = "free", space = "free") +
          ggplot2::geom_hline(ggplot2::aes(yintercept = 0), 
         color = "black", linetype = "dashed") + ggplot2::labs(y = "Regression parameters", 
@@ -154,6 +154,8 @@ p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, c
 
 p4
 
+######################################## We recommend the 5 way VPC, and interpreting only the reciprocal dyadic fraction
+strand_VPCs(fit, n_partitions = 5)
 
 ###############################################################################################################
 ############################### Model fit diagnostics

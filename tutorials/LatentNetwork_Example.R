@@ -18,10 +18,14 @@ data(FoodSharing_Data)
 outcome = list(TransferOut = FoodSharing_Data$TransferOut, 
                TransferIn = FoodSharing_Data$TransferIn)
 
-dyad = list(Relatedness = FoodSharing_Data$Relatedness, 
+dyad = list(Relatedness = standardize(FoodSharing_Data$Relatedness), 
             Friends = FoodSharing_Data$Friends
             )
 
+FoodSharing_Data$Individual$Age = standardize(FoodSharing_Data$Individual$Age)
+FoodSharing_Data$Individual$Wealth = standardize(FoodSharing_Data$Individual$Wealth)
+FoodSharing_Data$Individual$GripStrength = standardize(FoodSharing_Data$Individual$GripStrength)
+FoodSharing_Data$Individual$Education = standardize(FoodSharing_Data$Individual$Education)
 indiv = FoodSharing_Data$Individual 
 
 groups = data.frame(Ethnicity = as.factor(FoodSharing_Data$Individual$Ethnicity), 
@@ -159,7 +163,6 @@ p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, c
         "lines")) + scale_color_manual(values=c("4-way VPC" = "darkred", "3-way VPC" = "black"))  + theme(legend.position="bottom")
 
 p4
-
 
 ###############################################################################################################
 ############################### Model fit diagnostics

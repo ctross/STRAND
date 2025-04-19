@@ -19,11 +19,11 @@ library(rethinking)
 
 
 # Make data
- N_id = 145    # Individuals in network
+ N_id = 105    # Individuals in network, set smaller for faster model
  N_layers = 3  # Network layers
 
 # Covariates
- Kinship = rlkjcorr( 1 , N_id , eta=1.5 )
+ Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -208,6 +208,7 @@ res = summarize_strand_results(fit)
 
 ######################################################### Visualize results
 df_plt = res$summary
+df_plt = df_plt[which(!df_plt$Variable %in% c("error sd - Feeding", "error sd - Fighting", "error sd - Grooming")),]
 
 recip_to_long = function(X){
   len_X = nrow(X)
@@ -465,6 +466,7 @@ p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = 
 p2
 
 # ggsave("sim_res_dyad.pdf",p2, width=6, height=6)
+
 
 
 

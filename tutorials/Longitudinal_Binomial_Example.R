@@ -21,6 +21,14 @@ dat_long = NULL
 # if outcome data is missing, mask[i,j]=1
 # currently, missings in the predictors aren't supported in STRAND, but will be eventually
 for(y in 1:14){
+    d$Individual$Age = standardize(d$Individual$Age)
+
+    if(all(d$Mask[[y]]==1)){
+    Presenting = t(d$Presenting[[y]])               # If all entries are masked, then standardize() fails 
+    } else{
+    Presenting = standardize(t(d$Presenting[[y]]))  # If there are  some data, then standardize  
+    }
+
  # Merge data
  dat_long[[y]] = make_strand_data(
   outcome = list("Affiliative" = d$Affiliative[[y]]),
@@ -28,10 +36,11 @@ for(y in 1:14){
   mask = list("Affiliative" = d$Mask[[y]]),
   block_covariates = NULL, 
   individual_covariates = d$Individual, 
-  dyadic_covariates = list("Presenting" = t(d$Presenting[[y]])),
+  dyadic_covariates = list("Presenting" = Presenting),
   longitudinal = TRUE,
   outcome_mode="binomial",
-  link_mode="logit"
+  link_mode="logit",
+  directed = TRUE
   )
  }
 names(dat_long) = paste("Time", c(1:14))
@@ -45,7 +54,7 @@ fit_2a = fit_longitudinal_model(
  target_regression = ~ Age + Sex,
  dyad_regression = ~ Presenting,
  coefficient_mode="varying",
- random_effects_mode="varying",
+ random_effects_mode="fixed",
  bandage_penalty = -1,
   mode="mcmc",
  stan_mcmc_parameters = list(seed = 1, chains = 1, init=0,
@@ -85,8 +94,9 @@ fit_2b = fit_longitudinal_model(
  dyad_regression = ~ Presenting,
  coefficient_mode="fixed",
  random_effects_mode="fixed",
+ bandage_penalty = -1,
   mode="mcmc",
- stan_mcmc_parameters = list(seed = 1, chains = 1, 
+ stan_mcmc_parameters = list(seed = 1, chains = 1, init=0,
     parallel_chains = 1, refresh = 1, iter_warmup = 100,
     iter_sampling = 1000, max_treedepth = 12),
  priors=NULL
@@ -172,283 +182,3 @@ p
 
 ggsave("Slopes_Baboon_merged.pdf", p, height=6, width=13.5)
 
-
-res_2a = summarize_longitudinal_bsrm_results(fit_2a)
-
-
-strand_VPCs(fit_2a, n_partitions = 3, HPDI=0.9, include_reciprocity=TRUE, mode="adj")
-multiplex_plot(fit_2a, type="dyadic", mode="cor", HPDI=0.9)
-multiplex_plot(fit_2a, type="dyadic", mode="adj", HPDI=0.9)
-
-
-
-
-rlkjcorr = function (n, K, eta = 1) 
-{
-    stopifnot(is.numeric(K), K >= 2, K == as.integer(K))
-    stopifnot(eta > 0)
-    f <- function() {
-        alpha <- eta + (K - 2)/2
-        r12 <- 2 * rbeta(1, alpha, alpha) - 1
-        R <- matrix(0, K, K)
-        R[1, 1] <- 1
-        R[1, 2] <- r12
-        R[2, 2] <- sqrt(1 - r12^2)
-        if (K > 2) 
-            for (m in 2:(K - 1)) {
-                alpha <- alpha - 0.5
-                y <- rbeta(1, m/2, alpha)
-                z <- rnorm(m, 0, 1)
-                z <- z/sqrt(crossprod(z)[1])
-                R[1:m, m + 1] <- sqrt(y) * z
-                R[m + 1, m + 1] <- sqrt(1 - y)
-            }
-        return(crossprod(R))
-    }
-    R <- replicate(n, f())
-    if (dim(R)[3] == 1) {
-        R <- R[, , 1]
-    }
-    else {
-        R <- aperm(R, c(3, 1, 2))
-    }
-    return(R)
-}
-
-silly_prod = function(X,v){
-    Y=X
-    for(i in 1:length(v)) Y[i,i]=X[i,i]*v[i]
-    return(Y)
-}
-
-merge = function(A,D){
-X1 = cbind(A,D)
-X2 = cbind(D,A)
-Y = rbind(X1,X2)
-return(Y)
-} 
-
-K = 5
-A = rlkjcorr(n=1, K=K, eta=2.5)
-B = rlkjcorr(n=1, K=K, eta=2.5)
-C = runif(K,-1, 1)
-D = silly_prod(B,C)
-
-M = merge(A,D)
-L = chol(M)
-
-
-
-
-
-
-
-to_corr = function(K){
-    N = choose(K,2)
-    M = diag(rep(0,K))
-    M[lower.tri(M)] = rnorm(N, 0, 2)
-
-    Z = tanh(M)
-
-    X = matrix(0, nrow=K, ncol=K)
-    X[1,] = c(1, rep(0, K-1))
-
-    for(i in 2:K){
-       for(j in 1:K){
-         if(i == j) X[i,j] = sqrt(1 - sum(X[i,1:(j-1)]^2));
-          if(i > j) X[i,j] = Z[i,j] * sqrt(1 - sum(X[i,1:(j-1)]^2));
-       } 
-    }
-
-   R = X %*% t(X)
-
-   return(X)
-}
-
-return_pars = function(X){
- K = nrow(X)
-    Z1 = matrix(0, nrow=K, ncol=K)
-    Z1[1,] = rep(0, K)
-
-    for(i in 2:K){
-       for(j in K:1){
-         if(i == j) Z1[i,j] = 0;
-         if(j>1){
-          if(i > j) Z1[i,j] = X[i,j] / sqrt(1 - sum(X[i,1:(j-1)]^2));
-          }
-         if(j==1){
-            Z1[i,j] = X[i,j]
-         }
-       } 
-    }
-   
-
-  M1 =  0.5*(log(1 + Z1) - log(1 - Z1))
-  return(M1)
-}
-
-bob = return_pars(X)
-bob2 = return_pars(rlkjcorr(n=1,K=8,eta=4))
-
-
-to_corr2 = function(M){
-    Z = tanh(M)
-
-    X = matrix(0, nrow=K, ncol=K)
-    X[1,] = c(1, rep(0, K-1))
-
-    for(i in 2:K){
-       for(j in 1:K){
-         if(i == j) X[i,j] = sqrt(1 - sum(X[i,1:(j-1)]^2));
-          if(i > j) X[i,j] = Z[i,j] * sqrt(1 - sum(X[i,1:(j-1)]^2));
-       } 
-    }
-
-   R = X %*% t(X)
-
-   return(X)
-}
-
-
-
-
-
-A = rlkjcorr(n=1,K=4,eta=4)
-B = rlkjcorr(n=1,K=4,eta=4)
-C = runif(4,-0.01, 0.01)
-D = silly_prod(B,C)
-
-L = chol(merge(A,D))
-
-X = t(L)
-
-
-
-
-
-
-L = matrix(0, nrow=4, ncol=4)
-H = rlkjcorr(n=1,K=2,eta=1.5)
-
-L[1:2,1:2] = t(chol(H))
-L[3,1] = runif(1, -1, 1)
-L[3,2] = runif(1, -1, 1)*sqrt(1 - L[3,1]^2)
-L[4,1] = sum(L[2,1:2]*L[3,1:2])
-L[3,3] = sqrt(1 - sum(L[3,1:2]^2))
-
-  thresh = (L[2,1] - L[3,3] - L[3,1]*L[4,1])/L[3,2]
-
-  Q = L[2,1]/L[3,3] - (L[3,1]/L[3,3])*L[4,1]
-  G = L[3,2]/L[3,3]
-  X = L[4,2]
-
-  A = (1 + G^2)
-  B = 2*Q*G
-  C = -(1 - L[4,1]^2 - Q^2)
-
-  S1 = (-B - sqrt(B^2 - 4*A*C))/(2*A)
-  S2 = (-B + sqrt(B^2 - 4*A*C))/(2*A)
-  
-  thresh_0 = c(S1, S2)
-
-  if(L[3,2] > 0) L[4,2] = runif(1, max(thresh, thresh_0[1]), thresh_0[2])  
-  if(L[3,2] < 0) L[4,2] = runif(1, thresh_0[1], min(thresh, thresh_0[2])) 
-
-L[4,3] = (L[2,1] - sum(L[3,1:2]*L[4,1:2]))/L[3,3]
-L[4,4] = sqrt(1 - sum(L[4,1:3]^2))
-
-L %*% t(L)
-
-
-
-
-
-
-
-
-Q = L[2,1]/L[3,3] - (L[3,1]/L[3,3])*L[4,1]
-G = L[3,2]/L[3,3]
-X = L[4,2]
-
-(1 + G^2)*X^2 + 2*Q*G*X  < 1 - L[4,1]^2 - Q^2
-
-A = (1 + G^2)
-B = 2*Q*G
-C = -(1 - L[4,1]^2 - Q^2)
-
-S1 = (-B + sqrt(B^2 - 4*A*C))/(2*A)
-S2 =  (B + sqrt(B^2 - 4*A*C))/(2*A)
-
-X_test = mean(S1,S2)
-R = (1 + G^2)*X_test^2 + 2*Q*G*X_test  < 1 - L[4,1]^2 - Q^2
-R
-
-X_test = seq(-1,1, by=0.01)
-R = (1 + G^2)*X_test^2 + 2*Q*G*X_test  < 1 - L[4,1]^2 - Q^2
-R
-
-
-
-
-
-
-
-
-
-L = matrix(0, nrow=4, ncol=4)
-H = diag(rep(1,2))
-lim = 0.5
-H[1,2] = H[2,1] = runif(1, -lim, lim)
-
-L[1:2,1:2] = t(chol(H))
-L[3,1] = runif(1, -lim, lim)
-L[3,2] = runif(1, -lim, lim)*sqrt(1 - L[3,1]^2)
-L[4,1] = sum(L[2,1:2]*L[3,1:2])
-L[3,3] = sqrt(1 - sum(L[3,1:2]^2))
-L[4,2] = runif(1, -lim, lim)  
-L[4,3] = (L[2,1] - sum(L[3,1:2]*L[4,1:2]))/L[3,3]
-L[4,4] = sqrt(1 - sum(L[4,1:3]^2))
-
-L %*% t(L)
-
-
-
-inverse = function(x){return(solve(x))}
-
-K = 4
-A = rlkjcorr(n=1,K=K,eta=5)
-B = rlkjcorr(n=1,K=K,eta=5)
-C = runif(K,0, 0)
-D = silly_prod(B,C)
-
-
-I = diag(rep(1,K))
-Z = diag(rep(0,K))
-
-Schur_thing = A - D %*% inverse(A) %*% D
-
-F1 = rbind(cbind(I,Z),cbind(D %*% inverse(A),I))
-
-F2 = rbind(cbind(A,Z), cbind(Z, Schur_thing))
-
-F3 = rbind(cbind(I,inverse(A) %*% D), cbind(Z,I))
-
-chol(F1 %*% F2 %*% F3)
-
-
-
-functions{
-  //# Function to build a dyadic reciprocity matrix by hand
-  matrix multiply_diag(matrix B, vector C){
-    matrix[rows(B),cols(B)] D = B;
-
-    for(i in 1:size(C))
-     D[i,i] = B[i,i]*C[i];
-    return D;
-  }
-
-  matrix build_dr_matrix(matrix A, matrix B, vector C){
-    matrix[rows(B),cols(B)] D = multiply_diag(B, C);
-    return append_row(append_col(A, multiply_diag(B, C)), append_col(multiply_diag(B, C), A));
-  }
-}

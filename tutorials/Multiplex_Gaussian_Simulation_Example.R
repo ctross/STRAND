@@ -6,19 +6,21 @@
 
 # Clear working space
 rm(list = ls())
-set.seed(50)
+set.seed(46+2)
+
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
  colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
 
+library(rethinking)
 library(STRAND)
 library(stringr)
 library(ggplot2)
 library(psych)
-library(rethinking)
+
 
 # Make data
- N_id = 150     # Individuals in network
+ N_id = 50      # Individuals in network
  N_layers = 3   # Network layers
 
 # Covariates
@@ -80,7 +82,7 @@ groups_2 = sample( c("Mottled","Striped","Spotted") , size=N_id , replace=TRUE ,
 groups_3 = sample( c("Male", "Female") , size=N_id , replace=TRUE , prob=c(0.5,0.5) )
 
 # Intercept in each layer
-B_1a = matrix(-3.7,nrow=1,ncol=1)
+B_1a = matrix(-0.7,nrow=1,ncol=1)
 B_2a = matrix(0.5,nrow=1,ncol=1)
 B_3a = matrix(-3.5,nrow=1,ncol=1)
 
@@ -125,8 +127,8 @@ G = simulate_multiplex_network(
   dr_mu = dr_mu,                            
   dr_sigma = dr_sigma,                         
   dr_Rho = dr_Rho,                          
-  outcome_mode="poisson",    
-  link_mode = "log",            
+  outcome_mode="gaussian",    
+  link_mode = "identity",            
   individual_predictors = data.frame(Mass=Mass, 
                                      Age=Age, 
                                      Strength=Strength),    
@@ -135,13 +137,13 @@ G = simulate_multiplex_network(
   dyadic_effects = dr_effects           
  )
 
-table(G$network[1,,])
-table(G$network[2,,])
-table(G$network[3,,])
+par(mfrow=c(1,3))
+hist(G$network[1,,])
+hist(G$network[2,,])
+hist(G$network[3,,])
 
 #################################################### Create the STRAND data object
 outcome = list(Feeding = G$network[1,,], Fighting = G$network[2,,], Grooming = G$network[3,,])
-exposure = list(Feeding = G$exposure[1,,], Fighting = G$exposure[2,,], Grooming = G$exposure[3,,])
 
 dyad = list(Kinship = Kinship, 
             Dominance = Dominance
@@ -163,10 +165,6 @@ colnames(outcome$Feeding) = rownames(outcome$Feeding) = labels
 colnames(outcome$Fighting) = rownames(outcome$Fighting) = labels
 colnames(outcome$Grooming) = rownames(outcome$Grooming) = labels
 
-colnames(exposure$Feeding) = rownames(exposure$Feeding) = labels
-colnames(exposure$Fighting) = rownames(exposure$Fighting) = labels
-colnames(exposure$Grooming) = rownames(exposure$Grooming) = labels
-
 colnames(dyad$Kinship) = rownames(dyad$Kinship) = labels
 colnames(dyad$Dominance) = rownames(dyad$Dominance) = labels
 
@@ -175,14 +173,12 @@ rownames(groups) = labels
 
 
 ############# Build data
-
 dat = make_strand_data(outcome = outcome,
                        block_covariates = groups, 
                        individual_covariates = indiv, 
                        dyadic_covariates = dyad,
-                       exposure = exposure,
-                       outcome_mode="poisson",
-                       link_mode="log",
+                       outcome_mode="gaussian",
+                       link_mode="identity",
                        multiplex = TRUE)
 
 
@@ -198,7 +194,7 @@ fit = fit_multiplex_model(data=dat,
                                                         max_treedepth = NULL, adapt_delta = 0.95)
 )
 
-res = summarize_multiplex_bsrm_results(fit)
+res = summarize_strand_results(fit)
 
 
 ######################################################### Visualize results
@@ -387,7 +383,8 @@ p = ggplot(main_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=Ou
            theme(legend.position="bottom")
 p
 
-# ggsave("sim_res.pdf",p, width=9, height=4.5)
+# We recover main effects
+
 
 ########################## Plot 2
 block_df = df_plt[which(df_plt$Outcome2 == "Other" & df_plt$Block != "Intercept"),]
@@ -409,8 +406,6 @@ p = ggplot(block_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=O
            theme(panel.spacing = unit(1,"lines")) + 
            theme(legend.position="bottom")
 p
-
-# ggsave("sim_res_block.pdf",p, width=9, height=4.5)
 
 
 ########################## Plot 3
@@ -441,7 +436,7 @@ p1 = ggplot(recip_df[which(recip_df$Type == "Generalized"),], aes(x = Variable2,
            theme(legend.position="bottom")
 p1
 
-# ggsave("sim_res_gen.pdf",p1, width=6, height=6)
+
 
 p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = Median, ymin = LI, ymax = HI, group=Outcome)) + 
            geom_linerange(size = 1, color=colors[4]) + 
@@ -461,7 +456,7 @@ p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = 
            theme(legend.position="bottom")
 p2
 
-# ggsave("sim_res_dyad.pdf",p2, width=6, height=6)
+# We recover dyadic reciprocity, within and between layers, too 
 
 
 

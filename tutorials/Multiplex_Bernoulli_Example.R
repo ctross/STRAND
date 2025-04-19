@@ -29,12 +29,14 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = RICH$Relatedness, 
+ Relatedness = standardize(RICH$Relatedness), 
  Friends = RICH$Friends,
  Marriage = RICH$Marriage
 )
 
 # Individual data in data-frame
+RICH$Individual$Age = standardize(RICH$Individual$Age)
+RICH$Individual$Wealth = standardize(RICH$Individual$Wealth)
 ind = RICH$Individual
 
 # Individual blocking measures
@@ -152,7 +154,7 @@ df$Variable = gsub(" - Reduce", "", df$Variable)
 df$Variable = gsub("sd", "SD", df$Variable)
 
 df$Variable = gsub("FoodInsecure", "Food Insecure", df$Variable)
-df$Variable = gsub("LogWealth", "Log Wealth", df$Variable)
+df$Variable = gsub("Wealth", "Log Wealth", df$Variable)
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Site, color=Site,
         ymin = LI, ymax = HI)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -350,6 +352,7 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Software
 p
 
 # ggsave("rich_res_vpc_3.pdf",p, width=9, height=3)
+# Basically the same as AMEN layer-wise
 
 ###############################################################################################################
 ############################### Model fit diagnostics
@@ -380,5 +383,4 @@ fit_2$fit$summary("block_effects")
 # Check all the relevant parameters
 bayesplot::color_scheme_set("mix-blue-red")
 bayesplot::mcmc_trace(fit_2$fit$draws(), pars = c("focal_effects[1,1]","target_effects[1,2]","sr_L[2,1]","dr_L[2,1]"))
-
 

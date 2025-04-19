@@ -34,6 +34,7 @@ exposure = list(
 )
 
 # Individual data in data-frame
+Baboon$Individual$Age = standardize(Baboon$Individual$Age)
 ind = Baboon$Individual 
 
 # Merge data
@@ -68,13 +69,14 @@ fit3 = fit_multiplex_model(
 
 res3 = summarize_strand_results(fit3)
 
+#################################################################
 # Correlation matrix plots
 colors = plvs_vltra("dust_storm", rev=FALSE, elements=c(2,4))
 colors = c(colors[1], "grey90", colors[2])
-multiplex_plot(fit3, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE, save_plot = "Baboon_dyadic.pdf", height=6, width=7, palette=colors)
-multiplex_plot(fit3, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, save_plot = "Baboon_generalized.pdf", height=6, width=7, palette=colors)
+multiplex_plot(fit3, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  height=6, width=7, palette=colors)
+multiplex_plot(fit3, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  height=6, width=7, palette=colors)
 
-# Merged plot
+# Slopes plot
 vis3 = strand_caterpillar_plot(res3, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects"), export_as_table = TRUE, normalized=TRUE)
 
 vis3$Variable = gsub("focal effects coeffs \\(out-degree\\), ", "", vis3$Variable)
@@ -159,18 +161,34 @@ VPCs_1 = strand_VPCs(fit3, n_partitions = 4, include_reciprocity = TRUE)
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
-df1$Site = "Base model"
+df1$Site = "Base Cor"
 df1$Submodel = rep(c("Generalized","Dyadic"),each=15)
 
+df1$Median = as.numeric(df1$Median)
+df1$L = as.numeric(df1$L)
+df1$H = as.numeric(df1$H)
 
-df = rbind(df1)
-df$Median = as.numeric(df$Median)
-df$L = as.numeric(df$L)
-df$H = as.numeric(df$H)
+df1$Submodel = factor(df1$Submodel)
 
-df$Submodel = factor(df$Submodel)
+df1$Model = df1$Site 
 
-df$Model = df$Site 
+## Adjusted
+VPCs_2 = strand_VPCs(fit3, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
+
+df2 = data.frame(VPCs_2[[3]])
+colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
+df2$Site = "Adjusted Cor"
+df2$Submodel = rep(c("Generalized","Dyadic"),each=15)
+
+df2$Median = as.numeric(df2$Median)
+df2$L = as.numeric(df2$L)
+df2$H = as.numeric(df2$H)
+
+df2$Submodel = factor(df2$Submodel)
+
+df2$Model = df2$Site 
+
+df = rbind(df1,df2)
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Model, color=Model,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -183,7 +201,7 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Model, co
         axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
         axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
-        "lines")) + scale_color_manual(values=c("Base model" = colors[1])) + theme(legend.position="bottom")
+        "lines")) + scale_color_manual(values=c("Base Cor" = colors[3], "Adjusted Cor" = colors[5])) + theme(legend.position="bottom")
 
 p
 

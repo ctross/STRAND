@@ -24,7 +24,7 @@ library(psych)
 dat_list = NULL
 res_list_chol = NULL
 
-Q = 15
+Q = 60 # Thin the data down to a smaller network
 
 # Outcomes stored as a labeled list
 outcome = list(
@@ -35,13 +35,16 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = RICH$Relatedness[1:Q,1:Q], 
+ Relatedness = standardize(RICH$Relatedness[1:Q,1:Q]), 
  Friends = RICH$Friends[1:Q,1:Q],
  Marriage = RICH$Marriage[1:Q,1:Q]
 )
 
 # Individual data in data-frame
+RICH$Individual$Age = standardize(RICH$Individual$Age)
+RICH$Individual$Wealth = standardize(RICH$Individual$Wealth)
 ind = RICH$Individual[1:Q,]
+
 
 # Individual blocking measures
 groups = data.frame(
@@ -61,7 +64,7 @@ dat = make_strand_data(
  multiplex = TRUE
 )
 
-############################################### Fast mode
+############################################### Faster Cholesky mode
 # Model 1 - Full model, all controls
 fit_Fast = fit_multiplex_model(
  data=dat,
@@ -70,7 +73,7 @@ fit_Fast = fit_multiplex_model(
  target_regression = ~ Age + Wealth + FoodInsecure + Depressed,
  dyad_regression = ~ Relatedness + Friends + Marriage,
  mode="mcmc",
- bandage_penalty = -1,
+ bandage_penalty = -1,               # Key change, -1 triggers Pinkney's method
  stan_mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
@@ -82,12 +85,9 @@ fit_Fast = fit_multiplex_model(
    init=0)
 )
 
-res_temp = as.data.frame(fit_Fast$fit$summary(variables ="D_corr"))
-res_temp$fit_time = fit_Fast$fit$time()$total
-res_temp$node_count = Q
-res_temp$method = "cholesky"
+res_Fast = summarize_strand_results(fit_Fast)   
 
-############################################### Lasso mode
+############################################### Older lasso mode
 # Model 2 - Full model, all controls
 fit_Lasso = fit_multiplex_model(
  data=dat,
@@ -96,7 +96,7 @@ fit_Lasso = fit_multiplex_model(
  target_regression = ~ Age + Wealth + FoodInsecure + Depressed,
  dyad_regression = ~ Relatedness + Friends + Marriage,
  mode="mcmc",
- bandage_penalty = 0.02,
+ bandage_penalty = 0.02,         # This is the old method for gluing parameters together
  stan_mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
@@ -108,7 +108,7 @@ fit_Lasso = fit_multiplex_model(
    init=0)
 )
 
-res_Lasso = summarize_strand_results(fit_Lasso)   # 26494 seconds, 24661 seconds
+res_Lasso = summarize_strand_results(fit_Lasso)   
 
 ####################################################
 
@@ -176,7 +176,6 @@ p
 # ggsave("rich_res.pdf",p, width=9, height=4.5)
 
 
-
 VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 4)
 VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 4)
 
@@ -217,19 +216,6 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
         "lines")) + scale_color_manual(values=c("Base model" = colors[1], "Full model" = colors[3])) + theme(legend.position="bottom")
 
 p
-
-
-################################################################### Correlation matrix plots
-colors = plvs_vltra("dust_storm", rev=FALSE, elements=c(2,4))
-colors = c(colors[1], "grey90", colors[2])
-
-multiplex_plot(fit_Lasso, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  height=6, width=7, palette=colors)
-multiplex_plot(fit_Fast, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  height=6, width=7, palette=colors)
-
-multiplex_plot(fit_Lasso, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, height=6, width=7, palette=colors)
-multiplex_plot(fit_Fast, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, height=6, width=7, palette=colors)
-
-
 
 
 
@@ -312,3 +298,11 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
         "lines")) + scale_color_manual(values=c("L2_Norm" = colors[1], "Pinkney" = colors[3])) + theme(legend.position="bottom")
 
 p
+
+# Both methods give the same estimates
+
+# Really we should check the correct VPCs:
+strand_VPCs(fit_Lasso, n_partitions = 5)
+strand_VPCs(fit_Fast, n_partitions = 5)
+
+

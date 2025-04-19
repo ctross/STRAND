@@ -18,7 +18,7 @@ data(Bat_Data)
 nets = list(Lick = round(Bat_Data$Lick/60,0))
 
 # Dyadic variables
-dyad = list(Relatedness = Bat_Data$Relatedness, 
+dyad = list(Relatedness = standardize(Bat_Data$Relatedness), 
             NoOpportunity = Bat_Data$NoOpportunity
               )
 
@@ -64,8 +64,8 @@ fit2 = fit_block_plus_social_relations_model(data=model_dat,
                                                "focal_effects"=c(0, 10), 
                                                "target_effects"=c(0, 10), 
                                                "dyad_effects"=c(0, 10),
-                                               "sr_sigma"=c(0.1), 
-                                               "dr_sigma"=c(0.1) 
+                                               "sr_sigma"=c(2, 15), 
+                                               "dr_sigma"=c(2, 15) 
                                              )
                                            )
                                           )
@@ -84,7 +84,7 @@ tab2$Priors = "Modified, Especially vague"
 tab0 = rbind(tab1, tab2)
 
 plot_0 = ggplot(tab0, aes(x = Variable, y = Median, 
-        ymin = LI, ymax = HI, color=Priors)) + geom_linerange(size = 1,  position = position_dodge(0.33)) + 
+        ymin = LI, ymax = HI, color=Priors)) + geom_linerange(linewidth = 1,  position = position_dodge(0.33)) + 
         geom_point(size = 2, position = position_dodge(0.33)) + facet_grid(Submodel ~ 
         ., scales = "free", space = "free") + geom_hline(aes(yintercept = 0), 
         color = "black", linetype = "dashed") + labs(y = "Regression parameters", 
@@ -97,5 +97,6 @@ plot_0 = ggplot(tab0, aes(x = Variable, y = Median,
         "lines")) + theme(legend.position="bottom") + scale_color_manual(values=c("#E69F00", "black"))
 plot_0
 
+# Priors dont affect the results much here
 # ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
 

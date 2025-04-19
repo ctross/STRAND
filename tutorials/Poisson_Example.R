@@ -22,7 +22,7 @@ data(Bat_Data)
 nets = list(Lick = round(Bat_Data$Lick/60,0))
 
 # Dyadic variables
-dyad = list(Relatedness = Bat_Data$Relatedness, 
+dyad = list(Relatedness = standardize(Bat_Data$Relatedness), 
             NoOpportunity = Bat_Data$NoOpportunity
               )
 
@@ -49,7 +49,7 @@ fit0 = fit_block_plus_social_relations_model(data=model_dat_0,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = .98)
+                                                                        max_treedepth = NULL, adapt_delta = 0.98)
 )
 
 # Summary 0
@@ -90,7 +90,7 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             mode="mcmc",
                                             stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = .98)
+                                                                        max_treedepth = NULL, adapt_delta = 0.98)
 )
 
 # Summary 1
@@ -104,6 +104,8 @@ vis_1
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 #ggsave("Bat_corr.pdf", vis_2, width=6, height=2.5)
+
+# Same results
 
 ############################################################### To compute contrasts with new tools, do this:
 process_block_parameters(input=fit, focal="Female to Female", base="Male to Female", HPDI=0.9)
