@@ -7,6 +7,8 @@
 #'
 #' Ross, C. T., McElreath, R., and Redhead, D. (2024). Modelling animal network data in R using STRAND. Journal of Animal Ecology, 93(3), 254-266.
 #' 
+#' Sosa, S., McElreath, M. B., Redhead, D., and Ross, C. T. (2025). Robust Bayesian analysis of animal networks subject to biases in sampling intensity and censoring. Methods in Ecology and Evolution.
+#' 
 #' Redhead, D., McElreath, R., and Ross, C. T. (2023). Reliable network inference from unreliable data: A tutorial on latent network modeling using STRAND. Psychological methods.
 #' 
 #' @section Network simulation functions:
