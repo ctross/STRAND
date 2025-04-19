@@ -24,7 +24,7 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' fit = fit_longitudinal_model(data=model_dat,
+#' fit = fit_longitudinal_model_missings(data=model_dat,
 #'                              block_regression = ~ Ethnicity,
 #'                              focal_regression = ~ Age * NoFood,
 #'                              target_regression = ~ Age * NoFood,
@@ -40,7 +40,7 @@
 #' }
 #' 
 
-fit_longitudinal_model = function(long_data,
+fit_longitudinal_model_missings = function(long_data,
                                   block_regression,
                                   focal_regression,
                                   target_regression,
@@ -56,7 +56,7 @@ fit_longitudinal_model = function(long_data,
                                   ){
     ############################################################################ Build data
     if(is.null(names(long_data))) stop("long_data must be a named list. Please add names for each time-step. e.g., names(long_data)=paste('Time', 1:T)")
-    data = make_longitudinal_data(long_data = long_data,
+    data = make_longitudinal_data_missings(long_data = long_data,
                                   block_regression = block_regression,
                                   focal_regression = focal_regression,
                                   target_regression = target_regression,
@@ -119,9 +119,9 @@ fit_longitudinal_model = function(long_data,
       data = build_multiplex_bindings_dr_longitudinal(data)
       data = build_multiplex_bindings_sr_longitudinal(data)
       data$eta = eta
-      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_longitudinal_pinkney.stan"))
+      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_longitudinal_pinkney_missings.stan"))
         } else{
-      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_longitudinal.stan"))      
+      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_longitudinal_missings.stan"))      
         }
 
      data$individual_predictors = NULL

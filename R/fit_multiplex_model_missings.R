@@ -1,9 +1,9 @@
-#' A function to run combined stochastic block and social relations models using the STRAND framework
+#' A function to apply combined a stochastic block and social relations model to multiplex networks using the STRAND framework
 #' 
 #' This function allows users to analyse empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. 
 #'
-#' It is important to note that all individuals block (or group) assignment must be supplied as data.  Latent groups will be supported in future releases of STRAND.
+#' It is important to note that all individual block (or group) assignment must be supplied as data.  Latent blocks or groups will be supported in future releases of STRAND.
 #'
 #' @param data A data object of class STRAND, prepared using the make_strand_data() function. The data object must include all covariates used in the formulas listed below.
 #' @param block_regression A formula for the block-level predictors. This should be specified as in lm(), e.g.: ~ Ethnicity + Sex. Dont use interactions, however.
@@ -12,8 +12,9 @@
 #' @param dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
 #' @param mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
-#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
-#' @param return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
+#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
+#' @param bandage_penalty A parameter that controls how tightly stiched together correlation structure parameters are. Default is 0.01 for tight stiching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance. Setting "bandage_penalty=-1" deploys a different Stan model, which fixes the dyadic matrix perfectly. You must set init=0 below, for this model to initialize. 
+#' @param eta Prior on LKJ Cholesky factor, if bandage_penalty = -1.
 #' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
@@ -21,39 +22,40 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' fit = fit_block_plus_social_relations_model_missings(data=model_dat,
-#'                                             block_regression = ~ Ethnicity,
-#'                                             focal_regression = ~ Age * NoFood,
-#'                                             target_regression = ~ Age * NoFood,
-#'                                             dyad_regression = ~ Relatedness + Friends * SameSex,
-#'                                             mode="mcmc",
-#'                                             stan_mcmc_parameters = list(seed = 1, chains = 1, 
-#'                                               parallel_chains = 1, refresh = 1, 
-#'                                               iter_warmup = 100, iter_sampling = 100,
-#'                                               max_treedepth = NULL, adapt_delta = NULL)
-#'                                              )
+#' fit = fit_multiplex_model_missings(data=model_dat,
+#'                           block_regression = ~ Ethnicity,
+#'                           focal_regression = ~ Age * NoFood,
+#'                           target_regression = ~ Age * NoFood,
+#'                           dyad_regression = ~ Relatedness + Friends * SameSex,
+#'                           mode="mcmc",
+#'                           stan_mcmc_parameters = list(seed = 1, chains = 1, 
+#'                             parallel_chains = 1, refresh = 1, 
+#'                             iter_warmup = 100, iter_sampling = 100,
+#'                             max_treedepth = NULL, adapt_delta = NULL)
+#'                            )
 #' }
 #' 
 
-fit_block_plus_social_relations_model_missings = function(data,
-                                    block_regression,
-                                    focal_regression,
-                                    target_regression,
-                                    dyad_regression,
-                                    mode="mcmc",
-                                    return_predicted_network=FALSE,
-                                    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init = NULL),
-                                    priors=NULL
-                                    ){
+fit_multiplex_model_missings = function(data,
+                               block_regression,
+                               focal_regression,
+                               target_regression,
+                               dyad_regression,
+                               mode="mcmc",
+                               bandage_penalty = 0.01,
+                               eta = 4,
+                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
+                                                            iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init=NULL),
+                                priors=NULL
+                                ){
 
     ############################################################################# Check inputs
     if(attributes(data)$class != "STRAND Data Object"){
-        stop("fit_block_plus_social_relations_model() requires a data object of class: STRAND Data Object. Please use make_strand_data() to build your data list.")
+        stop("fit_multiplex_block_plus_social_relations_model() requires a data object of class: STRAND Data Object. Please use make_strand_data() to build your data list.")
     }
 
-    if(!("SRM+SBM" %in% attributes(data)$supported_models)){
-        stop("The supplied data are not appropriate for a block plus social relations model. Please ensure that self_report data are single sampled and a group variable is provided.")
+    if(!("Multiplex" %in% attributes(data)$supported_models)){
+        stop("The supplied data are not appropriate for a multiplex block plus social relations model. Please ensure that a list of >1 networks is provided as the output layer.")
     }
 
     if(data$N_individual_predictors==0 & focal_regression != ~ 1){
@@ -80,8 +82,6 @@ fit_block_plus_social_relations_model_missings = function(data,
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)
      dyad_names = names(data$dyadic_predictors)
-
-     data$imputation = 1
 
      ################################################################ Dyad model matrix
      if(data$N_dyadic_predictors>0){
@@ -113,7 +113,6 @@ fit_block_plus_social_relations_model_missings = function(data,
      if(data$N_individual_predictors>0){
       data$focal_set = model.matrix(focal_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
       data$target_set = model.matrix(target_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
-
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -134,7 +133,7 @@ fit_block_plus_social_relations_model_missings = function(data,
        data = process_missings(data)
      }   
 
-    ############################################# Extra model model stuff
+
      data$N_group_vars = ncol(data$block_set) 
      data$N_groups_per_var = rep(NA, data$N_group_vars)
 
@@ -147,7 +146,7 @@ fit_block_plus_social_relations_model_missings = function(data,
      data$max_N_groups = max(data$N_groups_per_var)
 
     ############### Priors
-    data$export_network = ifelse(return_predicted_network==TRUE, 1, 0)
+    data$export_network = 0
 
     if(is.null(priors)){
       data$priors =  make_priors()
@@ -155,10 +154,22 @@ fit_block_plus_social_relations_model_missings = function(data,
     data$priors = priors
       }
 
+    data$bandage_penalty = bandage_penalty
 
     ############################################################################# Fit model
-    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_missings.stan"))
-
+    if(bandage_penalty == -1){
+      data = build_multiplex_bindings_dr_multiplex(data)
+      data$eta = eta
+      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_multiplex_pinkney_missings.stan"))
+        } 
+     else{
+        if(bandage_penalty == 0){
+         stop("bandage_penalty mut be -1 or a positve number.")
+      } else{
+          model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_multiplex_missings.stan"))
+      }      
+        }
+    
      data$individual_predictors = NULL
      data$dyadic_predictors = NULL
      data$block_predictors = NULL
@@ -192,10 +203,15 @@ fit_block_plus_social_relations_model_missings = function(data,
      stop("Must supply a legal mode value: mcmc, vb, or optim.")
     }
 
-    bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network )
+    bob = list(data=data, fit=fit, return_predicted_network = NA)
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
-    attr(bob, "model_type") = "SRM+SBM"
+    attr(bob, "model_type") = "Multiplex"
     
     return(bob)
 }
+
+
+
+
+

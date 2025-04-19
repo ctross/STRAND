@@ -9,7 +9,7 @@
 #' @export
 #' 
 
-parse_longitudinal_data = function(data,
+parse_longitudinal_data_missings = function(data,
                                    block_regression,
                                    focal_regression,
                                    target_regression,
@@ -48,7 +48,7 @@ parse_longitudinal_data = function(data,
      #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
      dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
-     dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
+     dyad_model_matrix = model.matrix(dyad_regression, model.frame(~ ., dyad_dat, na.action=na.pass))
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
@@ -63,8 +63,8 @@ parse_longitudinal_data = function(data,
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$focal_set = model.matrix( focal_regression , data$individual_predictors )
-      data$target_set = model.matrix( target_regression , data$individual_predictors )
+      data$focal_set = model.matrix(focal_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
+      data$target_set = model.matrix(target_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -74,11 +74,16 @@ parse_longitudinal_data = function(data,
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){
-      data$block_set = model.matrix( block_regression , data$block_predictors )
+      data$block_set = model.matrix(block_regression, model.frame(~ ., data$block_predictors, na.action=na.pass)) 
      } else{
       data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
       colnames(data$block_set) = "(Intercept)"
      }
+
+    ########################################################### Missing data imputation, prior to block model gen quants
+     if(data$imputation == 1){
+       data = process_missings(data)
+     }   
 
      data$N_group_vars = ncol(data$block_set) 
      data$N_groups_per_var = rep(NA, data$N_group_vars)

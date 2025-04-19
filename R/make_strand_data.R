@@ -16,7 +16,7 @@
 #' @param individual_covariates An N_id by N_parameters dataframe of all individual-level covariates that are to be included in the model.
 #' @param dyadic_covariates A named list of N_id by N_id by N_dyadic_parameters matrices.
 #' @param exposure A named list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.
-#' @param m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.
+#' @param m_e_data A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, sampled_mask=sampled_mask, detected=detected, detected_exposure=detected_exposure, detected_mask=detected_mask), to be used in measurement error models.
 #' @param mask A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).
 #' @param diffusion_outcome An N-vector of outcome data for a trait diffusing over a network.
 #' @param diffusion_exposure An N-vector matched with the diffusion_outcome matrix. If diffusion_outcome is a count data set with binomial outcomes, then this variable holds the sample size information.
@@ -26,6 +26,8 @@
 #' @param imputation If TRUE, then checks for NAs in data are omitted, and supported models will impute the missings.
 #' @param longitudinal If TRUE, then checks for longitudinal data structure are performed.
 #' @param check_data_organization If TRUE, then checks that all colnames and rownames match. This will catch missorted data.
+#' @param check_standardization If TRUE, then checks that all individual and dyadic variables are standardized to have SDs in the range of standardization_threshold. Standardization is important in STRAND so that priors have equal strength across all predictors.
+#' @param standardization_threshold If check_standardization is TRUE, then individual and dyadic predictors must have SDs in this range.
 #' @return A list of data formatted for use by STRAND models.
 #' @export
 #' @examples
@@ -36,7 +38,7 @@
 
 make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, link_mode=NULL, ground_truth=NULL, block_covariates=NULL, individual_covariates=NULL, dyadic_covariates=NULL, 
                             exposure=NULL, m_e_data = NULL, mask=NULL, diffusion_outcome = NULL, diffusion_exposure = NULL, diffusion_mask = NULL, multiplex = FALSE, longitudinal = FALSE, 
-                            directed = TRUE, imputation = FALSE, check_data_organization = TRUE){
+                            directed = TRUE, imputation = FALSE, check_data_organization = TRUE, check_standardization = TRUE, standardization_threshold = c(0.5, 2)){
 
          ############################################################################# Check inputs
          # Renames self-report if needed
@@ -206,10 +208,10 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          N_id = dim(self_report[[1]])[1]
 
          if(!is.null(m_e_data)){ 
-          if(!all(names(m_e_data)==c("sampled","sampled_exposure",  "detected", "detected_exposure")))
-          stop("m_e_data must be named list: sampled, sampled_exposure, detected, detected_exposure, in this order.")
+          if(!all(names(m_e_data)==c("sampled", "sampled_exposure", "sampled_mask", "detected", "detected_exposure", "detected_mask")))
+          stop("m_e_data must be named list: sampled, sampled_exposure, sampled_mask, detected, detected_exposure, detected_mask, in this order.")
          }else{
-          m_e_data = list(sampled=rep(0,N_id), sampled_exposure=rep(0,N_id), detected=rep(0,N_id), detected_exposure=rep(0,N_id))
+          m_e_data = list(sampled=rep(0,N_id), sampled_exposure=rep(0,N_id), sampled_mask=rep(0,N_id), detected=rep(0,N_id), detected_exposure=rep(0,N_id), detected_mask=rep(0,N_id))
          }
 
          layer_names = names(self_report)
@@ -382,6 +384,21 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          } else{
           N_individual_predictors = dim(individual_covariates)[2]  
           individual_predictors = individual_covariates
+
+         if(check_standardization == TRUE){
+            for(i in 1:dim(individual_covariates)[2]){
+              if(is_numeric_not_binary(individual_covariates[,i])==TRUE){
+                sd_test = sd(individual_covariates[,i],na.rm=TRUE)
+                if(sd_test > standardization_threshold[1] & sd_test < standardization_threshold[2]){
+                    # All good
+                  } else{
+                    stop(paste0("Column ", i, " in individual_covariates has not been standardized. Use standardize(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
+                  }
+              }
+            }
+          }
+
+
          }
 
         if(is.null(dyadic_covariates)){
@@ -390,6 +407,21 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
          } else{
           N_dyadic_predictors = length(dyadic_covariates)
           dyadic_predictors = dyadic_covariates
+
+          if(check_standardization == TRUE){
+            for(i in 1:length(dyadic_covariates)){
+              if(is_numeric_not_binary(dyadic_covariates[[i]])==TRUE){
+                sd_test = sd(dyadic_covariates[[i]],na.rm=TRUE)
+                if(sd_test > standardization_threshold[1] & sd_test < standardization_threshold[2]){
+                    # All good
+                  } else{
+                    stop(paste0("Element ", i, " in dyadic_covariates has not been standardized. Use standardize(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
+                  }
+              }
+            }
+          }
+
+
          }
 
          ############################################################################# Determine legal models
@@ -486,6 +518,8 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
      detected = m_e_data$detected,
      sampled_exposure = m_e_data$sampled_exposure, 
      detected_exposure = m_e_data$detected_exposure,
+     sampled_mask = m_e_data$sampled_mask, 
+     detected_mask = m_e_data$detected_mask,
      diffusion_outcomes = diffusion_outcome,
      diffusion_exposure = diffusion_exposure,
      diffusion_mask = diffusion_mask,

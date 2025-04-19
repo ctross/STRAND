@@ -23,7 +23,7 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' fit = fit_block_plus_social_relations_model_with_measurement_bias(data=model_dat,
+#' fit = fit_block_plus_social_relations_model_with_measurement_bias_missings(data=model_dat,
 #'                                             block_regression = ~ Ethnicity,
 #'                                             focal_regression = ~ Age * NoFood,
 #'                                             target_regression = ~ Age * NoFood,
@@ -39,7 +39,7 @@
 #' }
 #' 
 
-fit_block_plus_social_relations_model_with_measurement_bias = function(data,
+fit_block_plus_social_relations_model_with_measurement_bias_missings = function(data,
                                     block_regression,
                                     focal_regression,
                                     target_regression,
@@ -104,7 +104,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
      #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
      dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
-     dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
+     dyad_model_matrix = model.matrix(dyad_regression, model.frame(~ ., dyad_dat, na.action=na.pass))
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
@@ -119,8 +119,8 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$focal_set = model.matrix( focal_regression , data$individual_predictors )
-      data$target_set = model.matrix( target_regression , data$individual_predictors )
+      data$focal_set = model.matrix(focal_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
+      data$target_set = model.matrix(target_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -128,14 +128,14 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
     
     ################################################################ Sampling model matrix
     if(data$N_individual_predictors > 0){
-     data$sampling_set = model.matrix( sampling_regression , data$individual_predictors )
+     data$sampling_set = model.matrix(sampling_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
      }else {
      data$sampling_set = matrix(1, nrow = data$N_id, ncol = 1)
       }
 
     ################################################################ Censoring model matrix
     if(data$N_individual_predictors > 0){
-     data$censoring_set = model.matrix( censoring_regression , data$individual_predictors )
+     data$censoring_set = model.matrix(censoring_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
      }else {
      data$censoring_set = matrix(1, nrow = data$N_id, ncol = 1)
       }
@@ -144,11 +144,16 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){
-      data$block_set = model.matrix( block_regression , data$block_predictors )
+      data$block_set = model.matrix(block_regression, model.frame(~ ., data$block_predictors, na.action=na.pass)) 
      } else{
       data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
       colnames(data$block_set) = "(Intercept)"
      }
+
+    ########################################################### Missing data imputation, prior to block model gen quants
+     if(data$imputation == 1){
+       data = process_missings(data)
+     }   
 
      data$N_group_vars = ncol(data$block_set) 
      data$N_groups_per_var = rep(NA, data$N_group_vars)
@@ -171,7 +176,7 @@ fit_block_plus_social_relations_model_with_measurement_bias = function(data,
       }
 
     ############################################################################# Fit model
-    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_with_measurement_bias.stan"))
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model_with_measurement_bias_missings.stan"))
 
      data$individual_predictors = NULL
      data$dyadic_predictors = NULL
