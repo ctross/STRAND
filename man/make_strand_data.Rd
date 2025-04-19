@@ -23,7 +23,9 @@ make_strand_data(
   longitudinal = FALSE,
   directed = TRUE,
   imputation = FALSE,
-  check_data_organization = TRUE
+  check_data_organization = TRUE,
+  check_standardization = TRUE,
+  standardization_threshold = c(0.5, 2)
 )
 }
 \arguments{
@@ -49,7 +51,7 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 
 \item{exposure}{A named list of matrices matched to the self_report matrices. If self_report is a count data set with binomial outcomes, then this variable holds the sample size information.}
 
-\item{m_e_data}{A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, detected=detected, detected_exposure=detected_exposure), to be used in measurement error models.}
+\item{m_e_data}{A list of integer vectors: list(sampled=sampled, sampled_exposure=sampled_exposure, sampled_mask=sampled_mask, detected=detected, detected_exposure=detected_exposure, detected_mask=detected_mask), to be used in measurement error models.}
 
 \item{mask}{A list of matrices matched to the self_report matrices. If mask[i,j,m]==0, then ties between i and j in layer m are detectable. If mask[i,j,m]==1, then i to j ties in layer m are censored (e.g., if i and j were monkeys kept in different enclosures).}
 
@@ -68,6 +70,10 @@ Data is presumed to be organized such that ground_truth[[t]][i,j] represents obs
 \item{imputation}{If TRUE, then checks for NAs in data are omitted, and supported models will impute the missings.}
 
 \item{check_data_organization}{If TRUE, then checks that all colnames and rownames match. This will catch missorted data.}
+
+\item{check_standardization}{If TRUE, then checks that all individual and dyadic variables are standardized to have SDs in the range of standardization_threshold. Standardization is important in STRAND so that priors have equal strength across all predictors.}
+
+\item{standardization_threshold}{If check_standardization is TRUE, then individual and dyadic predictors must have SDs in this range.}
 }
 \value{
 A list of data formatted for use by STRAND models.

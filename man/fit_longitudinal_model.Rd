@@ -10,7 +10,6 @@ fit_longitudinal_model(
   focal_regression,
   target_regression,
   dyad_regression,
-  gaussian_error_priors = c(0, 0.5),
   coefficient_mode = "varying",
   random_effects_mode = "fixed",
   mode = "mcmc",
@@ -32,8 +31,6 @@ fit_longitudinal_model(
 \item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
-
-\item{gaussian_error_priors}{Prior estimate for the measurement error in a Gaussian model. Base settings assume low very error. Should be a 2-vector for the mean and standard deviation of a zero-truncateed normal. The 2-vector will be cloned to each layer. To supply layer-specific values, supply a list of 2-vectors. One vector per layer.}
 
 \item{coefficient_mode}{Set to "fixed" if all time-points should have the same coeffcients. Set to "varying" if each time-point should have its own coefficient.}
 
