@@ -3,14 +3,18 @@ STRAND
  Social network analysis and simulation in R using Stan 
  ------
 
-<img align="right" src="logo.png" alt="logo" width="200"> 
-
+ <img align="left" src="logo.png" alt="logo" width="200"> 
+ <img align="right" src="strand.gif" alt="logo" width="250">
 
 **STRAND** is an R package designed for simulation and analysis of network data.  The package can be used to simulate network data under stochastic block models, social relations models, and latent network models. These tools allow for simulation not only of realistic human and animal social networks, but also allow researchers to simulate the effects of potential biases—like respondents falsely reporting ties or failing to recall real ties—on network level properties. 
 
 **STRAND** also allows users to conduct data analysis. Users can specify complex Bayesian social network models using a simple, lm-style, syntax. Single-sampled self report data can be modeled using stochastic block models or the Social Relations Model, with or with-out covariates. Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement. STRAND also provides methods for more rigorously dealing with missing data and measurement error. We have recently added support for multiplex network models and longitudinal network models. Here we provide a brief overview of various STRAND workflows. For further details, see our full publications at [**Psychological Methods**](https://psycnet.apa.org/record/2023-51200-001) (for latent network models), at [**Journal of Animal Ecology**](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.14021) (for simple network models), and at [**Methods in Ecology and Evolution**](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.70017) (for censoring-robust methods in ecology). 
+
+
   
 [**STRAND**](https://github.com/ctross/STRAND) is part of an ecosystem of tools for modern social network analysis. [**DieTryin**](https://github.com/ctross/DieTryin) is a companion package designed to facilitate the collection of [**RICH economic games**](https://journals.sagepub.com/doi/abs/10.1177/1525822X16643709), dyadic peer ratings, and roster-based network data in human communities. [**XLSFormulatoR**](https://github.com/ADR1993/XLSFormulatoR) is a package for automatically building name-generator network surveys for KoboToolbox.
+
+
 
 Install:
 --------------
