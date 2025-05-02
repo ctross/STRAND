@@ -3,8 +3,7 @@ STRAND
  Social network analysis and simulation in R using Stan 
  ------
 
- <img align="left" src="logo.png" alt="logo" width="200"> 
- <img align="right" src="strand.gif" alt="logo" width="250">
+ <img align="right" src="logo.gif" alt="logo" width="250">
 
 **STRAND** is an R package designed for simulation and analysis of network data.  The package can be used to simulate network data under stochastic block models, social relations models, and latent network models. These tools allow for simulation not only of realistic human and animal social networks, but also allow researchers to simulate the effects of potential biases—like respondents falsely reporting ties or failing to recall real ties—on network level properties. 
 
