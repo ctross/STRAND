@@ -11,29 +11,29 @@
 #' @export
 #'
 
-generate_structured_correlation_matrix <- function(data, eta, mode, setting, stan_mcmc_parameters) {
-  data$eta <- eta
+generate_structured_correlation_matrix = function(data, eta, mode, setting, stan_mcmc_parameters) {
+  data$eta = eta
 
   if (setting == "multiplex_dyadic_reciprocity") {
-    data$setting <- 1
-    data <- build_multiplex_bindings_dr_multiplex(data)
+    data$setting = 1
+    data = build_multiplex_bindings_dr_multiplex(data)
   }
 
   if (setting == "longitudinal_dyadic_reciprocity") {
-    data$setting <- 2
-    data <- build_multiplex_bindings_dr_longitudinal(data)
+    data$setting = 2
+    data = build_multiplex_bindings_dr_longitudinal(data)
   }
 
   if (setting == "longitudinal_generalized_reciprocity") {
-    data$setting <- 3
-    data <- build_multiplex_bindings_sr_longitudinal(data)
+    data$setting = 3
+    data = build_multiplex_bindings_sr_longitudinal(data)
 
     # Have to do a little renaming, so that the Stan file works for both dyadic and generalized matrices
-    data$N_dr_bindings <- data$N_sr_bindings
-    data$N_dr_params <- data$N_sr_params
-    data$N_dr_indices <- data$N_sr_indices
-    data$dr_indices <- data$sr_indices
-    data$dr_id <- data$sr_id
+    data$N_dr_bindings = data$N_sr_bindings
+    data$N_dr_params = data$N_sr_params
+    data$N_dr_indices = data$N_sr_indices
+    data$dr_indices = data$sr_indices
+    data$dr_id = data$sr_id
   }
 
 
@@ -41,14 +41,14 @@ generate_structured_correlation_matrix <- function(data, eta, mode, setting, sta
     # Correlation matrix methods contributed to STRAND by Sean Pinkney
     # Copyright 2025 Sean Pinkney <sean.pinkney@gmail.com>
     # Subject to the BSD 3-Clause License
-    model <- cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_cholesky.stan")
+    model = cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_cholesky.stan")
   }
 
   if (mode == "l2norm") {
-    model <- cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_l2norm.stan")
+    model = cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_l2norm.stan")
   }
 
-  fit <- model$sample(
+  fit = model$sample(
     data = unclass(data),
     seed = stan_mcmc_parameters$seed,
     chains = stan_mcmc_parameters$chain,
@@ -61,6 +61,6 @@ generate_structured_correlation_matrix <- function(data, eta, mode, setting, sta
     init = stan_mcmc_parameters$init
   )
 
-  bob <- list(data = data, fit = fit)
+  bob = list(data = data, fit = fit)
   return(bob)
 }
