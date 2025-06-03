@@ -1,4 +1,7 @@
 functions {
+  // Correlation matrix methods contributed to STRAND by Sean Pinkney
+  // Copyright 2025 Sean Pinkney <sean.pinkney@gmail.com>
+  // Subject to the BSD 3-Clause License 
   vector lb_ub_lp(vector y, real lb, real ub) {
      target += log(ub - lb) + log_inv_logit(y) + log1m_inv_logit(y);
     return lb + (ub - lb) * inv_logit(y);
