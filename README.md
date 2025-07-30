@@ -129,7 +129,7 @@ Probit versus logit links for multiplex binary outcomes: [**Does anything depend
 
 STRAND's Gaussian SRM has both dyad-level random effects and dyad-level error. Can we still recover parameters?  [**Yes.**](https://github.com/ctross/STRAND/blob/main/tutorials/Gaussian_Measurement_Example.R)
 
-STRAND's probit/logit SRM has both dyad-level random effects and dyad-level error. Can we still recover parameters?  [**Again, yes.**](https://github.com/ctross/STRAND/blob/main/tutorials/Probit_Measurement_Example.R)
+STRAND's probit/logit SRM has both dyad-level random effects and dyad-level error. Can we still recover parameters?  [**Yes.**](https://github.com/ctross/STRAND/blob/main/tutorials/Probit_Measurement_Example.R)
 
 
 
