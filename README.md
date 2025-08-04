@@ -74,6 +74,8 @@ Multiplex Poisson outcomes (using simulated data): [**Multiplex Poisson models**
 
 Multiplex Gaussian outcomes (using simulated data): [**Multiplex Gaussian models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Gaussian_Simulation_Example.R)
 
+Multiplex models with undirected layers (tested using simulated data): [**Undirected multiplex networks**](https://github.com/ctross/STRAND/blob/main/tutorials/Undirected_Multiplex_Bernoulli_Example.R)
+
 Multiplex network modeling requires estimation of a highly-structured dyadic correlation matrix with special symmetries. We have two approaches for constructing such block-structured matrices, one based on an $\ell^{2}$
  norm penalty, and one based on constructing a Cholesky factor with a special set of constraints. Here we show that both methods are equally effective: [**Different methods for estimating dyadic reciprocity**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example_Dyadic_Modes.R)
 
@@ -112,6 +114,8 @@ Longitudinal Bernoulli outcomes with missings: [**Longitudinal models with imput
 Miscellaneous features and toy examples
 --------------
 Below we provide a few more pointed tutorials showing how to deal with specific issues, like structural zeros, prior specification, data simulation, and comparison of STRAND to other tools. We also show a few other things about STRAND models, e.g., probit and logit links yield equivalent inference, binary SRM models are well-specified in a Bayesian framework, etc. We will also include some minimum working examples to address many common questions we get via email.
+
+An example on computing posterior distributions for network metrics like betweenness, centrality, transitivity, etc.: [**Posterior distributions for network metrics**](https://github.com/ctross/STRAND/blob/main/tutorials/Network_Metrics_Example.R)
 
 An example on both simulating and fitting networks (includes interactions): [**Simulating data and fitting interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
