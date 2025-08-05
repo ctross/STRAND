@@ -17,6 +17,7 @@ data{
 
   //# Outcome and exposure data
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties or binomial ties
+    array[N_id,N_id,N_responses] real outcomes_real; //# Outcome network if real
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome
     array[N_id,N_id,N_responses] int mask;           //# Mask for each outcome
 
@@ -173,7 +174,7 @@ model{
        }
 
       if(outcome_mode==4){
-         outcomes[i,j,1] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma);  //# Then model the outcomes
+         outcomes_real[i,j,1] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma);  //# Then model the outcomes
        }
 
        }
