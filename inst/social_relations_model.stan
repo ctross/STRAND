@@ -6,6 +6,7 @@ data{
     array[3] int N_params;                                          
                                              
     array[N_id,N_id,N_responses] int outcomes;  
+    array[N_id,N_id,N_responses] real outcomes_real; //# Outcome network if real
     array[N_id,N_id,N_responses] int exposure; 
     array[N_id,N_id,N_responses] int mask;                                   
 
@@ -161,7 +162,7 @@ model{
 
       //########################### Gaussian: link is always identity, so skip the if-staement for now 
       if(outcome_mode==4){
-      outcomes[i,j,1] ~ normal(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j], error_sigma);  //# Then model the outcomes
+      outcomes_real[i,j,1] ~ normal(B[1,1] + sr[i,1] + sr[j,2] + dr[i,j], error_sigma);  //# Then model the outcomes
        }
 
        }

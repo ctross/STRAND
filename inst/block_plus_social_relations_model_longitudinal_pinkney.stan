@@ -1,7 +1,4 @@
 functions {
-  // Correlation matrix methods contributed to STRAND by Sean Pinkney
-  // Copyright 2025 Sean Pinkney <sean.pinkney@gmail.com>
-  // Subject to the BSD 3-Clause License 
   vector lb_ub_lp(vector y, real lb, real ub) {
      target += log(ub - lb) + log_inv_logit(y) + log1m_inv_logit(y);
     return lb + (ub - lb) * inv_logit(y);
@@ -132,6 +129,7 @@ data{
 
   //# Outcome and exposure data
     array[N_id,N_id,N_responses] int outcomes;       //# Outcome network of binary ties for each timepoint
+    array[N_id,N_id,N_responses] real outcomes_real; //# Outcome network if real
     array[N_id,N_id,N_responses] int exposure;       //# Exposure for each outcome for each timepoint
     array[N_id,N_id,N_responses] int mask;           //# Censoring mask for each outcome for each timepoint
 
@@ -426,7 +424,7 @@ model{
        }
 
       if(outcome_mode==4){
-         outcomes[i,j,l] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
+         outcomes_real[i,j,l] ~ normal(sum(br) + sr[i,1] + sr[j,2] + dr[i,j], error_sigma[l]);  //# Then model the outcomes
        }
 
        }
