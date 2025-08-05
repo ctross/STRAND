@@ -504,6 +504,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
      N_individual_predictors = N_individual_predictors,                                       
      N_dyadic_predictors =  N_dyadic_predictors,                                           
      outcomes = outcomes,  
+     outcomes_real = outcomes,  
      flows=flows,                         
      individual_predictors = individual_predictors,      
      dyadic_predictors = dyadic_predictors,
