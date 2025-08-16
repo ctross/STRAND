@@ -93,7 +93,7 @@ Longitudinal simulation analysis (using simulated data): [**Longitudinal Generat
 
 Automatic Bayesian imputation of missing data (experimental)
 --------------
-STRAND now support automatic Bayesian imputation for continuous predictor variables, and automatically slices missing outcomes out of the likelihood. Block predictors are currently imputed deterministically prior to model fitting via columnwise resampling (a more rigorous method may be integrated in the future). These methods are currently passing the basic unit tests, but are considered experimental. We appreciate any feedback or test reports. Once these models go through a decent burn-in period, we will push this functionality to the base functions.
+STRAND now supports automatic Bayesian imputation for continuous predictor variables, and automatically slices missing outcomes out of the likelihood. Block predictors are currently imputed deterministically prior to model fitting via columnwise resampling (a more rigorous method may be integrated in the future). These methods are currently passing the basic unit tests, but are considered experimental. We appreciate any feedback or test reports. Once these models go through a decent burn-in period, we will push this functionality to the base functions.
 
 Binary/Bernoulli outcomes with missings: [**Single-layer models with imputation**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Example_With_Imputation.R)
 
@@ -106,9 +106,11 @@ Multiplex Poisson outcomes with missings: [**Multiplex models with imputation**]
 Longitudinal Bernoulli outcomes with missings: [**Longitudinal models with imputation**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Bernoulli_Example_With_Imputation.R)
 
 
+Downstream nodal regression (experimental)
+--------------
+Often, users are not strictly interested in networks as outcomes, but also want to know how nodal out-flow and in-flow propensities are linked to downstream outcomes. To support this, we have added a function for running downstream nodal regressions. In this worklfow, the user first fits a network model. Then, they run a downstream regression using the estimated node-level random effects as predictors of the downstream outcome. This two-step model propagates uncertianty by running a measurment error model on the nodal random effects. We are currently preparing a brief methods note on this method.
 
-
-
+Predicting downstream outcomes from nodal random effects: [**Downstream nodal regressions**](https://github.com/ctross/STRAND/blob/main/tutorials/Downstream_Nodal_Model_Example.R)
 
 
 Miscellaneous features and toy examples
