@@ -66,7 +66,6 @@ transformed data{
     array[N_id, N_params[2]-1, N_responses] real target_predictors;                     //# Same as target_set without first column
     array[N_id, N_id, N_params[3]-1, N_responses] real dyad_predictors;                 //# Same as dyad_set without first shelf
     array[N_id, N_params[4]-1, N_responses] real ind_focal_predictors;                  //# Same as ind_focal_set without first column
-    array[N_id,N_id,N_responses] real A;                                                //# Network of ties for each timepoint
 
   //# Store some key indexes
     array[max_N_groups, N_group_vars] real N_per_group;                                 //# Number of people in each block-type for each group variable
@@ -117,18 +116,6 @@ transformed data{
      }}
 
    }
-
- // Temp SRI style
-     for(t in 1:N_responses){
-     for(i in 1:N_id){
-      for(j in 1:N_id){
-        if(i == j){
-          A[i,j,t] = 0;
-        } else{
-          A[i,j,t] = outcomes[i,j,t]*1.0 / exposure[i,j,t]; 
-         }
-         }}
-    }
 }
 
 parameters{
@@ -148,6 +135,8 @@ parameters{
     real<lower=0, upper=1> alpha;
     real<lower=0> sigma;
     real<lower=0> eta;
+
+    array[N_id, N_id, N_responses] real<lower=0, upper=1> A;   //# Network of ties for each timepoint
 }
 
 model{
@@ -211,11 +200,14 @@ model{
                              dot_product(target_effects,  to_vector(target_predictors[j, ,t])) +
                              dot_product(dyad_effects,  to_vector(dyad_predictors[i, j, , t])) 
                                        );
+           if(i != j){ 
+           outcomes[i,j,t] ~ binomial(exposure[i,j,t], A[i,j,t]);
+            }
           }
 
           psi_star = psi .* to_vector(diffusion_outcomes[, t-1]);
          
-         //# to get to social learning from weights, we need to multply psi by the effective exposure to social information  
+         //# to get to social learning from weights, we need to multiply psi by the effective exposure to social information  
          if(ces_settings == 1){
           attention_weighted_network = CES(to_vector(A[i,,t]) .* psi_star, to_vector(A[,i,t]) .* psi_star, alpha, sigma, eta);
          }
@@ -227,6 +219,8 @@ model{
          if(ces_settings == 3){
           attention_weighted_network = CES_inf_1(to_vector(A[i,,t]) .* psi_star, to_vector(A[,i,t]) .* psi_star, alpha);
          }
+
+         attention_weighted_network[i] = 0;
          
            //# The CES function integrates information on outgoing ties and incoming ties, and the status of alters as having the binary trait of interest.
            //# The first two terms are ties weights times indicators for the binary trait.
