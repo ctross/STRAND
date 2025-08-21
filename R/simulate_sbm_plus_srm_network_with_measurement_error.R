@@ -107,9 +107,9 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
   # Varying effects on individuals
   # ## Determine for each dyad its baseline interaction frequencies (rmvnorm2) +
   # ## individuals' characteristics effect on interactions sum(individual_effects[1,] * individual_predictors[i,])
-  sr = matrix(NA, nrow=N_id, ncol=2)
+  sr_rand = sr = matrix(NA, nrow=N_id, ncol=2)
   for(i in 1:N_id){
-    sr[i,] = rmvnorm2(1 , Mu=sr_mu, sigma=sr_sigma, Rho= Rho_sr)
+    sr_rand[i,] = sr[i,] = rmvnorm2(1 , Mu=sr_mu, sigma=sr_sigma, Rho= Rho_sr)
 
     if(!is.null(individual_predictors)){
       sr[i,1] = sr[i,1] + sum(individual_effects[1,]*individual_predictors[i,])
@@ -257,6 +257,7 @@ simulate_sbm_plus_srm_network_with_measurement_bias = function(N_id = 30,
               dyadic_predictors=dyadic_predictors,
               exposure_predictors=exposure_predictors,
               sr=sr,
+              sr_rand=sr_rand, 
               dr=dr,
               true_samps=true_samps,
               ideal_samps=ideal_samps,

@@ -61,6 +61,15 @@ summarize_strand_results = function(input, include_samples=TRUE, HPDI=0.9){
        res = summarize_longitudinal_bsrm_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
+    if(attributes(input)$model_type == "NBDA"){
+       res = summarize_nbda_results(input=input, include_samples=include_samples, HPDI=HPDI)
+      }
+      
+    if(attributes(input)$model_type == "Downstream"){
+       res = summarize_downstream_nodal_results(input=input, include_samples=include_samples, HPDI=HPDI)
+      }
+
+
     return(res)
 }
 

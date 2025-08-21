@@ -81,9 +81,9 @@ Rho_sr[1,2] = Rho_sr[2,1] = sr_rho
 Rho_dr[1,2] = Rho_dr[2,1] = dr_rho
 
 # Varying effects on individuals
-sr = matrix(NA, nrow=N_id, ncol=2)
+sr_rand = sr = matrix(NA, nrow=N_id, ncol=2)
 for( i in 1:N_id){
- sr[i,] = rmvnorm2(1 , Mu=sr_mu, sigma=sr_sigma, Rho=Rho_sr ) 
+ sr_rand[i,] = sr[i,] = rmvnorm2(1 , Mu=sr_mu, sigma=sr_sigma, Rho=Rho_sr ) 
 
  if(!is.null(individual_predictors)){
   sr[i,1] = sr[i,1] + sum(individual_effects[1,]*individual_predictors[i,]) 
@@ -173,5 +173,5 @@ for ( i in 1:N_id ){
     dr[i,i] = 0
  }
 
-return(list(network=y_true, tie_strength=p,  individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, dr=dr, samps=samps))
+return(list(network=y_true, tie_strength=p,  individual_predictors=individual_predictors, dyadic_predictors=dyadic_predictors, sr=sr, sr_rand=sr_rand, dr=dr, samps=samps))
 }
