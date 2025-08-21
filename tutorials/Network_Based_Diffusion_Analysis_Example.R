@@ -148,7 +148,6 @@ fit = fit_NBDA_model(long_data = diff_dat,
     social_target_regression = ~ Gold + Mass,
     social_dyad_regression = ~ Kinship + Dominant,
     social_block_regression = ~ 1,
-    static_network = "auto_detect",
     network_treatment = "point",
     ces_settings = "es_inf_rts_1",
     mode="mcmc",
@@ -158,39 +157,3 @@ fit = fit_NBDA_model(long_data = diff_dat,
 
 
 res = summarize_strand_results(fit)
-
-################################################################ Fit using a static posterior estimate of network. Quite slow.
-fit2 = fit_NBDA_model(long_data = diff_dat,
-    individual_focal_regression = ~ Gold + Mass,
-    social_focal_regression = ~ Gold + Mass,
-    social_target_regression = ~ Gold + Mass,
-    social_dyad_regression = ~ Kinship + Dominant,
-    social_block_regression = ~ 1,
-    static_network = "auto_detect",
-    network_treatment = "posterior",
-    ces_settings = "es_inf_rts_1",
-    mode="mcmc",
-    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
-    )
-
-
-res2 = summarize_strand_results(fit2)
-
-################################################################ Fit using a dynamic posterior estimate of network. Really slow.
-fit3 = fit_NBDA_model(long_data = diff_dat,
-    individual_focal_regression = ~ Gold + Mass,
-    social_focal_regression = ~ Gold + Mass,
-    social_target_regression = ~ Gold + Mass,
-    social_dyad_regression = ~ Kinship + Dominant,
-    social_block_regression = ~ 1,
-    static_network = "dynamic",
-    network_treatment = "posterior",
-    ces_settings = "es_inf_rts_1",
-    mode="mcmc",
-    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
-    )
-
-
-res3 = summarize_strand_results(fit3)
