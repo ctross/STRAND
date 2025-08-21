@@ -1,14 +1,17 @@
 #' A function to run a network-based diffusion analysis using the STRAND framework
 #' 
-#' This function allows users to analyse empirical or simulated data using a NBDA model in Stan. The user must supply a list of STRAND data objects,
-#' and a series of formulas following standard lm() style syntax. 
+#' This function allows users to analyse empirical or simulated data using a NBDA model in Stan. The user must supply a list of STRAND data objects, representing a time-series of data,
+#' and a set of formulas following standard lm() style syntax. 
 #'
 #' @param long_data A list of data objects of class STRAND prepared using the make_strand_data() function. The data objects must include all covariates and trait diffusion data used in the formulas listed below.
 #' @param individual_focal_regression A formula for the effects of focal predictors on individual learning rate. This should be specified as in lm(), e.g.: ~ Age * Education.
 #' @param social_block_regression A formula for the block-level predictors of social attention weights. This should be specified as in lm(), e.g.: ~ Group + Sex. Dont use interactions, however.
 #' @param social_focal_regression A formula for the effects of focal predictors on social attention weights. This should be specified as in lm(), e.g.: ~ Age * Education.
 #' @param social_target_regression A formula for the effects of target predictors on social attention weights. This should be specified as in lm(), e.g.: ~ Age * Education.
-#' @param social_dyad_regression A formula for the predictors of dyadic relationships on social attention weights. This should be specified as in lm(), e.g.: ~ Kinship + Friendship.
+#' @param social_dyad_regression A formula for the effects of dyadic predictors on social attention weights. This should be specified as in lm(), e.g.: ~ Kinship + Friendship.
+#' @param static_network A string to specify if the network is static or dynamic: 'static', 'dynamic', or 'auto_detect'. Auto-detect checks if the outcome layer is identical in all timesteps. If the network is static, then a more efficient model is used if network_treatment is 'posterior'. For point estimates, this setting is ignored.
+#' @param network_treatment How should the network be treated. Setting: 'point' instructs STRAND to take a point estimate of the network by dividing the edge weights by edge exposure to get an edge strength point estimate in the data block. Setting: 'posterior' instructs STRAND to estimate edge strength using a binomial model, and should only be used if the network is binary or binomial. Due to the long time these models take to fit if 'posterior' is used, we haven't tested these models as closely. We reccomend using 'point' until we can improve MCMC runtime for the more complicated 'posterior' version.
+#' @param ces_settings A string: 'full' to estimate all free CES parameters, 'rts_1' to fix the returns to scale at 1, and 'es_inf_rts_1' to fix both the returns to scale at 1 and the elasticity of substitution to infinity. The last setting, 'es_inf_rts_1', is equivalant to estimating a single parameter alpha governing how much learing goes on in the 'out' versus 'in' direction. 
 #' @param mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
@@ -40,6 +43,9 @@ fit_NBDA_model = function(long_data,
                           social_focal_regression,
                           social_target_regression,
                           social_dyad_regression,
+                          static_network = "auto_detect",
+                          network_treatment = "point",
+                          ces_settings = "es_inf_rts_1",
                           mode="mcmc",
                           stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
                                                       iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init = NULL),
@@ -72,6 +78,18 @@ fit_NBDA_model = function(long_data,
     if(!("NBDA" %in% attributes(data)$supported_models)){
         stop("The supplied data are not appropriate for an NBDA. Please ensure that an appropriate data list is provided.")
     }
+
+    if(!ces_settings %in% c("full", "rts_1", "es_inf_rts_1")){
+        stop("ces_settings must be a string: 'full', 'rts_1', 'es_inf_rts_1'. ")
+    }
+
+    if(!network_treatment %in% c("point", "posterior")){
+        stop("network_treatment must be a string: 'point', 'posterior'. ")
+    }
+
+    if(!static_network %in% c("auto_detect", "dynamic", "static")){
+        stop("static_network must be a string: 'auto_detect', 'dynamic', 'static'. ")
+    }
     
     ############### Priors
     data$export_network = 0
@@ -82,9 +100,49 @@ fit_NBDA_model = function(long_data,
     data$priors = priors
       }
 
+    if(ces_settings == "full"){
+      data$ces_settings = 1
+    }
+
+    if(ces_settings == "rts_1"){
+      data$ces_settings = 2
+    }
+
+    if(ces_settings == "es_inf_rts_1"){
+      data$ces_settings = 3
+    }
+
 
     ############################################################################# Fit model
-    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","network_based_diffusion_analysis.stan"))
+    if(static_network == "auto_detect"){
+      temp_check = c()
+
+      for(t in 1:dim(data$outcomes)[3]){
+        temp_check[t] = all(data$outcomes[,,1]==data$outcomes[,,t])
+      }
+
+      static_network = ifelse(all(temp_check)==TRUE, "static", "dynamic")
+    }
+    
+
+    if(network_treatment == "point"){
+        model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","network_based_diffusion_analysis.stan"))
+    }
+
+    if(network_treatment == "posterior"){
+      warning("Due to the excessive runtime for models fit with the 'posterior' setting, we have not been able to check parameter recovery closely. Please consider these models as experimental, unless you validate them on test data.")
+      Sys.sleep(5)
+      
+       if(static_network == "static"){
+        print("Static network detected or declared.")
+        model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","network_based_diffusion_analysis_posterior_network_static.stan"))
+       }
+       
+       if(static_network == "dynamic"){
+         print("Dynamic network detected or declared.")
+        model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","network_based_diffusion_analysis_posterior_network_dynamic.stan"))
+      }
+    }
 
      data$individual_predictors = NULL
      data$dyadic_predictors = NULL
