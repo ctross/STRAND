@@ -11,6 +11,9 @@ fit_NBDA_model(
   social_focal_regression,
   social_target_regression,
   social_dyad_regression,
+  static_network = "auto_detect",
+  network_treatment = "point",
+  ces_settings = "es_inf_rts_1",
   mode = "mcmc",
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
@@ -29,7 +32,13 @@ fit_NBDA_model(
 
 \item{social_target_regression}{A formula for the effects of target predictors on social attention weights. This should be specified as in lm(), e.g.: ~ Age * Education.}
 
-\item{social_dyad_regression}{A formula for the predictors of dyadic relationships on social attention weights. This should be specified as in lm(), e.g.: ~ Kinship + Friendship.}
+\item{social_dyad_regression}{A formula for the effects of dyadic predictors on social attention weights. This should be specified as in lm(), e.g.: ~ Kinship + Friendship.}
+
+\item{static_network}{A string to specify if the network is static or dynamic: 'static', 'dynamic', or 'auto_detect'. Auto-detect checks if the outcome layer is identical in all timesteps. If the network is static, then a more efficient model is used if network_treatment is 'posterior'. For point estimates, this setting is ignored.}
+
+\item{network_treatment}{How should the network be treated. Setting: 'point' instructs STRAND to take a point estimate of the network by dividing the edge weights by edge exposure to get an edge strength point estimate in the data block. Setting: 'posterior' instructs STRAND to estimate edge strength using a binomial model, and should only be used if the network is binary or binomial. Due to the long time these models take to fit if 'posterior' is used, we haven't tested these models as closely. We reccomend using 'point' until we can improve MCMC runtime for the more complicated 'posterior' version.}
+
+\item{ces_settings}{A string: 'full' to estimate all free CES parameters, 'rts_1' to fix the returns to scale at 1, and 'es_inf_rts_1' to fix both the returns to scale at 1 and the elasticity of substitution to infinity. The last setting, 'es_inf_rts_1', is equivalant to estimating a single parameter alpha governing how much learing goes on in the 'out' versus 'in' direction.}
 
 \item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
@@ -44,8 +53,8 @@ We recommend 1000 sampling and warmup iterations on a single chain for explorato
 A STRAND model object containing the data used, and the Stan results.
 }
 \description{
-This function allows users to analyse empirical or simulated data using a NBDA model in Stan. The user must supply a list of STRAND data objects,
-and a series of formulas following standard lm() style syntax.
+This function allows users to analyse empirical or simulated data using a NBDA model in Stan. The user must supply a list of STRAND data objects, representing a time-series of data,
+and a set of formulas following standard lm() style syntax.
 }
 \examples{
 \dontrun{
