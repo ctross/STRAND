@@ -17,11 +17,11 @@ rm(list = ls())
 set.seed(46+2)
 
 # Make data with this sample size
-N_id = 150
+N_id = 70
 labels = paste("Ind", 1:N_id)
 
 # Covariates
-Kinship = rlkjcorr( 1 , N_id , eta=1.5 )                
+Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ) )               
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1) 
 rownames(Kinship) = colnames(Kinship) = labels
 rownames(Dominant) = colnames(Dominant) = labels
@@ -38,10 +38,10 @@ dyadic_preds[,,2] = Dominant
 # Set effect sizes
 sr_mu = c(0,0)  
 sr_sigma = c(1.8, 1.8)           
-sr_rho = 0.999                  
+sr_rho = -0.7                  
 dr_mu = 0 
 dr_sigma = 3.5
-dr_rho = 0.999                  
+dr_rho = -0.8                  
 sr_effects_1 = c(1.9, 1.9)     
 sr_effects_2 = c(-1.1, -1.1)     
 dr_effects_1 = c(-1.9, 2.1)       
@@ -51,8 +51,6 @@ group_probs_block_size = c(0.25, c(0.5, 0.5)*(1-0.25))
 
 B_1 = matrix(-12,nrow=1,ncol=1)
 B_2 = matrix(rnorm(9,0,3),nrow=3,ncol=3)
-
-B_2 = 0.5*B_2 + 0.5*t(B_2)      
 
 diag(B_2) = diag(B_2) + 4.5
 
@@ -97,8 +95,9 @@ plot(Net, edge.arrow.size =0.1, edge.curved = 0.3, vertex.label=NA, vertex.size 
 
 #################################################### Now organize data for diffusion analysis
  long_dat = NULL
- T = 200
+ T = 100
 
+# In this example, the network and data are constant over timesteps, but this need not be the case always
  for(t in 1:T){
   dyadic_preds = list(Kinship = Kinship, Dominant = Dominant)
 
@@ -134,23 +133,64 @@ diff_dat = simulate_diffusion(long_dat,
                    social_target_regression = ~ Gold + Mass,
                    social_target_parameters = c(-0.9, 1.7),
                    social_dyad_regression = ~ Kinship + Dominant,
-                   social_dyad_parameters = c(1.9, 1.8)
+                   social_dyad_parameters = c(1.9, 1.8),
+                   ces_parameters = list(alpha = 0.05, sigma = 100, eta = 1)
                           )
 
 
 plot_diffusion(diff_dat)
 
-fit = fit_NBDA_model(diff_dat,
+
+################################################################ Fit using a point estimate of network
+fit = fit_NBDA_model(long_data = diff_dat,
     individual_focal_regression = ~ Gold + Mass,
     social_focal_regression = ~ Gold + Mass,
     social_target_regression = ~ Gold + Mass,
     social_dyad_regression = ~ Kinship + Dominant,
     social_block_regression = ~ 1,
+    static_network = "auto_detect",
+    network_treatment = "point",
+    ces_settings = "es_inf_rts_1",
     mode="mcmc",
     stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
                                 iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
     )
 
-fit$fit$summary()
+
+res = summarize_strand_results(fit)
+
+################################################################ Fit using a static posterior estimate of network. Quite slow.
+fit2 = fit_NBDA_model(long_data = diff_dat,
+    individual_focal_regression = ~ Gold + Mass,
+    social_focal_regression = ~ Gold + Mass,
+    social_target_regression = ~ Gold + Mass,
+    social_dyad_regression = ~ Kinship + Dominant,
+    social_block_regression = ~ 1,
+    static_network = "auto_detect",
+    network_treatment = "posterior",
+    ces_settings = "es_inf_rts_1",
+    mode="mcmc",
+    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
+    )
 
 
+res2 = summarize_strand_results(fit2)
+
+################################################################ Fit using a dynamic posterior estimate of network. Really slow.
+fit3 = fit_NBDA_model(long_data = diff_dat,
+    individual_focal_regression = ~ Gold + Mass,
+    social_focal_regression = ~ Gold + Mass,
+    social_target_regression = ~ Gold + Mass,
+    social_dyad_regression = ~ Kinship + Dominant,
+    social_block_regression = ~ 1,
+    static_network = "dynamic",
+    network_treatment = "posterior",
+    ces_settings = "es_inf_rts_1",
+    mode="mcmc",
+    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
+    )
+
+
+res3 = summarize_strand_results(fit3)
