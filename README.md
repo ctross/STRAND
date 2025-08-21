@@ -119,6 +119,12 @@ Often, users are not only interested in networks as outcomes, but also want to k
 
 + Predicting downstream outcomes from nodal random effects: [**Downstream nodal regressions**](https://github.com/ctross/STRAND/blob/main/tutorials/Downstream_Nodal_Model_Example.R)
 
+Network-based diffusion analysis (experimental)
+--------------
+How do networks structure the evolution of binary traits? A classic method here is NBDA (network-based diffusion analysis). We provide a generalized version of NBDA that incorporates focal, target, and dyadic predictors of social learning rate.
+
++ Predicting the evolution of binary traits: [**Network-based diffusion analysis**](https://github.com/ctross/STRAND/blob/main/tutorials/Network_Based_Diffusion_Analysis_Example.R)
+
 
 Miscellaneous features and toy examples
 --------------
