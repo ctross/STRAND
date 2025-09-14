@@ -25,7 +25,7 @@ Install by running on R:
 ```{r}
 ################################### Install the latest release
  library(devtools)
- install_github('ctross/STRAND@the_height_our_halo')
+ install_github('ctross/STRAND@the_height_of_our_halo')
  library(STRAND)
 ```
 
