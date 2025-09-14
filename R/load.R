@@ -63,7 +63,7 @@ latest_released_version = function(quiet=TRUE, ...) {
   if(pingr::is_online()){
   latest_version = latest_released_version(retries = 0)
 
-  installed_version = "the_height_our_halo"
+  installed_version = "the_height_of_our_halo"
   
   packageStartupMessage(paste0("This version of STRAND is: ", installed_version, "."))
 
@@ -72,6 +72,7 @@ latest_released_version = function(quiet=TRUE, ...) {
    STRAND is under active development, so consider updating with: devtools::install_github('ctross/STRAND@", latest_version,"')"))
   }}
 }
+
 
 
 
