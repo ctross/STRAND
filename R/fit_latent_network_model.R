@@ -129,7 +129,7 @@ fit_latent_network_model = function(data,
      #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
      dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
-     dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
+     dyad_model_matrix = model_matrix_strand(dyad_regression , dyad_dat, "dyad_regression")
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
@@ -144,11 +144,11 @@ fit_latent_network_model = function(data,
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$fpr_set = model.matrix( fpr_regression , data$individual_predictors )
-      data$rtt_set = model.matrix( rtt_regression , data$individual_predictors )
-      data$theta_set = model.matrix( theta_regression , data$individual_predictors )
-      data$focal_set = model.matrix( focal_regression , data$individual_predictors )
-      data$target_set = model.matrix( target_regression , data$individual_predictors )
+      data$fpr_set = model_matrix_strand(fpr_regression , data$individual_predictors, "fpr_regression")
+      data$rtt_set = model_matrix_strand(rtt_regression, data$individual_predictors, "rtt_regression")
+      data$theta_set = model_matrix_strand(theta_regression , data$individual_predictors, "theta_regression")
+      data$focal_set = model_matrix_strand(focal_regression, data$individual_predictors, "focal_regression")
+      data$target_set = model_matrix_strand(target_regression , data$individual_predictors, "target_regression")
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -161,7 +161,7 @@ fit_latent_network_model = function(data,
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){
-      data$block_set = model.matrix( block_regression , data$block_predictors )
+      data$block_set = model_matrix_strand(block_regression , data$block_predictors, "block_regression")
      } else{
       data$block_set = matrix(1, nrow=data$N_id, ncol=1)
      }

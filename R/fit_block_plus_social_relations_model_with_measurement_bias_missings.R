@@ -104,7 +104,7 @@ fit_block_plus_social_relations_model_with_measurement_bias_missings = function(
      #dyad_dat = as.data.frame(do.call(cbind, dyad_dat))
      dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
-     dyad_model_matrix = model.matrix(dyad_regression, model.frame(~ ., dyad_dat, na.action=na.pass))
+     dyad_model_matrix = model_matrix_strand(dyad_regression, model.frame(~ ., dyad_dat, na.action=na.pass), "dyad_regression")
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
@@ -119,8 +119,8 @@ fit_block_plus_social_relations_model_with_measurement_bias_missings = function(
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$focal_set = model.matrix(focal_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
-      data$target_set = model.matrix(target_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
+      data$focal_set = model_matrix_strand(focal_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass), "focal_regression")
+      data$target_set = model_matrix_strand(target_regression , model.frame(~ ., data$individual_predictors, na.action=na.pass), "target_regression")
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -128,14 +128,14 @@ fit_block_plus_social_relations_model_with_measurement_bias_missings = function(
     
     ################################################################ Sampling model matrix
     if(data$N_individual_predictors > 0){
-     data$sampling_set = model.matrix(sampling_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
+     data$sampling_set = model_matrix_strand(sampling_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass), "sampling_regression")
      }else {
      data$sampling_set = matrix(1, nrow = data$N_id, ncol = 1)
       }
 
     ################################################################ Censoring model matrix
     if(data$N_individual_predictors > 0){
-     data$censoring_set = model.matrix(censoring_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass))
+     data$censoring_set = model_matrix_strand(censoring_regression, model.frame(~ ., data$individual_predictors, na.action=na.pass), "censoring_regression")
      }else {
      data$censoring_set = matrix(1, nrow = data$N_id, ncol = 1)
       }
@@ -144,7 +144,7 @@ fit_block_plus_social_relations_model_with_measurement_bias_missings = function(
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){
-      data$block_set = model.matrix(block_regression, model.frame(~ ., data$block_predictors, na.action=na.pass)) 
+      data$block_set = model_matrix_strand(block_regression , model.frame(~ ., data$block_predictors, na.action=na.pass), "block_regression")
      } else{
       data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
       colnames(data$block_set) = "(Intercept)"

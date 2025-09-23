@@ -58,12 +58,12 @@ latest_released_version = function(quiet=TRUE, ...) {
   sub("v", "", release$tag_name)
 }
 
-  packageStartupMessage("Bei diesem Spaziergang an den STRAND scharfen wir unsere Sinne fur die Sternbilder hoch am Himmel!")
+  packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan.")
 
   if(pingr::is_online()){
   latest_version = latest_released_version(retries = 0)
 
-  installed_version = "the_height_of_our_halo"
+  installed_version = "our_dire_reveille"
   
   packageStartupMessage(paste0("This version of STRAND is: ", installed_version, "."))
 
