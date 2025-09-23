@@ -93,7 +93,7 @@ fit_block_plus_social_relations_model = function(data,
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
      dyad_dat = do.call(data.frame, dyad_dat)
      colnames(dyad_dat) = dyad_names
-     dyad_model_matrix = model.matrix( dyad_regression , dyad_dat )
+     dyad_model_matrix = model_matrix_strand(dyad_regression , dyad_dat, "dyad_regression")
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
@@ -108,8 +108,8 @@ fit_block_plus_social_relations_model = function(data,
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$focal_set = model.matrix( focal_regression , data$individual_predictors )
-      data$target_set = model.matrix( target_regression , data$individual_predictors )
+      data$focal_set = model_matrix_strand(focal_regression, data$individual_predictors, "focal_regression")
+      data$target_set = model_matrix_strand(target_regression , data$individual_predictors, "target_regression")
      } else{
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
@@ -119,7 +119,7 @@ fit_block_plus_social_relations_model = function(data,
 
     ################################################################ Block model matrix
      if(data$N_block_predictors>0){
-      data$block_set = model.matrix( block_regression , data$block_predictors )
+      data$block_set = model_matrix_strand(block_regression , data$block_predictors, "block_regression")
      } else{
       data$block_set = as.array(matrix(1, nrow=data$N_id, ncol=1))
       colnames(data$block_set) = "(Intercept)"

@@ -235,7 +235,7 @@ fit_downstream_nodal_model = function(
 
      ################################################################ Individual model matrix
      if(data$N_individual_predictors>0){
-      data$focal_set = model.matrix( downstream_regression , data$individual_predictors )
+      data$focal_set = model_matrix_strand(downstream_regression , data$individual_predictors, "downstream_regression")
      } else{
       data$focal_set = matrix(1, nrow=data$N_id, ncol=1)
      }
