@@ -51,6 +51,7 @@ make_longitudinal_data = function(long_data,
     block_set  = array(NA, c(dim(thin_dat[[1]]$block_set),length(thin_dat)))
 
     outcomes  = array(NA, c(dim(thin_dat[[1]]$outcomes)[c(1:2)],length(thin_dat)))
+    outcomes_real  = array(NA, c(dim(thin_dat[[1]]$outcomes)[c(1:2)],length(thin_dat)))
     exposure  = array(NA, c(dim(thin_dat[[1]]$exposure)[c(1:2)],length(thin_dat)))
     mask  = array(NA, c(dim(thin_dat[[1]]$mask)[c(1:2)],length(thin_dat)))
 
@@ -65,6 +66,7 @@ make_longitudinal_data = function(long_data,
      block_set[ , , i]  = thin_dat[[i]]$block_set
 
      outcomes[ , , i]  = thin_dat[[i]]$outcomes
+     outcomes_real[ , , i]  = thin_dat[[i]]$outcomes
      exposure[ , , i]  = thin_dat[[i]]$exposure
      mask[ , , i]  = thin_dat[[i]]$mask
 
@@ -79,6 +81,7 @@ make_longitudinal_data = function(long_data,
     dimnames(block_set) = dimnames(thin_dat[[1]]$block_set)
 
     dimnames(outcomes) = dimnames(thin_dat[[1]]$outcomes)
+    dimnames(outcomes_real) = dimnames(thin_dat[[1]]$outcomes)
     dimnames(exposure) = dimnames(thin_dat[[1]]$exposure)
     dimnames(mask) = dimnames(thin_dat[[1]]$mask)
 
@@ -90,6 +93,7 @@ make_longitudinal_data = function(long_data,
     dat_out$target_set = target_set
     dat_out$block_set = block_set
     dat_out$outcomes = outcomes
+    dat_out$outcomes_real = outcomes_real
     dat_out$exposure = exposure
     dat_out$mask = mask
 
