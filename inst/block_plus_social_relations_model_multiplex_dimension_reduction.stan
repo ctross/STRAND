@@ -105,8 +105,10 @@ parameters{
 
 transformed parameters{
     matrix[2, 2] D_corr; 
+    matrix[2, 2] G_corr;
 
     D_corr = tcrossprod(dr_L);  
+    G_corr = tcrossprod(sr_L); 
 }
 
 model{
@@ -121,8 +123,8 @@ model{
     //# Loading priors
     for(l in 1:N_responses){
       if(l == 1){
-       alpha[l,1] ~ normal(-1, 3);
-       alpha[l,2] ~ normal(1, 3);
+       alpha[l,1] ~ normal(-3, 3);
+       alpha[l,2] ~ normal(3, 3);
       } else{
        alpha[l,1] ~ normal(0, 10);
        alpha[l,2] ~ normal(0, 10);   
@@ -245,8 +247,63 @@ model{
 
  }
 
-generated quantities{
-    matrix[2, 2] G_corr; 
+generated quantities{ 
+    matrix[N_id*export_network, N_id*export_network] p;
+    array[N_id*export_network] vector[2*export_network] sr;
+    matrix[N_id*export_network, N_id*export_network] dr;
+ 
+    if(export_network==1){                
+     vector[2] terms;
+     int tie;
+     array[N_group_vars] matrix[max_N_groups, max_N_groups] B;
 
-    G_corr = tcrossprod(sr_L); 
+    for(i in 1:N_group_vars){
+     B[i,1:N_groups_per_var[i], 1:N_groups_per_var[i]] = to_matrix(block_effects[(block_indexes[i]+1):(block_indexes[i+1])], N_groups_per_var[i], N_groups_per_var[i]);
+    }
+            
+    for(i in 1:N_id){
+     vector[2] sr_terms;
+
+     sr_terms[1] = dot_product(focal_effects,  to_vector(focal_predictors[i]));
+     sr_terms[2] = dot_product(target_effects,  to_vector(target_predictors[i]));  
+
+     sr[i] = diag_pre_multiply(sr_sigma, sr_L) * sr_raw[i] + sr_terms;
+     }
+
+    for(i in 1:(N_id-1)){
+    for(j in (i+1):N_id){
+      vector[2] scrap;
+      vector[N_group_vars] br1;
+      vector[N_group_vars] br2;
+
+      scrap[1] = dr_raw[i,j];
+      scrap[2] = dr_raw[j,i];
+      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
+
+       for(q in 1:N_group_vars){
+        br1[q] = B[q,block_set[i,q], block_set[j,q]];
+        br2[q] = B[q,block_set[j,q], block_set[i,q]];
+         }
+
+       dr[i,j] = scrap[1] + dot_product(dyad_effects,  to_vector(dyad_predictors[i, j, ])) + sum(br1);
+       dr[j,i] = scrap[2] + dot_product(dyad_effects,  to_vector(dyad_predictors[j, i, ])) + sum(br2);
+    }}
+
+    for(i in 1:N_id){
+      dr[i,i] = -99; //# ignore this :)
+    }
+
+
+    for ( i in 1:N_id ) {
+        for ( j in 1:N_id ) {
+            if ( i != j ) {
+               p[i,j] = inv_logit( sr[i,1] + sr[j,2] + dr[i,j]);
+            }
+        }//j
+    }//i
+
+  for ( i in 1:N_id ) {
+   p[i,i] = 0; 
+   }
+ }
 }
