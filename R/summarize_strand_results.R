@@ -69,6 +69,9 @@ summarize_strand_results = function(input, include_samples=TRUE, HPDI=0.9){
        res = summarize_downstream_nodal_results(input=input, include_samples=include_samples, HPDI=HPDI)
       }
 
+    if(attributes(input)$model_type == "Multiplex_Dimension_Reduction"){
+       res = summarize_multiplex_dimension_reduction_results(input=input, include_samples=include_samples, HPDI=HPDI)
+      }
 
     return(res)
 }
