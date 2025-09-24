@@ -97,18 +97,25 @@ parameters{
     matrix[N_id, N_id] dr_raw;   
 
     //# Error in Gaussian model
-    vector<lower=0>[1] error_sigma;  
+    vector<lower=0>[N_responses] error_sigma;  
 
     //# Loading parameters
-    matrix[N_responses, 2] alpha; 
+    matrix[N_responses, 2] alpha_raw; 
+    real<lower=0> alpha_1_2;
 }
 
 transformed parameters{
     matrix[2, 2] D_corr; 
     matrix[2, 2] G_corr;
+    matrix[N_responses, 2] alpha; 
 
     D_corr = tcrossprod(dr_L);  
     G_corr = tcrossprod(sr_L); 
+
+    alpha = alpha_raw;
+    alpha[1,2] = alpha_1_2;
+
+
 }
 
 model{
@@ -121,17 +128,9 @@ model{
     real latent_tie;                                           //# Local scrap  
 
     //# Loading priors
-    for(l in 1:N_responses){
-      if(l == 1){
-       alpha[l,1] ~ normal(-3, 3);
-       alpha[l,2] ~ normal(3, 3);
-      } else{
-       alpha[l,1] ~ normal(0, 10);
-       alpha[l,2] ~ normal(0, 10);   
-      }
-
-    }              
-    
+    to_vector(alpha_raw) ~ normal(0, 5);   
+    alpha_1_2 ~ normal(3, 1);
+           
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
     sr_raw[i] ~ normal(0,1);
