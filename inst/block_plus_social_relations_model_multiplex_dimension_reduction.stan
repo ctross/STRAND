@@ -277,7 +277,7 @@ generated quantities{
 
       scrap[1] = dr_raw[i,j];
       scrap[2] = dr_raw[j,i];
-      scrap = rep_vector(dr_sigma, 2) .* (dr_L*scrap);
+      scrap = append_row(dr_sigma, dr_sigma) .* (dr_L*scrap);
 
        for(q in 1:N_group_vars){
         br1[q] = B[q,block_set[i,q], block_set[j,q]];
