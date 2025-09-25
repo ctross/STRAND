@@ -231,4 +231,3 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
-
