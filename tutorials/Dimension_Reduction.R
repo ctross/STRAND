@@ -1,6 +1,7 @@
 ##############################################
-#
-#   Binomial Analyses - Simulated data with interaction  
+# Multiplex dimension reduction: Binomial Analyses - Simulated data with interaction 
+# 
+# The idea for this model comes from an anonymous RSOS reviewer. 
 #
 ########################################
 
@@ -14,7 +15,7 @@ library(STRAND)
 
 # Make data
 set.seed(1)
-N_id = 100
+N_id = 60
 
 # Covariates
 Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
@@ -58,7 +59,7 @@ groups = data.frame(Intercept=as.numeric(factor(groups_1)), Merica=as.numeric(fa
 groups_f = data.frame(Intercept=factor(groups_1), Merica=factor(groups_2), Quantum=factor(groups_3))
 individual = data.frame(Mass=Mass)
 
-#################################################### Simulate SBM + SRM network
+#################################################### Simulate a single latent SBM + SRM network
 G = simulate_sbm_plus_srm_network(N_id = N_id, 
                          B = B, 
                          V=3,
@@ -86,10 +87,12 @@ plot(Net, edge.arrow.size = 0.1, edge.curved = 0.3, vertex.label=NA, vertex.size
 image(G$network)
 
 
-############################################# Simulate multiplex networks from the latent network
+############################################# Simulate multiplex layers from the latent network
 M = 5 # Network layers
+EE = 10 # Samples per dyad
 alpha = matrix(NA, nrow=M, ncol=2)
 
+# Loadings
 alpha[1,] = c(-3, 6)    # Feeding
 alpha[2,] = c(0, 6)     # Territory
 alpha[3,] = c(-7, 8)    # Courtship
@@ -105,12 +108,12 @@ Outcomes = array(0, c(N_id, N_id, M))
 for(m in 1:M){
  for(i in 1:N_id){
   for(j in 1:N_id){
-     Outcomes[i,j,m] = rbinom(1, size=20, prob=inv_logit(alpha[m,1] + alpha[m,2]*G$tie_strength[i,j]))  
+     Outcomes[i,j,m] = rbinom(1, size=EE, prob=inv_logit(alpha[m,1] + alpha[m,2]*G$tie_strength[i,j]))  
   } 
  }   
 }
 
-Exposure = matrix(20, nrow=N_id, ncol=N_id)
+Exposure = matrix(EE, nrow=N_id, ncol=N_id)
 
 ################################## Fit model
 
@@ -169,6 +172,7 @@ fit = fit_multiplex_model_dimension_reduction(
  target_regression = ~ Mass,
  dyad_regression = ~ Kinship * Dominant,
  mode="mcmc",
+ return_predicted_network = TRUE,
  stan_mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
@@ -179,5 +183,14 @@ fit = fit_multiplex_model_dimension_reduction(
    adapt_delta = 0.98)
 )
 
+# Check fit and loadings
 res = summarize_strand_results(fit)
+
+##########################################
+# Check latent network recovery
+par(mfrow=c(1,3))
+image(apply(res$samples$predicted_network_sample, 2:3, mean))
+image(G$tie_strength)
+plot(c(apply(res$samples$predicted_network_sample, 2:3, mean)), c(G$tie_strength))
+
 

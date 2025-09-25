@@ -25,7 +25,7 @@ Install by running on R:
 ```{r}
 ################################### Install the latest release
  library(devtools)
- install_github('ctross/STRAND@the_height_of_our_halo')
+ install_github('ctross/STRAND@our_dire_reveille')
  library(STRAND)
 ```
 
@@ -86,6 +86,11 @@ Networks typically influence each other. Users may wish to study if outgoing tie
  + Multiplex network modeling requires estimation of a highly-structured dyadic correlation matrix with special symmetries. We have two approaches for constructing such block-structured matrices, one based on an $\ell^{2}$
  norm penalty, and one based on constructing a Cholesky factor with a special set of constraints. Here we show that both methods are equally effective: [**Different methods for estimating dyadic reciprocity**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example_Dyadic_Modes.R)
 
+Multiplex dimension reduction network models (experimental)
+--------------
+Sometimes we have multiple network layers of observations that are reflective of a single underlying social network. In these models, we use the SRM to estimate a single latent network, and then estimate loadings of the observation layers onto that latent network. 
+
++ Multiplex dimension reduction (using simulated data): [**Multiplex dimension reduction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Dimension_Reduction.R)
 
  Longitudinal network dynamics (experimental)
 --------------

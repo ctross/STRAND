@@ -71,9 +71,6 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
                          dyadic_effects = dr_effects_1
                          )      
 
-Net = graph_from_adjacency_matrix(G$network, mode = c("directed"))
-par(mfrow=c(1,2))
-plot(Net, edge.arrow.size = 0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 image(G$network)
 
 ################################################################################################ Fit STRAND
