@@ -14,7 +14,7 @@ library(STRAND)
 
 # Make data
 set.seed(1)
-N_id = 100
+N_id = 60
 
 # Covariates
 Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
@@ -88,6 +88,7 @@ image(G$network)
 
 ############################################# Simulate multiplex networks from the latent network
 M = 5 # Network layers
+EE = 10 # Samples per dyad
 alpha = matrix(NA, nrow=M, ncol=2)
 
 alpha[1,] = c(-3, 6)    # Feeding
@@ -105,12 +106,12 @@ Outcomes = array(0, c(N_id, N_id, M))
 for(m in 1:M){
  for(i in 1:N_id){
   for(j in 1:N_id){
-     Outcomes[i,j,m] = rbinom(1, size=20, prob=inv_logit(alpha[m,1] + alpha[m,2]*G$tie_strength[i,j]))  
+     Outcomes[i,j,m] = rbinom(1, size=EE, prob=inv_logit(alpha[m,1] + alpha[m,2]*G$tie_strength[i,j]))  
   } 
  }   
 }
 
-Exposure = matrix(20, nrow=N_id, ncol=N_id)
+Exposure = matrix(EE, nrow=N_id, ncol=N_id)
 
 ################################## Fit model
 
@@ -169,6 +170,7 @@ fit = fit_multiplex_model_dimension_reduction(
  target_regression = ~ Mass,
  dyad_regression = ~ Kinship * Dominant,
  mode="mcmc",
+ return_predicted_network = TRUE,
  stan_mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
@@ -180,4 +182,12 @@ fit = fit_multiplex_model_dimension_reduction(
 )
 
 res = summarize_strand_results(fit)
+
+##########################################
+# Check latent network recovery
+par(mfrow=c(1,3))
+image(apply(res$samples$predicted_network_sample, 2:3, mean))
+image(G$tie_strength)
+plot(c(apply(res$samples$predicted_network_sample, 2:3, mean)), c(G$tie_strength))
+
 
