@@ -10,6 +10,7 @@ fit_multiplex_model_dimension_reduction(
   focal_regression,
   target_regression,
   dyad_regression,
+  return_predicted_network = FALSE,
   mode = "mcmc",
   stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
     iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
@@ -27,6 +28,8 @@ fit_multiplex_model_dimension_reduction(
 \item{target_regression}{A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education}
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
+
+\item{return_predicted_network}{Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.}
 
 \item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
