@@ -129,7 +129,7 @@ model{
 
     //# Loading priors
     to_vector(alpha_raw) ~ normal(0, 5);   
-    alpha_1_2 ~ normal(3, 1);
+    alpha_1_2 ~ normal(3, 3);
            
     //# Sender-receiver priors for social relations model
     for(i in 1:N_id)
