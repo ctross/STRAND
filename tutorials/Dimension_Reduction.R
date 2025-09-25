@@ -1,6 +1,7 @@
 ##############################################
-#
-#   Binomial Analyses - Simulated data with interaction  
+# Multiplex dimension reduction: Binomial Analyses - Simulated data with interaction 
+# 
+# The idea for this model comes from an anonymous RSOS reviewer. 
 #
 ########################################
 
@@ -58,7 +59,7 @@ groups = data.frame(Intercept=as.numeric(factor(groups_1)), Merica=as.numeric(fa
 groups_f = data.frame(Intercept=factor(groups_1), Merica=factor(groups_2), Quantum=factor(groups_3))
 individual = data.frame(Mass=Mass)
 
-#################################################### Simulate SBM + SRM network
+#################################################### Simulate a single latent SBM + SRM network
 G = simulate_sbm_plus_srm_network(N_id = N_id, 
                          B = B, 
                          V=3,
@@ -86,11 +87,12 @@ plot(Net, edge.arrow.size = 0.1, edge.curved = 0.3, vertex.label=NA, vertex.size
 image(G$network)
 
 
-############################################# Simulate multiplex networks from the latent network
+############################################# Simulate multiplex layers from the latent network
 M = 5 # Network layers
 EE = 10 # Samples per dyad
 alpha = matrix(NA, nrow=M, ncol=2)
 
+# Loadings
 alpha[1,] = c(-3, 6)    # Feeding
 alpha[2,] = c(0, 6)     # Territory
 alpha[3,] = c(-7, 8)    # Courtship
@@ -181,6 +183,7 @@ fit = fit_multiplex_model_dimension_reduction(
    adapt_delta = 0.98)
 )
 
+# Check fit and loadings
 res = summarize_strand_results(fit)
 
 ##########################################
