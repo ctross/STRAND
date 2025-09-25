@@ -102,7 +102,7 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
 
     samples = list(srm_model_samples=srm_samples)
 
-    if(input$return_predicted_network == TRUE){
+    if(input$data$export_network == 1){
         samples$predicted_network_sample = posterior::draws_of(stanfit$"p")
         }
 
@@ -231,3 +231,4 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
+
