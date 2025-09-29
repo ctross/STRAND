@@ -55,6 +55,7 @@ latest_released_version = function(quiet=TRUE, ...) {
         call. = FALSE)
   }
   release = jsonlite::read_json(dest_file)
+  release 
 }
 
 packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan.")
@@ -77,6 +78,7 @@ tryCatch({
   })
 
 }
+
 
 
 
