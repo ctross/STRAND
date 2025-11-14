@@ -392,7 +392,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
                 if(sd_test > standardization_threshold[1] & sd_test < standardization_threshold[2]){
                     # All good
                   } else{
-                    stop(paste0("Column ", i, " in individual_covariates has not been standardized. Use standardize(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
+                    stop(paste0("Column ", i, " in individual_covariates has not been standardized. Use standardize_strand(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
                   }
               }
             }
@@ -415,7 +415,7 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
                 if(sd_test > standardization_threshold[1] & sd_test < standardization_threshold[2]){
                     # All good
                   } else{
-                    stop(paste0("Element ", i, " in dyadic_covariates has not been standardized. Use standardize(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
+                    stop(paste0("Element ", i, " in dyadic_covariates has not been standardized. Use standardize_strand(). \n Setting: 'check_standardization = FALSE' turns off this error check. \n Predictors in STRAND models should generally be standardized, igonore at your own risk."))
                   }
               }
             }

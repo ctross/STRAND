@@ -10,11 +10,11 @@
 #' @param focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
-#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
+#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
-#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
@@ -27,7 +27,7 @@
 #'                                             target_regression = ~ Age * NoFood,
 #'                                             dyad_regression = ~ Relatedness + Friends * SameSex,
 #'                                             mode="mcmc",
-#'                                             stan_mcmc_parameters = list(seed = 1, chains = 1, 
+#'                                             mcmc_parameters = list(seed = 1, chains = 1, 
 #'                                               parallel_chains = 1, refresh = 1, 
 #'                                               iter_warmup = 100, iter_sampling = 100,
 #'                                               max_treedepth = NULL, adapt_delta = NULL)
@@ -42,8 +42,10 @@ fit_block_plus_social_relations_model = function(data,
                                     dyad_regression,
                                     mode="mcmc",
                                     return_predicted_network=FALSE,
-                                    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init = NULL),
+                                    mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, 
+                                                      iter_warmup = 500, iter_sampling = 500, 
+                                                      max_treedepth = 12, adapt_delta = 0.95, 
+                                                      chain_method = "vectorized", cores=1, init = 2),
                                     priors=NULL
                                     ){
 
@@ -73,10 +75,10 @@ fit_block_plus_social_relations_model = function(data,
     }
 
     if(attributes(data)$directed == "undirected" & (focal_regression != target_regression) ){
-        warning("You have an undirected outcome, but focal_regression and target_regression are not equal. 
+        warning("You have an undirected outcome, but focal_regression and target_regression are not equal.
         In undirected models, these should be the same. Rethink your model.")
     }
-    
+
     ############################################################################# Prepare data and parse formulas
      ind_names = colnames(data$individual_predictors)
      dyad_names = names(data$dyadic_predictors)
@@ -87,7 +89,7 @@ fit_block_plus_social_relations_model = function(data,
 
      dyad_dat = list()
      for(i in 1:dyad_dims[3]){
-      dyad_dat[[i]] = c(data$dyadic_predictors[[i]])  
+      dyad_dat[[i]] = c(data$dyadic_predictors[[i]])
      }
 
      #dyad_dat = do.call(rbind.data.frame, dyad_dat)
@@ -97,7 +99,7 @@ fit_block_plus_social_relations_model = function(data,
 
      dyad_dat_out = array(NA, c(dyad_dims[1], dyad_dims[2], ncol(dyad_model_matrix)))
      for(i in 1:ncol(dyad_model_matrix)){
-      dyad_dat_out[,,i] = matrix(dyad_model_matrix[,i], nrow=dyad_dims[1], ncol=dyad_dims[2])  
+      dyad_dat_out[,,i] = matrix(dyad_model_matrix[,i], nrow=dyad_dims[1], ncol=dyad_dims[2])
      }
 
      dimnames(dyad_dat_out)[[3]] = colnames(dyad_model_matrix)
@@ -114,7 +116,7 @@ fit_block_plus_social_relations_model = function(data,
       data$focal_set = matrix(1,nrow=data$N_id, ncol=1)
       data$target_set = matrix(1,nrow=data$N_id, ncol=1)
      }
-    
+
     data$N_params = c(ncol(data$focal_set), ncol(data$target_set), dim(data$dyad_set)[3])
 
     ################################################################ Block model matrix
@@ -125,15 +127,15 @@ fit_block_plus_social_relations_model = function(data,
       colnames(data$block_set) = "(Intercept)"
      }
 
-     data$N_group_vars = ncol(data$block_set) 
+     data$N_group_vars = ncol(data$block_set)
      data$N_groups_per_var = rep(NA, data$N_group_vars)
 
      for(i in 1:data$N_group_vars){
-      data$N_groups_per_var[i] = length(unique(data$block_set[,i]))  
+      data$N_groups_per_var[i] = length(unique(data$block_set[,i]))
      }
 
      data$N_groups_per_var = as.array(data$N_groups_per_var)
-  
+
      data$max_N_groups = max(data$N_groups_per_var)
 
     ############### Priors
@@ -146,7 +148,16 @@ fit_block_plus_social_relations_model = function(data,
       }
 
     ############################################################################# Fit model
-    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model.stan"))
+    mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+    
+    start_time = Sys.time()
+    if(! mode %in% c("mcmc", "vb", "optim", "numpyro") ){
+     stop("Must supply a legal mode value: mcmc, vb, optim, or numpyro.")
+    }
+
+    if(mode != 'numpyro'){
+      model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","block_plus_social_relations_model.stan"))
+    }
 
     data$individual_predictors = NULL
     data$dyadic_predictors = NULL
@@ -155,36 +166,45 @@ fit_block_plus_social_relations_model = function(data,
     if(mode=="mcmc"){
       fit = model$sample(
         data = unclass(data),
-        seed = stan_mcmc_parameters$seed,
-        chains = stan_mcmc_parameters$chain,
-        parallel_chains = stan_mcmc_parameters$parallel_chains,
-        refresh = stan_mcmc_parameters$refresh,
-        iter_warmup = stan_mcmc_parameters$iter_warmup,
-        iter_sampling = stan_mcmc_parameters$iter_sampling,
-        max_treedepth = stan_mcmc_parameters$max_treedepth,
-        adapt_delta = stan_mcmc_parameters$adapt_delta,
-        init = stan_mcmc_parameters$init
+        seed = mcmc_parameters$seed,
+        chains = mcmc_parameters$chains,
+        parallel_chains = mcmc_parameters$parallel_chains,
+        refresh = mcmc_parameters$refresh,
+        iter_warmup = mcmc_parameters$iter_warmup,
+        iter_sampling = mcmc_parameters$iter_sampling,
+        max_treedepth = mcmc_parameters$max_treedepth,
+        adapt_delta = mcmc_parameters$adapt_delta,
+        init = mcmc_parameters$init
         )
        }
 
     if(mode=="vb"){
-     print("Variational inference is fast, but not always dependable. We recommend using vb only for test runs.")   
+     print("Variational inference is fast, but not always dependable. We recommend using vb only for test runs.")
      fit = model$pathfinder(data = unclass(data))
      }
 
     if(mode=="optim"){
-     print("Optimazation is fast, but not always dependable. We recommend using optim only for test runs.") 
+     print("Optimazation is fast, but not always dependable. We recommend using optim only for test runs.")
      fit = model$optimize(data = unclass(data), seed = 123)
      }
 
-    if(! mode %in% c("mcmc", "vb", "optim") ){
-     stop("Must supply a legal mode value: mcmc, vb, or optim.")
+    if(mode=="numpyro"){
+      print("The NumPyro back-end is a new option, we recommend cross-checking final model fits against Stan models fit with 'mcmc'.")
+      print("In particular, we have noticed a higher frequency of stuck chains. Be sure to check ESS and rhat values post-fitting.")
+      
+      fit = fit_bsrm_with_numpyro(data, mcmc_parameters)
     }
 
-    bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network )
+    
+    # Return results
+    end_time = Sys.time()
+    bob = list(data=data, fit=fit, return_predicted_network=return_predicted_network, 
+               start_time = start_time, end_time = end_time, 
+               fit_duration = start_time-end_time)
+
     attr(bob, "class") = "STRAND Model Object"
     attr(bob, "fit_type") = mode
     attr(bob, "model_type") = "SRM+SBM"
-    
+
     return(bob)
 }

@@ -26,6 +26,8 @@ data{
     int export_network;                         //# Controls export of predictions
     int outcome_mode;                           //# Are outcomes binomial
     int link_mode;                              //# Link type
+    real expected_ties;                         //# Density measure to stop reflection loading
+    int stop_reflection_invariance;             //# Boolean to turn on penalty
 }
 
 transformed data{
@@ -33,6 +35,9 @@ transformed data{
     matrix[N_id, N_params[1]-1] focal_predictors;           //# Same as focal_set without first column
     matrix[N_id, N_params[2]-1] target_predictors;          //# Same as target_set without first column
     array[N_id, N_id, N_params[3]-1] real dyad_predictors;  //# Same as dyad_set without first shelf
+
+    real S;
+    real penalty;
 
   //# Store some key indexes
     array[max_N_groups, N_group_vars] int N_per_group;      //# Number of people in each block-type for each group variable
@@ -75,6 +80,9 @@ transformed data{
      for(i in 2:N_params[3]){
      dyad_predictors[ , , i-1] = dyad_set[,,i];  
      }}
+    
+    S = expected_ties;
+    penalty = S^(1/priors[19,1]);
 }
 
 parameters{
@@ -114,8 +122,6 @@ transformed parameters{
 
     alpha = alpha_raw;
     alpha[1,2] = alpha_1_2;
-
-
 }
 
 model{
@@ -125,7 +131,7 @@ model{
     array[N_group_vars] matrix[max_N_groups, max_N_groups] B;  //# Block effects, in array form
     vector[N_group_vars] br;                                   //# Sum of block effects per dyad    
     vector[2] scrap;                                           //# Local storage    
-    real latent_tie;                                           //# Local scrap  
+    matrix[N_id, N_id] p;                                      //# Scrap  
 
     //# Loading priors
     to_vector(alpha_raw) ~ normal(0, 5);   
@@ -165,10 +171,10 @@ model{
      }
 
     //# Then put priors on B, which scale loosely with the block size
-    for ( q in 1:N_group_vars ){
-    for ( i in 1:N_groups_per_var[q] ){
-        for ( j in 1:N_groups_per_var[q] ) {
-            if ( i==j ) {
+    for(q in 1:N_group_vars){
+    for(i in 1:N_groups_per_var[q]){
+        for(j in 1:N_groups_per_var[q]) {
+            if(i==j) {
                 B[q,i,j] ~ normal(logit(priors[10,1]/sqrt(N_per_group[i,q])), priors[10,2]);   //# transfers more likely within groups
             } else {
                 B[q,i,j] ~ normal(logit(priors[11,1]/sqrt(N_per_group[i,q]*0.5 + N_per_group[j,q]*0.5)), priors[11,2]); //# transfers less likely between groups
@@ -198,6 +204,21 @@ model{
      dr[i,i] = -99; //# ignore this :)
     }
 
+     for(i in 1:N_id){
+     for(j in 1:N_id){
+       if(i != j){
+         for(q in 1:N_group_vars){
+          br[q] = B[q,block_set[i,q], block_set[j,q]]; //# Extract all of the block components for this dyad
+           } 
+          p[i,j] = inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);
+       }else{
+          p[i,j] = 0;
+       }
+       }}
+    
+    if(stop_reflection_invariance==1){
+     target += normal_lpdf(sum(p) | S, penalty); //# Stop label switching by penalizing the distance between report density and recovered density
+    }
 
     for(l in 1:N_responses){
     //# likelihood
@@ -205,37 +226,32 @@ model{
      for(j in 1:N_id){
        if(i != j){
         if(mask[i,j,l]==0){
-        for(q in 1:N_group_vars){
-          br[q] = B[q,block_set[i,q], block_set[j,q]]; //# Extract all of the block components for this dyad
-         }
-
-         latent_tie = inv_logit(sum(br) + sr[i,1] + sr[j,2] + dr[i,j]);
-
+          
       if(outcome_mode==1){
         if(link_mode==1){
-         outcomes[i,j,l] ~ bernoulli_logit(alpha[l,1] + alpha[l,2]*latent_tie);  //# Then model the outcomes
+         outcomes[i,j,l] ~ bernoulli_logit(alpha[l,1] + alpha[l,2]*p[i,j]);  //# Then model the outcomes
          }
         if(link_mode==2){
-         outcomes[i,j,l] ~ bernoulli(Phi(alpha[l,1] + alpha[l,2]*latent_tie));  //# Then model the outcomes
+         outcomes[i,j,l] ~ bernoulli(Phi(alpha[l,1] + alpha[l,2]*p[i,j]));  //# Then model the outcomes
          }
        }
 
       if(outcome_mode==2){
         if(link_mode==1){
-         outcomes[i,j,l] ~ binomial_logit(exposure[i,j,l], alpha[l,1] + alpha[l,2]*latent_tie);  //# Then model the outcomes
+         outcomes[i,j,l] ~ binomial_logit(exposure[i,j,l], alpha[l,1] + alpha[l,2]*p[i,j]);  //# Then model the outcomes
         }
 
         if(link_mode==2){
-         outcomes[i,j,l] ~ binomial(exposure[i,j,l], Phi(alpha[l,1] + alpha[l,2]*latent_tie));  //# Then model the outcomes
+         outcomes[i,j,l] ~ binomial(exposure[i,j,l], Phi(alpha[l,1] + alpha[l,2]*p[i,j]));  //# Then model the outcomes
         }
        }
        
       if(outcome_mode==3){
-        outcomes[i,j,l] ~ poisson_log(alpha[l,1] + alpha[l,2]*latent_tie);  //# Then model the outcomes
+        outcomes[i,j,l] ~ poisson_log(alpha[l,1] + alpha[l,2]*p[i,j]);  //# Then model the outcomes
        }
 
       if(outcome_mode==4){
-      outcomes_real[i,j,l] ~ normal(alpha[l,1] + alpha[l,2]*latent_tie, error_sigma[l]);  //# Then model the outcomes
+      outcomes_real[i,j,l] ~ normal(alpha[l,1] + alpha[l,2]*p[i,j], error_sigma[l]);  //# Then model the outcomes
        }
 
        }

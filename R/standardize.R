@@ -9,11 +9,11 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' age_standardize = standardize(input=age)
+#' age_standardize = standardize_strand(input=age)
 #' }
 #'
 
-standardize = function(input, center=TRUE, type="sd"){
+standardize_strand = function(input, center=TRUE, type="sd"){
   if(center==TRUE){
    y = input - mean(input, na.rm=TRUE)
   }

@@ -1,16 +1,14 @@
-#########################################################
+##############################################################################################
 #
 #   Bernoulli Analyses - Simulated undirected data 
 #
-#########################################################
+##############################################################################################
 
 # Clear working space
-rm(list = ls())
 set.seed(1)
 
 # Load libraries
 library(STRAND)
-library(rethinking)
 library(ggplot2)
 
 # STRAND is designed to model directed networks. "Undirected" networks can be thought of
@@ -20,7 +18,7 @@ library(ggplot2)
 N_id = 75
 
 # Covariates
-Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ) )   # Dyadic covariates should be symmetric for undirected networks
+Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ) )   # Dyadic covariates should be symmetric for undirected networks
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1) #
 Random = matrix(rnorm(N_id^2,0,1),nrow=N_id, ncol=N_id)
 
@@ -81,7 +79,7 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
                          dyadic_effects = dr_effects_1
                          )  
 
-########################################################################## 
+########################################################################## Viz
 image(G$tie_strength)     # Tie strength is now essentially undirected up to a small amount of rng error      
 image(G$network)          # And so is the outcome network, up to some randomness caused by rbinom for weaker ties
 
@@ -103,7 +101,7 @@ rownames(Random) = colnames(Random) = name_vec
 rownames(groups_f) = name_vec
 rownames(individual) = name_vec
 
-# Now make the data object with directed=FALSE so that strand runs some extra checks, and flags some poterntial errors with a warning
+# Now make the data object with directed=FALSE so that strand runs some extra checks, and flags some potential errors with a warning
 
 # The next call throws a warning, because Random is directed
 model_dat = make_strand_data(outcome=list(Outcome = G$network2),  
@@ -132,7 +130,7 @@ fit0 =  fit_block_plus_social_relations_model(data=model_dat,
                               target_regression = ~ 1,               # 
                               dyad_regression = ~ Kinship + Dominant,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                              mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                           iter_warmup = 2, iter_sampling = 2,
                                                           max_treedepth = 12, adapt_delta = 0.95)
 )
@@ -144,9 +142,9 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
                               target_regression = ~ Mass,            # 
                               dyad_regression = ~ Kinship + Dominant,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                          iter_warmup = 1000, iter_sampling = 500,
-                                                          max_treedepth = 12, adapt_delta = 0.95)
+                              mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                                          iter_warmup = 500, iter_sampling = 500,
+                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
 
@@ -160,8 +158,8 @@ vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Ta
 vis_1
 
 ################################################################# Reciprocity terms
-# Simple correlations and basic 4-way variance partition
- strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
+# Simple correlations and variance partition
+ strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
 
 # In data, the VPCs are about 
  c(sr_sigma, dr_sigma, sqrt(3.14^2 / 3))^2 / sum(c(sr_sigma, dr_sigma, sqrt(3.14^2 / 3))^2)

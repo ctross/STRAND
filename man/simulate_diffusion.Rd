@@ -57,7 +57,7 @@ fit = fit_NBDA_model(long_data=model_dat,
                      social_target_regression = ~ Age * NoFood,
                      social_dyad_regression = ~ Relatedness + Friends * SameSex,
                      mode="mcmc",
-                     stan_mcmc_parameters = list(seed = 1, chains = 1, 
+                     mcmc_parameters = list(seed = 1, chains = 1, 
                        parallel_chains = 1, refresh = 1, 
                        iter_warmup = 100, iter_sampling = 100,
                        max_treedepth = NULL, adapt_delta = NULL)

@@ -1,31 +1,28 @@
-########################################
+#####################################################################################################
 #
 #   Latent Network Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+#####################################################################################################
 
 # Load libraries
 library(STRAND)
 library(ggplot2)
 
-#Load package data
+# Load package data
 data(FoodSharing_Data)
 
 # Create the STRAND data object
 outcome = list(TransferOut = FoodSharing_Data$TransferOut, 
                TransferIn = FoodSharing_Data$TransferIn)
 
-dyad = list(Relatedness = standardize(FoodSharing_Data$Relatedness), 
-            Friends = standardize(FoodSharing_Data$Friends)
+dyad = list(Relatedness = standardize_strand(FoodSharing_Data$Relatedness), 
+            Friends = standardize_strand(FoodSharing_Data$Friends)
             )
 
-FoodSharing_Data$Individual$Age = standardize(FoodSharing_Data$Individual$Age)
-FoodSharing_Data$Individual$Education = standardize(FoodSharing_Data$Individual$Education)
-FoodSharing_Data$Individual$GripStrength = standardize(FoodSharing_Data$Individual$GripStrength)   
-FoodSharing_Data$Individual$Wealth = standardize(FoodSharing_Data$Individual$Wealth)
+FoodSharing_Data$Individual$Age = standardize_strand(FoodSharing_Data$Individual$Age)
+FoodSharing_Data$Individual$Education = standardize_strand(FoodSharing_Data$Individual$Education)
+FoodSharing_Data$Individual$GripStrength = standardize_strand(FoodSharing_Data$Individual$GripStrength)   
+FoodSharing_Data$Individual$Wealth = standardize_strand(FoodSharing_Data$Individual$Wealth)
 
 indiv = FoodSharing_Data$Individual 
 
@@ -76,8 +73,8 @@ fit1 = fit_latent_network_model_missings(data=dat_nas,
                                 theta_regression = ~ 1,
                                 mode="mcmc",
                                 return_predicted_network = FALSE,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = NULL, adapt_delta = NULL)
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 11, adapt_delta = 0.95)
                                               )
 
 # Run model
@@ -91,8 +88,8 @@ fit2 = fit_latent_network_model_missings(data=dat,
                                 theta_regression = ~ 1,
                                 mode="mcmc",
                                 return_predicted_network = FALSE,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = NULL, adapt_delta = NULL)
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 11, adapt_delta = 0.95)
                                               )
 # Run model
 fit0 = fit_latent_network_model(data=dat,
@@ -105,8 +102,8 @@ fit0 = fit_latent_network_model(data=dat,
                                 theta_regression = ~ 1,
                                 mode="mcmc",
                                 return_predicted_network = FALSE,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = NULL, adapt_delta = NULL)
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 11, adapt_delta = 0.95)
                                               )
 
 

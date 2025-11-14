@@ -1,4 +1,8 @@
-################################################# How does STRAND compare to other models when observations are noisy?
+################################################################################################################
+#
+# How does a latent network probit SRM compare to a standard probit SRM ?
+#
+################################################################################################################
 
 # STRAND is designed to estimate the parameters of the true network, even from single-layer data with measurement error. 
 # Treating observations/reports as representing the "true" latent social network
@@ -183,7 +187,7 @@ fit1 = fit_block_plus_social_relations_model(
          "dr_sigma"=c(10, 3)        # Location of 10
        )),
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 500 ,
       iter_sampling = 500 ,
@@ -235,7 +239,7 @@ fit2 = fit_block_plus_social_relations_model(
          "dr_sigma"=c(0, 1)         # 
        )),
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 500 ,
       iter_sampling = 500 ,
@@ -301,7 +305,7 @@ fit3 = fit_block_plus_social_relations_model(
          "dr_sigma"=c(10, 3)       # Location of 10
        )),
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 500 ,
       iter_sampling = 500 ,
@@ -353,7 +357,7 @@ fit4 = fit_block_plus_social_relations_model(
          "dr_sigma"=c(0, 1)         # 
        )),
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -472,7 +476,7 @@ p1 = ggplot(Measures_Alt,aes(x=Variable,y=M,ymin=L,ymax=H,color=Package))+
 
 # Because measurement error can mask dyadic reciprocity, we can only learn a lower bound on the magnitude of dyadic reciprocity from the data. STRAND represents this, while amen doesnt.
 
-# Note that STRAND with either strong or weak priors for the level of measurement error recovers the correct measurement-level reciprocity (whether we set to sd of noise in the generative model to 0 or 1.5). 
+# Note that STRAND with either strong or weak priors for the level of measurement error recovers the correct measurement-level reciprocity (whether we set the sd of noise in the generative model to 0 or 1.5). 
 # With weak priors, STRAND actually gets the latent-network reciprocity estimate correct too (amen doesnt). Using strong priors that measurement error is zero is normally a bad idea.
 
 # Other notes: 

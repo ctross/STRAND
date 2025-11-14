@@ -21,8 +21,13 @@ multiplex_plot_g = function(input, HPDI=0.9, plot = TRUE, export_as_table = FALS
   palette = c("#7D370D", "#FBFEF9", "#114B47")  
     }
 
- stanfit = posterior::as_draws_rvars(input$fit$draws())
- corr = posterior::draws_of(stanfit$"G_corr")
+  if(attr(input, "fit_type")=="numpyro"){
+         samps = convert_posterior(input$fit$get_samples())
+         corr = samps$G_corr 
+    }else{
+         stanfit = posterior::as_draws_rvars(input$fit$draws())
+         corr = posterior::draws_of(stanfit$"G_corr")
+      }
 
  N_responses = input$data$N_responses
  layer_names = attr(input$data,"layer_names")

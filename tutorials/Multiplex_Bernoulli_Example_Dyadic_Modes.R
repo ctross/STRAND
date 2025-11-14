@@ -1,11 +1,8 @@
-########################################
+####################################################################################
 #
 #   Multiplex Bernoulli Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+####################################################################################
 
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
@@ -35,14 +32,14 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = standardize(RICH$Relatedness[1:Q,1:Q]), 
+ Relatedness = standardize_strand(RICH$Relatedness[1:Q,1:Q]), 
  Friends = RICH$Friends[1:Q,1:Q],
  Marriage = RICH$Marriage[1:Q,1:Q]
 )
 
 # Individual data in data-frame
-RICH$Individual$Age = standardize(RICH$Individual$Age)
-RICH$Individual$Wealth = standardize(RICH$Individual$Wealth)
+RICH$Individual$Age = standardize_strand(RICH$Individual$Age)
+RICH$Individual$Wealth = standardize_strand(RICH$Individual$Wealth)
 ind = RICH$Individual[1:Q,]
 
 
@@ -74,7 +71,7 @@ fit_Fast = fit_multiplex_model(
  dyad_regression = ~ Relatedness + Friends + Marriage,
  mode="mcmc",
  bandage_penalty = -1,               # Key change, -1 triggers Pinkney's method
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
@@ -97,7 +94,7 @@ fit_Lasso = fit_multiplex_model(
  dyad_regression = ~ Relatedness + Friends + Marriage,
  mode="mcmc",
  bandage_penalty = 0.02,         # This is the old method for gluing parameters together
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
@@ -173,23 +170,22 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Site, col
 
 p
 
-# ggsave("rich_res.pdf",p, width=9, height=4.5)
 
-
-VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 4)
-VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 4)
+################################################################
+VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 5)
+VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "Base model"
 df1$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df2 = data.frame(do.call(rbind, VPCs_2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "Full model"
 df2$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df = rbind(df1, df2)
 df$Median = as.numeric(df$Median)
@@ -200,7 +196,7 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Give", "Take", "Reduce"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error")))
+
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, color=Site,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -220,8 +216,8 @@ p
 
 
 ######################################################################## Reciprocity
-VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 4, include_reciprocity = TRUE)
-VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 4, include_reciprocity = TRUE)
+VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 5, include_reciprocity = TRUE)
+VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 5, include_reciprocity = TRUE)
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -257,12 +253,12 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
         "lines")) + scale_color_manual(values=c("L2_Norm" = colors[1], "Pinkney" = colors[3])) + theme(legend.position="bottom")
 
 p
-# ggsave("rich_res_recip_probit_v_logit.pdf",p, width=9, height=9)
+
 
 ######################################################################## Reciprocity, adjusted
 # Also possible to make amen-style dyadic reciprocity estimates by scaling by ratio of "dyadic variance" to "dyadic variance plus error variance"
-VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
-VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
+VPCs_1 = strand_VPCs(fit_Lasso, n_partitions = 5, include_reciprocity = TRUE, mode="adj")
+VPCs_2 = strand_VPCs(fit_Fast, n_partitions = 5, include_reciprocity = TRUE, mode="adj")
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -299,10 +295,5 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
 
 p
 
-# Both methods give the same estimates
-
-# Really we should check the correct VPCs:
-strand_VPCs(fit_Lasso, n_partitions = 5)
-strand_VPCs(fit_Fast, n_partitions = 5)
 
 

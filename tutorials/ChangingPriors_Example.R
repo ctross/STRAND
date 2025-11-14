@@ -1,11 +1,8 @@
-########################################
+##############################################################################################
 #
 #   Poisson Analysis with Custom Priors 
 #
-########################################
-
-# Clear working space
-rm(list = ls()) 
+##############################################################################################
 
 # Load libraries
 library(STRAND)
@@ -18,7 +15,7 @@ data(Bat_Data)
 nets = list(Lick = round(Bat_Data$Lick/60,0))
 
 # Dyadic variables
-dyad = list(Relatedness = standardize(Bat_Data$Relatedness), 
+dyad = list(Relatedness = standardize_strand(Bat_Data$Relatedness), 
             NoOpportunity = Bat_Data$NoOpportunity
               )
 
@@ -41,9 +38,9 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             target_regression = ~ 1,
                                             dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = .98)
+                                                                        max_treedepth = 11, adapt_delta = 0.95)
                                            )
 res = summarize_strand_results(fit)
 
@@ -54,9 +51,9 @@ fit2 = fit_block_plus_social_relations_model(data=model_dat,
                                             target_regression = ~ 1,
                                             dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = .98),
+                                                                        max_treedepth = 11, adapt_delta = 0.95),
                                             priors=make_priors(
                                              priors_to_change=list(
                                                "B_ingroup"=c(0.01, 3.5), 
@@ -71,7 +68,7 @@ fit2 = fit_block_plus_social_relations_model(data=model_dat,
                                           )
 res2 = summarize_strand_results(fit2)
 
-
+##############################################################################################
 # Prep results for plotting
 tab1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), 
                                  normalized=TRUE,  only_slopes=TRUE, export_as_table=TRUE)
@@ -98,5 +95,4 @@ plot_0 = ggplot(tab0, aes(x = Variable, y = Median,
 plot_0
 
 # Priors dont affect the results much here
-# ggsave("Bat_slopes_priors.pdf", plot_0, width=7, height=2.5)
 

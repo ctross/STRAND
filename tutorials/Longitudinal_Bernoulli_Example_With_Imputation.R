@@ -1,4 +1,8 @@
-######################################### Colombia example
+######################################################################################
+#
+#   Longitudinal Bernoulli analyses with imputation
+#
+######################################################################################
 library(STRAND)
 library(PlvsVltra)
 
@@ -13,30 +17,30 @@ R = AMENDS_Data$Relatedness
 
  node_labels = rownames(AMENDS_Data$Sharing[[1]])
 
- ind_1 = data.frame(Age = standardize(d$Age_Wave_1), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_1))
+ ind_1 = data.frame(Age = standardize_strand(d$Age_Wave_1), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_1))
  block_1 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_1 = list(Friend=f$Wave_1, Relatedness = standardize(R))
+ dyad_1 = list(Friend=f$Wave_1, Relatedness = standardize_strand(R))
  mask_1 = list(Share=m$Wave_1)
  out_1 = list(Share=s$Wave_1)
  rownames(ind_1) = rownames(block_1) = node_labels
 
- ind_2 = data.frame(Age = standardize(d$Age_Wave_2), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_2))
+ ind_2 = data.frame(Age = standardize_strand(d$Age_Wave_2), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_2))
  block_2 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_2 = list(Friend=f$Wave_2, Relatedness = standardize(R))
+ dyad_2 = list(Friend=f$Wave_2, Relatedness = standardize_strand(R))
  mask_2 = list(Share=m$Wave_2)
  out_2 = list(Share=s$Wave_2)
  rownames(ind_2) = rownames(block_2) = node_labels
 
- ind_3 = data.frame(Age = standardize(d$Age_Wave_3), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_3))
+ ind_3 = data.frame(Age = standardize_strand(d$Age_Wave_3), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_3))
  block_3 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_3 = list(Friend=f$Wave_3, Relatedness = standardize(R))
+ dyad_3 = list(Friend=f$Wave_3, Relatedness = standardize_strand(R))
  mask_3 = list(Share=m$Wave_3)
  out_3 = list(Share=s$Wave_3)
  rownames(ind_3) = rownames(block_3) = node_labels
 
- ind_4 = data.frame(Age = standardize(d$Age_Wave_4), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_4))
+ ind_4 = data.frame(Age = standardize_strand(d$Age_Wave_4), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_4))
  block_4 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_4 = list(Friend=f$Wave_4, Relatedness = standardize(R))
+ dyad_4 = list(Friend=f$Wave_4, Relatedness = standardize_strand(R))
  mask_4 = list(Share=m$Wave_4)
  out_4 = list(Share=s$Wave_4)
  rownames(ind_4) = rownames(block_4) = node_labels
@@ -94,7 +98,7 @@ R = AMENDS_Data$Relatedness
 names(dat_long) = paste("Wave", c(1:4))
 
 
-###################################################### Messy data
+###################################################### Make data messy
 data(AMENDS_Data)
 
 d = AMENDS_Data$Individual
@@ -121,30 +125,30 @@ R = AMENDS_Data$Relatedness
  s$Wave_3[c(1,5,17,40:45), c(1,5,17,40:45)] = NA
  s$Wave_4[c(11,15,27,30:36,50:55), c(11,15,27,30:36,50:55)] = NA
 
- ind_1 = data.frame(Age = standardize(d$Age_Wave_1), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_1))
+ ind_1 = data.frame(Age = standardize_strand(d$Age_Wave_1), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_1))
  block_1 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_1 = list(Friend=f$Wave_1, Relatedness = standardize(R))
+ dyad_1 = list(Friend=f$Wave_1, Relatedness = standardize_strand(R))
  mask_1 = list(Share=m$Wave_1)
  out_1 = list(Share=s$Wave_1)
  rownames(ind_1) = rownames(block_1) = node_labels
 
- ind_2 = data.frame(Age = standardize(d$Age_Wave_2), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_2))
+ ind_2 = data.frame(Age = standardize_strand(d$Age_Wave_2), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_2))
  block_2 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_2 = list(Friend=f$Wave_2, Relatedness = standardize(R))
+ dyad_2 = list(Friend=f$Wave_2, Relatedness = standardize_strand(R))
  mask_2 = list(Share=m$Wave_2)
  out_2 = list(Share=s$Wave_2)
  rownames(ind_2) = rownames(block_2) = node_labels
 
- ind_3 = data.frame(Age = standardize(d$Age_Wave_3), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_3))
+ ind_3 = data.frame(Age = standardize_strand(d$Age_Wave_3), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_3))
  block_3 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_3 = list(Friend=f$Wave_3, Relatedness = standardize(R))
+ dyad_3 = list(Friend=f$Wave_3, Relatedness = standardize_strand(R))
  mask_3 = list(Share=m$Wave_3)
  out_3 = list(Share=s$Wave_3)
  rownames(ind_3) = rownames(block_3) = node_labels
 
- ind_4 = data.frame(Age = standardize(d$Age_Wave_4), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize(d$Wealth_Wave_4))
+ ind_4 = data.frame(Age = standardize_strand(d$Age_Wave_4), Sex = d$Sex, Ethnicity=d$Ethnicity, Wealth=standardize_strand(d$Wealth_Wave_4))
  block_4 = data.frame(Sex = factor(d$Sex), Ethnicity=factor(d$Ethnicity))
- dyad_4 = list(Friend=f$Wave_4, Relatedness = standardize(R))
+ dyad_4 = list(Friend=f$Wave_4, Relatedness = standardize_strand(R))
  mask_4 = list(Share=m$Wave_4)
  out_4 = list(Share=s$Wave_4)
  rownames(ind_4) = rownames(block_4) = node_labels
@@ -201,6 +205,7 @@ R = AMENDS_Data$Relatedness
 
 names(dat_long_messy) = paste("Wave", c(1:4))
 
+############################################################################## Fit models
 fit_1a = fit_longitudinal_model_missings(long_data=dat_long_messy,
                                   block_regression = ~ Ethnicity + Sex,
                                   focal_regression = ~ Age + Wealth,
@@ -210,8 +215,8 @@ fit_1a = fit_longitudinal_model_missings(long_data=dat_long_messy,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = -1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 
@@ -224,8 +229,8 @@ fit_1b = fit_longitudinal_model(long_data=dat_long,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = -1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 
@@ -238,8 +243,8 @@ fit_1c = fit_longitudinal_model_missings(long_data=dat_long,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = -1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 
@@ -253,8 +258,8 @@ fit_2a = fit_longitudinal_model_missings(long_data=dat_long_messy,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = 0.1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 
@@ -267,8 +272,8 @@ fit_2b = fit_longitudinal_model(long_data=dat_long,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = 0.1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 
@@ -281,8 +286,8 @@ fit_2c = fit_longitudinal_model_missings(long_data=dat_long,
                                   random_effects_mode="fixed",
                                   mode="mcmc",
                                   bandage_penalty = 0.1,
-                                  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
+                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                   priors=NULL
                                   )
 

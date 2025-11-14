@@ -18,7 +18,14 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
         stop("summarize_multiplex_dimension_reduction_results() requires a fitted object of class: STRAND Model Object. Please use fit_multiplex_model_dimension_reduction() to run your model.")
     }
 
-    if(attributes(input)$fit_type != "mcmc"){
+    ###################################################### Check input 
+    outcome_mode = input$data$outcome_mode 
+
+    if(attr(input, "fit_type")=="numpyro"){
+        numpyro = TRUE
+    }else{
+        numpyro = FALSE
+     if(attributes(input)$fit_type != "mcmc"){
       if(attributes(input)$fit_type == "vb"){
          warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
@@ -27,12 +34,13 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
          stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling.")  
       }    
+     }
     }
 
     ###################################################### Create samples 
+    ################### Network model parameters
+    if(numpyro==FALSE){
     stanfit = posterior::as_draws_rvars(input$fit$draws())
-
-    outcome_mode = input$data$outcome_mode 
 
     ################### Network model parameters
     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
@@ -58,6 +66,56 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
 
     if(dim(input$data$dyad_set)[3]>1)
     dyad_effects = posterior::draws_of(stanfit$"dyad_effects")
+    }
+
+    ################### Network model parameters numpyro
+    if(numpyro==TRUE){
+    samps = convert_posterior(input$fit$get_samples())
+
+    sr_sigma = samps$sr_sigma
+    sr_L = samps$sr_L 
+    sr_raw = aperm(samps$sr_raw, perm = c(1, 3, 2))
+
+    dr_L = samps$dr_L 
+
+    if(input$data$export_network==1){
+     dr_raw = long_to_dyadic_set(aperm(samps$dr_raw, perm = c(1, 3, 2)), input$data$N_id)
+     } else{
+       dr_raw = NULL 
+     }
+
+    dr_sigma = matrix(samps$dr_sigma, ncol = 1)  
+
+    alpha_1 = samps$alpha
+    alpha_2 = samps$beta
+
+    error_sigma = matrix(samps$error_sigma , ncol = dim(alpha_1)[2])  
+
+    alpha = array(NA, c(dim(alpha_1)[1], dim(alpha_1)[2], 2))
+
+    alpha[,,1] = alpha_1
+    alpha[,,2] = alpha_2
+     
+    if(dim(input$data$block_set)[2]>0)
+    block_effects = samps$block_effects
+
+    if(dim(input$data$focal_set)[2]>1){
+      focal_effects = samps$focal_effects
+      focal_effects = focal_effects[, -1, drop = FALSE]
+    }
+
+    if(dim(input$data$target_set)[2]>1){
+      target_effects = samps$target_effects
+      target_effects = target_effects[, -1, drop = FALSE]
+    }
+
+
+    if(dim(input$data$dyad_set)[3]>1){
+      dyad_effects = samps$dyad_effects
+      dyad_effects = dyad_effects[, -1, drop = FALSE]
+    }
+    
+      }
 
     ################### Get index data for block-model samples
     block_indexes = c()
@@ -103,8 +161,13 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
     samples = list(srm_model_samples=srm_samples)
 
     if(input$data$export_network == 1){
+     if(numpyro==FALSE){
         samples$predicted_network_sample = posterior::draws_of(stanfit$"p")
         }
+     if(numpyro==TRUE){
+        samples$predicted_network_sample = long_to_dyadic_set(samps$p, input$data$N_id)
+        }
+    }  
 
     ###################################################### Create summary stats 
      results_list = list()
@@ -164,15 +227,17 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
      results_list[[4]] = results_srm_dyadic
 
     ######### Calculate all block effects
-     results_srm_base = matrix(NA, nrow=3 + dim(block_effects)[2], ncol=7)
+     results_srm_base = matrix(NA, nrow = 2 + input$data$N_responses + dim(block_effects)[2], ncol=7)
      results_srm_base[1,] = sum_stats("focal-target effects rho (generalized recipocity)", samples$srm_model_samples$focal_target_L[,2,1], HPDI)
      results_srm_base[2,] = sum_stats("dyadic effects rho (dyadic recipocity)", samples$srm_model_samples$dyadic_L[,2,1], HPDI)
-
+      
+      for(q in 1:input$data$N_responses){
         if(outcome_mode == 4){
-        results_srm_base[3,] = sum_stats("error sd", c(samples$srm_model_samples$error_sd), HPDI)
+        results_srm_base[2+q,] = sum_stats(paste0("error sd, ", attr(input$data,"layer_names")[q]), c(samples$srm_model_samples$error_sd[,q]), HPDI)
         } else{
-        results_srm_base[3,] = c("error sd", rep(NA,6))     
+        results_srm_base[2+q,] = c(paste0("error sd, ", attr(input$data,"layer_names")[q]), rep(NA,6))     
         }
+      }
 
  
      group_ids_character_df = cbind(rep("Any",input$data$N_id),attr(input$data, "group_ids_character"))
@@ -201,7 +266,7 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
       for(b1 in 1:input$data$N_groups_per_var[q]){
       for(b2 in 1:input$data$N_groups_per_var[q]){
        ticker = ticker + 1  
-      results_srm_base[ 3 + ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
+      results_srm_base[ 2 + input$data$N_responses + ticker,] = sum_stats(paste0("offset, ", group_ids_character[b1], " to ", group_ids_character[b2]), 
                                                                          samples$srm_model_samples$block_parameters[[q]][,b1,b2], HPDI)
      }}
 
@@ -231,4 +296,5 @@ summarize_multiplex_dimension_reduction_results = function(input, include_sample
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
+
 

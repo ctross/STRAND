@@ -1,30 +1,25 @@
-###############################################################
+###############################################################################################################
 #
 #   Undirected layer in multiplex analyses with data simulation 
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+###############################################################################################################
 set.seed(1111)
 
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
  colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
 
-library(rethinking)
 library(STRAND)
 library(stringr)
 library(ggplot2)
 library(psych)
-
 
 # Make data
  N_id = 100      # Individuals in network
  N_layers = 3    # Network layers
 
 # Covariates
- Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ))      # Dyadic covariate, should be undirected since it predicts undirected ties
+ Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))      # Dyadic covariate, should be undirected since it predicts undirected ties
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)          # Dyadic covariate, should be undirected since it predicts undirected ties
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -209,9 +204,9 @@ fit = fit_multiplex_model(data=dat,
                           target_regression = ~ Mass + Age + Strength,  #
                           dyad_regression = ~ Kinship + Dominance,      # Dyadic predictors should probably be undirected if used to predict other undirected layers.
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                         iter_warmup = 700, iter_sampling = 700,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 11, adapt_delta = 0.95)
 )
 
 res = summarize_strand_results(fit)
@@ -418,7 +413,6 @@ p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = 
            theme(legend.position="bottom")
 p2
 # We recover dyadic reciprocity, within and between layers, too 
-
 
 
 

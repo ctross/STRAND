@@ -1,11 +1,8 @@
-#######################################
+##############################################################################################
 #
 #   Binomial Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+##############################################################################################
 
 # Load libraries
 library(STRAND)
@@ -21,10 +18,10 @@ exposure = list(Grooming = Baboon_Data$Exposure)
 
 # Dyadic variable: transpose of Presenting
 dyad = list(Presenting = t(Baboon_Data$Presenting),
-            Threatening = standardize(t(Baboon_Data$Threatening),center=FALSE)
+            Threatening = standardize_strand(t(Baboon_Data$Threatening),center=FALSE)
             )
 
-Baboon_Data$Individual$Age = standardize(Baboon_Data$Individual$Age)
+Baboon_Data$Individual$Age = standardize_strand(Baboon_Data$Individual$Age)
 indiv = Baboon_Data$Individual
 
 block = data.frame(Sex = as.factor(indiv$Sex))
@@ -46,22 +43,21 @@ fit =  fit_block_plus_social_relations_model(data=model_dat,
                               target_regression = ~ Age,
                               dyad_regression = ~  Presenting + Threatening,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
-                                                          iter_warmup = 500, iter_sampling = 500,
-                                                          max_treedepth = NULL, adapt_delta = .98)
+                              mcmc_parameters = list(chains = 1, refresh = 1,
+                                                          iter_warmup = 1000, iter_sampling = 1000,
+                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
 res = summarize_strand_results(fit)
 
-
+##############################################################################################
 ############################### Plots
 vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="HP", only_slopes=TRUE)
 vis_1
-#ggsave("Baboon_slopes.pdf", vis_1, width=7, height=2.5)
 
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
-#ggsave("Baboon_corr.pdf", vis_2, width=6, height=2.5)
+
 
 ############################################################### To compute contrasts with new tools, do this:
 process_block_parameters(input=fit, focal="female to male", base="male to female", HPDI=0.9)
@@ -71,8 +67,8 @@ process_block_parameters(input=fit, focal="male to male", base="male to female",
 
 ################################################################# Reciprocity terms
 # Simple correlations
-cor1 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor2 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
+cor1 = strand_VPCs(fit, n_partitions = 5, merge_noise_terms = TRUE, include_reciprocity = TRUE, mode="cor")
+cor2 = strand_VPCs(fit, n_partitions = 5, merge_noise_terms = TRUE, include_reciprocity = TRUE, mode="adj")
 
 df1 = data.frame(cor1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -111,9 +107,10 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-# STRAND basic 4-way variance partition
+# STRAND variance partitions
 vpc1 = strand_VPCs(fit, n_partitions = 4)
 vpc2 = strand_VPCs(fit, n_partitions = 3)
+vpc3 = strand_VPCs(fit, n_partitions = 5, merge_noise_terms = TRUE)
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -125,9 +122,15 @@ df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "3-way VPC"
 df2$Submodel = rep(c("Grooming"),each=3)
-df2$Variable2 = rep(c("Focal","Target","Dyadic+Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic + Error"),1)
 
-df = rbind(df1, df2)
+df3 = data.frame(do.call(rbind, vpc3[[2]]))
+colnames(df3) = c("Variable", "Median", "L", "H", "Mean", "SD")
+df3$Site = "4-way VPC (alternative)"
+df3$Submodel = rep(c("Grooming"),each=4)
+df3$Variable2 = rep(c("Focal","Target","Dyadic Signal","Dyadic Noise + Error"),1)
+
+df = rbind(df1, df2, df3)
 df$Median = as.numeric(df$Median)
 df$L = as.numeric(df$L)
 df$H = as.numeric(df$H)
@@ -136,7 +139,7 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Grooming"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
+df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic + Error", "Dyadic Signal","Dyadic Noise + Error")))
 
 df$Type = df$Site 
 
@@ -151,7 +154,7 @@ p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, c
         axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
         axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
-        "lines")) + scale_color_manual(values=c("4-way VPC" = "darkred", "3-way VPC" = "black"))  + theme(legend.position="bottom")
+        "lines")) + scale_color_manual(values=c("4-way VPC" = "darkred", "3-way VPC" = "black", "4-way VPC (alternative)" = "orange1"))  + theme(legend.position="bottom")
 
 p4
 

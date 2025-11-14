@@ -1,11 +1,8 @@
-###################################################
+######################################################################################
 #
 #   Multiplex Poisson analyses with data simulation 
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+######################################################################################
 set.seed(50)
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
@@ -15,14 +12,13 @@ library(STRAND)
 library(stringr)
 library(ggplot2)
 library(psych)
-library(rethinking)
 
 # Make data
  N_id = 150     # Individuals in network
  N_layers = 3   # Network layers
 
 # Covariates
- Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
+ Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -175,7 +171,6 @@ rownames(groups) = labels
 
 
 ############# Build data
-
 dat = make_strand_data(outcome = outcome,
                        block_covariates = groups, 
                        individual_covariates = indiv, 
@@ -193,7 +188,7 @@ fit = fit_multiplex_model(data=dat,
                           target_regression = ~ Mass + Age + Strength,
                           dyad_regression = ~ Kinship + Dominance,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                         iter_warmup = 500, iter_sampling = 500,
                                                         max_treedepth = NULL, adapt_delta = 0.95)
 )
@@ -370,7 +365,7 @@ main_df$Variable = factor(main_df$Variable)
 main_df$Variable = factor(main_df$Variable, levels=rev(c("SD", "Age", "Mass", "Strength", "Dominance", "Kinship")))
 
 p = ggplot(main_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=Outcome)) + 
-           geom_linerange(size = 1, color=colors[4]) + 
+           geom_linerange(linewidth = 1, color=colors[4]) + 
            geom_point(size = 2, color=colors[4]) +
            geom_point(size = 2, aes(x = Variable, y = TrueValues, group=Outcome), color=colors[2], shape=18) +
            facet_grid(Type ~ Outcome, scales = "free_y", space = "free_y") + 
@@ -387,13 +382,13 @@ p = ggplot(main_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=Ou
            theme(legend.position="bottom")
 p
 
-# ggsave("sim_res.pdf",p, width=9, height=4.5)
+
 
 ########################## Plot 2
 block_df = df_plt[which(df_plt$Outcome2 == "Other" & df_plt$Block != "Intercept"),]
 
 p = ggplot(block_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=Outcome)) + 
-           geom_linerange(size = 1, color=colors[4]) + 
+           geom_linerange(linewidth = 1, color=colors[4]) + 
            geom_point(size = 2, color=colors[4]) +
            geom_point(size = 2, aes(x = Variable, y = TrueValues, group=Outcome), color=colors[2], shape=18) +
            facet_grid(Block ~ Outcome, scales = "free", space = "free") + 
@@ -409,8 +404,6 @@ p = ggplot(block_df, aes(x = Variable, y = Median, ymin = LI, ymax = HI, group=O
            theme(panel.spacing = unit(1,"lines")) + 
            theme(legend.position="bottom")
 p
-
-# ggsave("sim_res_block.pdf",p, width=9, height=4.5)
 
 
 ########################## Plot 3
@@ -441,7 +434,6 @@ p1 = ggplot(recip_df[which(recip_df$Type == "Generalized"),], aes(x = Variable2,
            theme(legend.position="bottom")
 p1
 
-# ggsave("sim_res_gen.pdf",p1, width=6, height=6)
 
 p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = Median, ymin = LI, ymax = HI, group=Outcome)) + 
            geom_linerange(size = 1, color=colors[4]) + 
@@ -461,7 +453,7 @@ p2 = ggplot(recip_df[which(recip_df$Type == "Dyadic"),], aes(x = Variable2, y = 
            theme(legend.position="bottom")
 p2
 
-# ggsave("sim_res_dyad.pdf",p2, width=6, height=6)
+
 
 
 

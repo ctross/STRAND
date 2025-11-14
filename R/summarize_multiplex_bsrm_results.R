@@ -18,8 +18,15 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
         stop("summarize_multiplex_bsrm_results() requires a fitted object of class: STRAND Model Object.")
     }
 
-    if(attributes(input)$fit_type != "mcmc"){
-      if(attributes(input)$fit_type == "vb"){
+    ###################################################### Check input 
+    outcome_mode = input$data$outcome_mode 
+
+    if(attr(input, "fit_type")=="numpyro"){
+        numpyro = TRUE
+    }else{
+        numpyro = FALSE
+            if(attributes(input)$fit_type != "mcmc"){
+            if(attributes(input)$fit_type == "vb"){
          warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
               but often failed to recover strong true effects. ")  
@@ -27,6 +34,7 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
          stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling.")  
       }    
+     }
     }
 
     ###################################################### Create samples 
@@ -35,9 +43,10 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
 
     outcome_mode = input$data$outcome_mode 
 
+    ################### Network model parameters
+    if(numpyro==FALSE){
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
-    ################### Network model parameters
     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
     sr_L = posterior::draws_of(stanfit$"sr_L") 
     sr_raw = posterior::draws_of(stanfit$"sr_raw")
@@ -61,6 +70,55 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
 
     if(dim(input$data$dyad_set)[3]>1)
     dyad_effects = posterior::draws_of(stanfit$"dyad_effects")
+    }
+
+    ################### Network model parameters numpyro
+    if(numpyro==TRUE){
+    samps = convert_posterior(input$fit$get_samples())
+
+    sr_sigma = matrix(samps$sr_sigma, ncol = N_responses*2)
+    sr_L = samps$sr_L 
+    sr_raw = aperm(samps$sr_raw, perm = c(1, 3, 2))
+
+    dr_L = samps$dr_L   
+
+    if(input$data$export_network==1){
+      dr_raw = array(NA, c(dim(samps$dr_raw)[1], N_responses, input$data$N_id, input$data$N_id))
+
+      for(q in 1:N_responses){
+       dr_raw[,q,,] = long_to_dyadic_set(aperm(samps$dr_raw[,c(q,N_responses+q),], perm = c(1, 3, 2)), input$data$N_id)
+      }
+     } else{
+       dr_raw = NULL 
+     }                      
+
+    dr_sigma = matrix(samps$dr_sigma, ncol = N_responses)
+
+    G_corr = samps$G_corr 
+    D_corr = samps$D_corr
+
+    error_sigma = matrix(samps$error_sigma , ncol = N_responses)    
+     
+    if(dim(input$data$block_set)[2]>0)
+    block_effects = samps$block_effects
+
+    if(dim(input$data$focal_set)[2]>1){
+      focal_effects = samps$focal_effects
+      focal_effects = focal_effects[, , -1, drop = FALSE]
+    }
+
+    if(dim(input$data$target_set)[2]>1){
+      target_effects = samps$target_effects
+      target_effects = target_effects[, , -1, drop = FALSE]
+    }
+
+
+    if(dim(input$data$dyad_set)[3]>1){
+      dyad_effects = samps$dyad_effects
+      dyad_effects = dyad_effects[, , -1, drop = FALSE]
+    }
+
+    }
 
     ################### Get index data for block-model samples
     block_indexes = c()
@@ -259,3 +317,7 @@ summarize_multiplex_bsrm_results = function(input, include_samples=TRUE, HPDI=0.
     attr(res_final, "class") = "STRAND Results Object"
     return(res_final)
 }
+
+
+
+

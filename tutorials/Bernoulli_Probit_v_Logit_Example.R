@@ -1,15 +1,12 @@
-###########################################################################
+#########################################################################################
 #
 #   Bernoulli Analyses: Probit versus Logit
 #
-#   Some have argued that SRM models require probit links. Here we show
+#   Some have argued that binary SRM models require probit links. Here we show
 #   that the choice of link function is irrelevant to anything other than
 #   the scale of estimates and the run-time of the models.  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+#########################################################################################
 
 # Load libraries
 library(PlvsVltra) # For colors: install_github('ctross/PlvsVltra')
@@ -18,23 +15,23 @@ colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
 library(STRAND)
 library(ggplot2)
 
-#Load package data
+# Load package data
 data(Colombia_Data)
 
 ###################################################################################### Logit model
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
-            Distance = standardize(Colombia_Data$Distance)
+dyad = list(Relatedness = standardize_strand(Colombia_Data$Relatedness), 
+            Distance = standardize_strand(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
-                    BMI = standardize(Colombia_Data$Individual$BMI)
+indiv =  data.frame(Age = standardize_strand(Colombia_Data$Individual$Age), 
+                    BMI = standardize_strand(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -55,9 +52,9 @@ fit_logit = fit_block_plus_social_relations_model(data=dat_logit,
                                             target_regression = ~ Age + BMI,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 700, iter_sampling = 700,
-                                                                          max_treedepth = 12, adapt_delta = .98)
+                                                                          max_treedepth = 12, adapt_delta = 0.98)
 )
 
 # Summaries
@@ -65,19 +62,20 @@ res_logit = summarize_strand_results(fit_logit)
 
 ###################################################################################### Probit model
 set.seed(4)
+
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
-            Distance = standardize(Colombia_Data$Distance)
+dyad = list(Relatedness = standardize_strand(Colombia_Data$Relatedness), 
+            Distance = standardize_strand(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
-                    BMI = standardize(Colombia_Data$Individual$BMI)
+indiv =  data.frame(Age = standardize_strand(Colombia_Data$Individual$Age), 
+                    BMI = standardize_strand(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -103,9 +101,9 @@ fit_probit = fit_block_plus_social_relations_model(data=dat_probit,
                                             target_regression = ~ Age + BMI,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 700, iter_sampling = 700,
-                                                                          max_treedepth = 12, adapt_delta = .98, init = 0.5)
+                                                                          max_treedepth = 12, adapt_delta = 0.98, init = 0.5)
 )
 
 # Summaries
@@ -113,18 +111,18 @@ res_probit = summarize_strand_results(fit_probit)
 
 
 ######################################################################## VPCs
-VPCs_1 = strand_VPCs(fit_logit, n_partitions = 4)
-VPCs_2 = strand_VPCs(fit_probit, n_partitions = 4)
+VPCs_1 = strand_VPCs(fit_logit, n_partitions = 5)
+VPCs_2 = strand_VPCs(fit_probit, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "Logit"
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df2 = data.frame(do.call(rbind, VPCs_2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "Probit"
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df = rbind(df1, df2)
 df$Median = as.numeric(df$Median)
@@ -132,7 +130,7 @@ df$L = as.numeric(df$L)
 df$H = as.numeric(df$H)
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error")))
+
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, color=Site,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -150,8 +148,8 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
 p
 
 ######################################################################## Reciprocity
-VPCs_1 = strand_VPCs(fit_logit, n_partitions = 4, include_reciprocity = TRUE)
-VPCs_2 = strand_VPCs(fit_probit, n_partitions = 4, include_reciprocity = TRUE)
+VPCs_1 = strand_VPCs(fit_logit, n_partitions = 5, include_reciprocity = TRUE)
+VPCs_2 = strand_VPCs(fit_probit, n_partitions = 5, include_reciprocity = TRUE)
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")

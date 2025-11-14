@@ -1,18 +1,16 @@
-###################################################
+###############################################################################################
 #
-#   Multiplex Poisson analyses with data simulation 
+#   Multiplex Gaussian analyses with data simulation 
 #
-########################################
+###############################################################################################
 
 # Clear working space
-rm(list = ls())
 set.seed(46+2)
 
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
  colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
 
-library(rethinking)
 library(STRAND)
 library(stringr)
 library(ggplot2)
@@ -20,11 +18,11 @@ library(psych)
 
 
 # Make data
- N_id = 50      # Individuals in network
- N_layers = 3   # Network layers
+ N_id = 110      # Individuals in network
+ N_layers = 3    # Network layers
 
 # Covariates
- Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
+ Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -42,6 +40,7 @@ sr_sigma = c(0.2, 0.7, 0.1, 0.3, 0.7, 0.8)      # Variation in random effects. F
 sr_Rho = rlkjcorr( 1 , N_layers*2 , eta=1.5 )   # Generalized reciprocity matrix.
 dr_mu = rep(0, N_layers)                        # Average effect size, should be zero
 dr_sigma = c(0.9, 1.1, 1.2)                     # Variation in dyadic random effects.
+error_sigma = c(0.35, 2.1, 1.2)                 # Variation in noise effects.
 
 # Build dyadic matrix in full
 dr_Rho = structure(c(1, -0.226068357721697, 0.362134589509303, 0.247782279255332, 
@@ -134,7 +133,8 @@ G = simulate_multiplex_network(
                                      Strength=Strength),    
   dyadic_predictors = dyadic_preds,        
   individual_effects = sr_effects,        
-  dyadic_effects = dr_effects           
+  dyadic_effects = dr_effects,
+  error_sigma = error_sigma           
  )
 
 par(mfrow=c(1,3))
@@ -181,18 +181,17 @@ dat = make_strand_data(outcome = outcome,
                        link_mode="identity",
                        multiplex = TRUE)
 
-
-# Model
 fit = fit_multiplex_model(data=dat,
                           block_regression = ~ Pattern + Sex,
                           focal_regression = ~ Mass + Age + Strength,
                           target_regression = ~ Mass + Age + Strength,
                           dyad_regression = ~ Kinship + Dominance,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
-                                                        iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, seed=67,
+                                                        iter_warmup = 1000, iter_sampling = 1000,
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
+
 
 res = summarize_strand_results(fit)
 
@@ -458,7 +457,7 @@ p2
 
 # We recover dyadic reciprocity, within and between layers, too 
 
-
+strand_VPCs(fit, n_partitions = 5)
 
 
 

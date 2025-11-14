@@ -1,8 +1,12 @@
-############################################## Baboon example
-library(STRAND)
-library(stringr)
-library(ggplot2)
-library(psych)
+#####################################################################################################
+#
+#   Longitudinal Network Analyses - Binomial models  
+#
+#####################################################################################################
+
+ library(stringr)
+ library(ggplot2)
+ library(psych)
 
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
@@ -21,12 +25,12 @@ dat_long = NULL
 # if outcome data is missing, mask[i,j]=1
 # currently, missings in the predictors aren't supported in STRAND, but will be eventually
 for(y in 1:14){
-    d$Individual$Age = standardize(d$Individual$Age)
+    d$Individual$Age = standardize_strand(d$Individual$Age)
 
     if(all(d$Mask[[y]]==1)){
-    Presenting = t(d$Presenting[[y]])               # If all entries are masked, then standardize() fails 
+    Presenting = t(d$Presenting[[y]])               # If all entries are masked, then standardize_strand() fails 
     } else{
-    Presenting = standardize(t(d$Presenting[[y]]))  # If there are  some data, then standardize  
+    Presenting = standardize_strand(t(d$Presenting[[y]]))  # If there are  some data, then standardize  
     }
 
  # Merge data
@@ -57,7 +61,7 @@ fit_2a = fit_longitudinal_model(
  random_effects_mode="fixed",
  bandage_penalty = -1,
   mode="mcmc",
- stan_mcmc_parameters = list(seed = 1, chains = 1, init=0,
+ mcmc_parameters = list(seed = 1, chains = 1, init=0,
     parallel_chains = 1, refresh = 1, iter_warmup = 1000,
     iter_sampling = 1000, max_treedepth = 12)
   )
@@ -67,10 +71,10 @@ res_2a = summarize_longitudinal_bsrm_results(fit_2a)
 ############################################## 
 # Visualize results
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,9,2))
-longitudinal_plot(fit_2a, type="dyadic", save_plot="Baboon_dyadic_long_1.pdf", palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_2a, type="dyadic", palette = pal, height=6, width=6.5)
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,2,9,3,4))
-longitudinal_plot(fit_2a, type="generalized", save_plot="Baboon_generalized_long_1.pdf", palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_2a, type="generalized", palette = pal, height=6, width=6.5)
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,9,7,5,10,8,6))
 longitudinal_plot(fit_2a,type="coefficient", 
@@ -79,9 +83,7 @@ longitudinal_plot(fit_2a,type="coefficient",
     focal="SexMale", target="SexMale",
     dyadic="Presenting"),
     palette=pal,
-    normalized=TRUE,
-    height=4, width=9,
-    save_plot="Slopes_Baboon.pdf")
+    normalized=TRUE)
 
 
 ############################################## 
@@ -96,7 +98,7 @@ fit_2b = fit_longitudinal_model(
  random_effects_mode="fixed",
  bandage_penalty = -1,
   mode="mcmc",
- stan_mcmc_parameters = list(seed = 1, chains = 1, init=0,
+ mcmc_parameters = list(seed = 1, chains = 1, init=0,
     parallel_chains = 1, refresh = 1, iter_warmup = 100,
     iter_sampling = 1000, max_treedepth = 12),
  priors=NULL
@@ -107,10 +109,10 @@ res_2b = summarize_longitudinal_bsrm_results(fit_2b)
 ############################################## 
 # Visualize results
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,9,2))
-longitudinal_plot(fit_2b, type="dyadic", save_plot="Baboon_dyadic_long_2.pdf", palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_2b, type="dyadic", palette = pal, height=6, width=6.5)
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,2,9,3,4))
-longitudinal_plot(fit_2b, type="generalized", save_plot="Baboon_generalized_long_2.pdf", palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_2b, type="generalized", palette = pal, height=6, width=6.5)
 
 
 ############################################## 
@@ -179,6 +181,4 @@ p = ggplot(full_set2, aes(x=LayerNumeric, y=as.numeric(Median), ymin=as.numeric(
      theme(legend.position="bottom") + theme(legend.title = element_blank()) + scale_x_continuous(breaks=1:14,expand = c(0, 0.95))
 
 p
-
-ggsave("Slopes_Baboon_merged.pdf", p, height=6, width=13.5)
 

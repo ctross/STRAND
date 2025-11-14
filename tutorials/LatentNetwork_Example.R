@@ -1,11 +1,8 @@
-########################################
+###########################################################################################################
 #
 #   Latent Network Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+###########################################################################################################
 
 # Load libraries
 library(STRAND)
@@ -18,14 +15,14 @@ data(FoodSharing_Data)
 outcome = list(TransferOut = FoodSharing_Data$TransferOut, 
                TransferIn = FoodSharing_Data$TransferIn)
 
-dyad = list(Relatedness = standardize(FoodSharing_Data$Relatedness), 
+dyad = list(Relatedness = standardize_strand(FoodSharing_Data$Relatedness), 
             Friends = FoodSharing_Data$Friends
             )
 
-FoodSharing_Data$Individual$Age = standardize(FoodSharing_Data$Individual$Age)
-FoodSharing_Data$Individual$Wealth = standardize(FoodSharing_Data$Individual$Wealth)
-FoodSharing_Data$Individual$GripStrength = standardize(FoodSharing_Data$Individual$GripStrength)
-FoodSharing_Data$Individual$Education = standardize(FoodSharing_Data$Individual$Education)
+FoodSharing_Data$Individual$Age = standardize_strand(FoodSharing_Data$Individual$Age)
+FoodSharing_Data$Individual$Wealth = standardize_strand(FoodSharing_Data$Individual$Wealth)
+FoodSharing_Data$Individual$GripStrength = standardize_strand(FoodSharing_Data$Individual$GripStrength)
+FoodSharing_Data$Individual$Education = standardize_strand(FoodSharing_Data$Individual$Education)
 indiv = FoodSharing_Data$Individual 
 
 groups = data.frame(Ethnicity = as.factor(FoodSharing_Data$Individual$Ethnicity), 
@@ -50,10 +47,11 @@ fit = fit_latent_network_model(data=dat,
                                 fpr_regression = ~ Age + Wealth + Depressed,
                                 rtt_regression = ~ Age + Wealth + Depressed,
                                 theta_regression = ~ 1,
+
                                 mode="mcmc",
                                 return_predicted_network = FALSE,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                iter_sampling = 500, max_treedepth = NULL, adapt_delta = NULL)
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 11, adapt_delta = 0.95)
                                               )
 
 # Summary
@@ -62,15 +60,12 @@ res = summarize_strand_results(fit)
 # Simple visualizations
 vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects"), normalized=TRUE)
 vis_1
- # ggsave("Colombia_slopes_latent.pdf", vis_1, width=8, height=8)
 
 vis_2 = strand_caterpillar_plot(res, submodels=c("False positive rate", "Recall of true ties","Theta: question-order effects"), normalized=TRUE)
 vis_2
- # ggsave("Colombia_slopes_measurement.pdf", vis_2, width=8, height=8)
 
 vis_3 = strand_caterpillar_plot(res, submodels=c("False positive rate", "Recall of true ties","Theta: question-order effects"), only_slopes=FALSE, normalized=FALSE, only_technicals=TRUE)
 vis_3
- # ggsave("Colombia_intercepts_measurement.pdf", vis_3, width=8, height=4)
 
             
 ############################################################## To compute contrasts with new tools, do this:
@@ -80,8 +75,8 @@ process_block_parameters(fit, "EMBERA to AFROCOLOMBIAN", "AFROCOLOMBIAN to EMBER
 
 ################################################################# Reciprocity terms
 # Simple correlations
-cor1 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor2 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
+cor1 = strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
+cor2 = strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="adj")
 
 df1 = data.frame(cor1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -120,15 +115,15 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-# STRAND basic 4-way variance partition
-vpc1 = strand_VPCs(fit, n_partitions = 4)
+# STRAND variance partition
+vpc1 = strand_VPCs(fit, n_partitions = 5)
 vpc2 = strand_VPCs(fit, n_partitions = 3)
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "4-way VPC"
 df1$Submodel = rep(c("Transfers"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -145,7 +140,6 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Transfers"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
 
 df$Type = df$Site 
 

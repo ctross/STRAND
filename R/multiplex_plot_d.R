@@ -22,8 +22,14 @@ multiplex_plot_d = function(input, HPDI=0.9, mode="cor", plot = TRUE, export_as_
   palette = c("#7D370D", "#FBFEF9", "#114B47")  
     }
  
- stanfit = posterior::as_draws_rvars(input$fit$draws())
- corr = posterior::draws_of(stanfit$"D_corr")
+   if(attr(input, "fit_type")=="numpyro"){
+         samps = convert_posterior(input$fit$get_samples())
+         corr = samps$D_corr 
+    }else{
+         stanfit = posterior::as_draws_rvars(input$fit$draws())
+         corr = posterior::draws_of(stanfit$"D_corr")
+      }
+
  lims = c(-1,1)
 
  if(mode %in% c("cov", "adj")){

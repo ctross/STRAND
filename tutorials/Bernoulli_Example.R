@@ -1,11 +1,8 @@
-########################################
+####################################################################################################################
 #
 #   Bernoulli Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+####################################################################################################################
 
 # Load libraries
 library(STRAND)
@@ -17,16 +14,16 @@ data(Colombia_Data)
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
-            Distance = standardize(Colombia_Data$Distance)
+dyad = list(Relatedness = standardize_strand(Colombia_Data$Relatedness), 
+            Distance = standardize_strand(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
-                    BMI = standardize(Colombia_Data$Individual$BMI)
+indiv =  data.frame(Age = standardize_strand(Colombia_Data$Individual$Age), 
+                    BMI = standardize_strand(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -47,9 +44,9 @@ fit = fit_block_plus_social_relations_model(data=dat,
                                             target_regression = ~ Age + BMI,
                                             dyad_regression = ~ Distance + Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          max_treedepth = 12, adapt_delta = 0.95)
 )
 
 # Summaries
@@ -58,11 +55,11 @@ res = summarize_strand_results(fit)
 # Plots
 vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, only_slopes=TRUE)
 vis_1
-#ggsave("Colombia_slopes.pdf", vis_1, width=10, height=5.5)
+
 
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE,  only_technicals=TRUE, only_slopes=FALSE)
 vis_2
-#ggsave("Colombia_corr.pdf", vis_2, width=6, height=2.5)
+
 
 # Block effects
 process_block_parameters(fit, "AFROCOLOMBIAN to AFROCOLOMBIAN", "AFROCOLOMBIAN to EMBERA", HPDI=0.9)
@@ -111,20 +108,20 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-vpc1 = strand_VPCs(fit, n_partitions = 4) # Split variance into focal, target, dyadic, and error components.
+vpc1 = strand_VPCs(fit, n_partitions = 5) # Split variance into focal, target, dyadic, and error components.
 vpc2 = strand_VPCs(fit, n_partitions = 3) # Split variance into focal, target, and dyadic+error components.
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "4-way VPC"
 df1$Submodel = rep(c("Friendship"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "3-way VPC"
 df2$Submodel = rep(c("Friendship"),each=3)
-df2$Variable2 = rep(c("Focal","Target","Dyadic+Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic + Error"),1)
 
 df = rbind(df1, df2)
 df$Median = as.numeric(df$Median)
@@ -135,7 +132,7 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Friendship"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
+
 
 df$Type = df$Site 
 

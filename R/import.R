@@ -2,6 +2,6 @@
 #' @importFrom grDevices terrain.colors
 #' @importFrom graphics pairs
 #' @importFrom jsonlite read_json
-#' @importFrom utils download.file
+#' @importFrom utils download.file modifyList
 NULL
 
