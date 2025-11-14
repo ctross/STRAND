@@ -1,11 +1,8 @@
-###########################################
+#####################################################################################
 #
 #   Binomial Analyses with sampling biases  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+#####################################################################################
 
 # Load libraries
 library(STRAND)
@@ -60,10 +57,7 @@ A = simulate_sbm_plus_srm_network_with_measurement_bias(N_id = N_id,
                                                    )
 
 # Plot data
-Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
-V(Net)$color = c("turquoise4","brown4", "goldenrod3")[A$group_ids$Group]
-E(Net)$color = c("grey60","black")[is.mutual(Net)+1]
-plot(Net, edge.arrow.size =0.3, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
+image(A$network)
 
 # Prep dyadic data
 # Add colnames and rownames
@@ -160,7 +154,7 @@ fit1 =  fit_block_plus_social_relations_model_with_measurement_bias_missings(dat
                               censoring_regression = ~ Coloration,
                               dyad_regression = ~  SizeDiff + Relatedness,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
+                              mcmc_parameters = list(chains = 1, refresh = 1,
                                                           iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
@@ -174,7 +168,7 @@ fit2 =  fit_block_plus_social_relations_model_with_measurement_bias_missings(dat
                               censoring_regression = ~ Coloration,
                               dyad_regression = ~  SizeDiff + Relatedness,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
+                              mcmc_parameters = list(chains = 1, refresh = 1,
                                                           iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
@@ -188,7 +182,7 @@ fit0 =  fit_block_plus_social_relations_model_with_measurement_bias(data=model_d
                               censoring_regression = ~ Coloration,
                               dyad_regression = ~  SizeDiff + Relatedness,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
+                              mcmc_parameters = list(chains = 1, refresh = 1,
                                                           iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
@@ -233,9 +227,9 @@ p1
 
 ################################################################# Reciprocity terms
 # Simple correlations
-cor1 = strand_VPCs(fit1, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor2 = strand_VPCs(fit2, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor0 = strand_VPCs(fit0, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
+cor1 = strand_VPCs(fit1, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
+cor2 = strand_VPCs(fit2, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
+cor0 = strand_VPCs(fit0, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
 
 df1 = data.frame(cor1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -279,27 +273,27 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-vpc1 = strand_VPCs(fit1, n_partitions = 4)
-vpc2 = strand_VPCs(fit2, n_partitions = 4) 
-vpc0 = strand_VPCs(fit0, n_partitions = 4) 
+vpc1 = strand_VPCs(fit1, n_partitions = 5)
+vpc2 = strand_VPCs(fit2, n_partitions = 5) 
+vpc0 = strand_VPCs(fit0, n_partitions = 5) 
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "New-Imputation"
 df1$Submodel = rep(c("Friendship"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "New-No-Imputation"
 df2$Submodel = rep(c("Friendship"),each=4)
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df0 = data.frame(do.call(rbind, vpc0[[2]]))
 colnames(df0) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df0$Site = "Old-No-Imputation"
 df0$Submodel = rep(c("Friendship"),each=4)
-df0$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df0$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df = rbind(df1, df2, df0)
 df$Median = as.numeric(df$Median)
@@ -310,7 +304,6 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Friendship"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
 
 df$Type = df$Site 
 

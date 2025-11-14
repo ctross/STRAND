@@ -1,32 +1,29 @@
-###########################################
+#####################################################################################################
 #
 #   Bernoulli Analyses - Imputation models 
 #
-###########################################
-
-# Clear working space
-rm(list = ls())
+#####################################################################################################
 
 # Load libraries
 library(STRAND)
 library(ggplot2)
 
-#Load package data
+# Load package data
 data(Colombia_Data)
 
 # Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = standardize(Colombia_Data$Relatedness), 
-            Distance = standardize(Colombia_Data$Distance)
+dyad = list(Relatedness = standardize_strand(Colombia_Data$Relatedness), 
+            Distance = standardize_strand(Colombia_Data$Distance)
             )
 
 groups = data.frame(Ethnicity = as.factor(Colombia_Data$Individual$Ethnicity), 
                     Sex = as.factor(Colombia_Data$Individual$Sex)
                     )
 
-indiv =  data.frame(Age = standardize(Colombia_Data$Individual$Age), 
-                    BMI = standardize(Colombia_Data$Individual$BMI)
+indiv =  data.frame(Age = standardize_strand(Colombia_Data$Individual$Age), 
+                    BMI = standardize_strand(Colombia_Data$Individual$BMI)
                      )
 
 rownames(indiv) = rownames(Colombia_Data$Individual)
@@ -77,12 +74,12 @@ fit1 = fit_block_plus_social_relations_model_missings(data=dat,
                                             mode="mcmc",
                                             return_predicted_network=FALSE,
                                             priors=NULL,
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
-# Now fit new model on the true data without missings
+# Fit new model on the true data without missings
 fit2 = fit_block_plus_social_relations_model_missings(data=dat0,
                                             block_regression = ~ Sex + Ethnicity,
                                             focal_regression = ~ Age + BMI,
@@ -91,9 +88,9 @@ fit2 = fit_block_plus_social_relations_model_missings(data=dat0,
                                             mode="mcmc",
                                             return_predicted_network=FALSE,
                                             priors=NULL,
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
 # And the old basic model on the true data
@@ -105,9 +102,9 @@ fit0 = fit_block_plus_social_relations_model(data=dat0,
                                             mode="mcmc",
                                             return_predicted_network=FALSE,
                                             priors=NULL,
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
 # Summaries
@@ -149,9 +146,9 @@ p1
 
 ################################################################# Reciprocity terms
 # Simple correlations
-cor1 = strand_VPCs(fit1, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor2 = strand_VPCs(fit2, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
-cor0 = strand_VPCs(fit0, n_partitions = 4, include_reciprocity = TRUE, mode="cor")
+cor1 = strand_VPCs(fit1, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
+cor2 = strand_VPCs(fit2, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
+cor0 = strand_VPCs(fit0, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
 
 df1 = data.frame(cor1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -195,27 +192,27 @@ p3 = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Method, 
 p3
 
 ######################################################################## VPCs
-vpc1 = strand_VPCs(fit1, n_partitions = 4)
-vpc2 = strand_VPCs(fit2, n_partitions = 4) 
-vpc0 = strand_VPCs(fit0, n_partitions = 4) 
+vpc1 = strand_VPCs(fit1, n_partitions = 5)
+vpc2 = strand_VPCs(fit2, n_partitions = 5) 
+vpc0 = strand_VPCs(fit0, n_partitions = 5) 
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "New-Imputation"
 df1$Submodel = rep(c("Friendship"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "New-No-Imputation"
 df2$Submodel = rep(c("Friendship"),each=4)
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df0 = data.frame(do.call(rbind, vpc0[[2]]))
 colnames(df0) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df0$Site = "Old-No-Imputation"
 df0$Submodel = rep(c("Friendship"),each=4)
-df0$Variable2 = rep(c("Focal","Target","Dyadic","Error"),1)
+df0$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),1)
 
 df = rbind(df1, df2, df0)
 df$Median = as.numeric(df$Median)
@@ -226,7 +223,6 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Friendship"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
 
 df$Type = df$Site 
 

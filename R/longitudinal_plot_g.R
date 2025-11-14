@@ -21,8 +21,21 @@ longitudinal_plot_g = function(input, HPDI=0.9, plot = TRUE, export_as_table = F
   palette = c("black", "grey60","darkred","#975e3d", "#406e6b")  
     }
 
- stanfit = posterior::as_draws_rvars(input$fit$draws())
- corr = posterior::draws_of(stanfit$"G_corr")
+ if(attr(input, "fit_type")=="numpyro"){
+   numpyro = TRUE
+   } else{
+   numpyro = FALSE
+ }   
+ 
+ if(numpyro==FALSE){
+  stanfit = posterior::as_draws_rvars(input$fit$draws())
+  corr = posterior::draws_of(stanfit$"G_corr")
+ }
+
+ if(numpyro==TRUE){
+   samps = convert_posterior(input$fit$get_samples())
+   corr = samps$G_corr
+ }
 
  N_responses = input$data$N_responses
  layer_names = attr(input$data,"layer_names")

@@ -158,7 +158,7 @@ process_block_parameters = function(input, focal, base, HPDI=0.9){
 
      }   
     
-    colnames(results_srm_out) = c("Variable", "Layer", "Target" , "Base" , "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","LayerNumeric","P") 
+    colnames(results_srm_out) = c("Variable", "Layer", "Category" , "Base" , "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","LayerNumeric","P") 
 
 
    ############# Finally, return

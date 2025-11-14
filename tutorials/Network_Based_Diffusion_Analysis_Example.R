@@ -1,4 +1,8 @@
-###################################### Load packages
+######################################################################################
+#
+#   Network-based diffusion analysis
+#
+######################################################################################
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
  color_set = plvs_vltra("mystic_mausoleum", rev=FALSE, elements=NULL, show=FALSE)
@@ -7,7 +11,6 @@
  library(stringr)
  library(ggplot2)
  library(psych)
- library(rethinking)
  library(Matrix)
  library(igraph)
 
@@ -21,7 +24,7 @@ N_id = 70
 labels = paste("Ind", 1:N_id)
 
 # Covariates
-Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ) )               
+Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ) )               
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1) 
 rownames(Kinship) = colnames(Kinship) = labels
 rownames(Dominant) = colnames(Dominant) = labels
@@ -151,9 +154,10 @@ fit = fit_NBDA_model(long_data = diff_dat,
     network_treatment = "point",
     ces_settings = "es_inf_rts_1",
     mode="mcmc",
-    stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+    mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
                                 iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95)
     )
 
 
 res = summarize_strand_results(fit)
+

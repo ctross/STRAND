@@ -9,7 +9,7 @@ generate_structured_correlation_matrix(
   eta,
   mode,
   setting,
-  stan_mcmc_parameters
+  mcmc_parameters
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ generate_structured_correlation_matrix(
 
 \item{setting}{Which matrix to create? "multiplex_dyadic_reciprocity", "longitudinal_dyadic_reciprocity", or "longitudinal_generalized_reciprocity".}
 
-\item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned.}
+\item{mcmc_parameters}{A list of Stan parameters that often need to be tuned.}
 }
 \value{
 A Stan object.

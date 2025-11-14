@@ -1,25 +1,22 @@
-########################################
+####################################################################################################################
 #
 #   Bernoulli analysis - with between-level interaction  
 #
-########################################
+####################################################################################################################
 
 # STRAND models are usually written in a way to make predictors of node-level and dyad-level features stand out.
 # That is, we have separate equations for focal_regression, target_regression, and dyad_regression. However,
 # researchers sometime want to let an individual feature (like a focal's age) interact with a dyadic feature,
 # and this is also possible in STRAND. This is because individual data can always be coded equivalently as dyadic.
-# Just like some individual-level feature like Age, be written as: Focal_Age[,i] = Age, for a focal effect,
-# Target_Age[i,] = Age, for target effects. Then, either of these can be included in the dyad regression,
+# Just let some individual-level feature like Age, be written as: Focal_Age[,i] = Age, for a focal effect,
+# or Target_Age[i,] = Age, for target effects. Then, either of these can be included in the dyad regression,
 # interacting with other variables if desired.
 
-# Clear working space
-rm(list = ls())
-
-# Load libraries
+############# Load libraries
 library(STRAND)
 library(ggplot2)
 
-#Load package data
+# Load package data
 data(Colombia_Data)
 
 N = nrow(Colombia_Data$Relatedness)
@@ -28,14 +25,14 @@ rownames(Focal_Age) = colnames(Focal_Age) = rownames(Colombia_Data$Individual)
 
 # Create Focal_Age as a dyadic variable by cloning across columns
 for(i in 1:N){
- Focal_Age[,i] = standardize(Colombia_Data$Individual$Age, center = FALSE)      
+ Focal_Age[,i] = standardize_strand(Colombia_Data$Individual$Age, center = FALSE)      
 }
 
-# Create the STRAND data object
+############# Create the STRAND data object
 outcome = list(Friends = Colombia_Data$Friends)
 
-dyad = list(Relatedness = standardize(Colombia_Data$Relatedness, center = FALSE), 
-            Distance = standardize(Colombia_Data$Distance),
+dyad = list(Relatedness = standardize_strand(Colombia_Data$Relatedness, center = FALSE), 
+            Distance = standardize_strand(Colombia_Data$Distance),
             Focal_Age = Focal_Age
             )
 
@@ -54,9 +51,9 @@ fit = fit_block_plus_social_relations_model(data=dat,
                                             target_regression = ~ 1,
                                             dyad_regression = ~ Distance + Relatedness*Focal_Age,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                           iter_warmup = 500, iter_sampling = 500,
-                                                                          max_treedepth = NULL, adapt_delta = .98)
+                                                                          max_treedepth = 11, adapt_delta = 0.98)
 )
 
 # Summaries
@@ -66,14 +63,14 @@ res = summarize_strand_results(fit)
   K = 100
   i_samps = res$samples$srm_model_samples$block_parameters[[1]] # intercept
   d_samps = res$samples$srm_model_samples$dyadic_coeffs         # dyadic effects (order of effects is the same as in the res object. 
-                                                                # Here 1 id for distance, and 2 3 and 4 are for our kin, age, and kin*age effects)
+                                                                # Here 1 is for distance, and 2, 3, and 4 are for kin, age, and kin*age effects)
 
   # Note that we fit the model on standardized predictors, 
   # so we need to some wrangling to predict back on the natural scale
 
   # Simulate for a predicted sweep of ages
-  foc_age = seq(min(standardize(Colombia_Data$Individual$Age, center = FALSE)),
-                max(standardize(Colombia_Data$Individual$Age, center = FALSE)),
+  foc_age = seq(min(standardize_strand(Colombia_Data$Individual$Age, center = FALSE)),
+                max(standardize_strand(Colombia_Data$Individual$Age, center = FALSE)),
                  length.out=K)
 
   # and 4 levels of kinship

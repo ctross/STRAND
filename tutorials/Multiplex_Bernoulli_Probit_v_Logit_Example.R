@@ -6,10 +6,7 @@
 #   that the choice of link function is irrelevant to anything other than
 #   the scale of estimates and the run-time of the models.  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+#####################################################################################
 
 # Load libraries
  library(PlvsVltra) # For colors: install_github('ctross/PlvsVltra')
@@ -33,16 +30,16 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = standardize(RICH$Relatedness), 
+ Relatedness = standardize_strand(RICH$Relatedness), 
  Friends = RICH$Friends,
  Marriage = RICH$Marriage
 )
 
 # Individual data in data-frame
 ind = data.frame(
- Age = standardize(RICH$Individual$Age), 
+ Age = standardize_strand(RICH$Individual$Age), 
  FoodInsecure = RICH$Individual$FoodInsecure,
- Wealth = standardize(RICH$Individual$Wealth),
+ Wealth = standardize_strand(RICH$Individual$Wealth),
  Depressed = RICH$Individual$Depressed
 )
 
@@ -82,14 +79,14 @@ fit_1 = fit_multiplex_model(
  target_regression = ~ 1,
  dyad_regression = ~ 1,
  mode="mcmc",
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 1000, 
    iter_sampling = 1000, 
-   max_treedepth = NULL, 
-   adapt_delta = 0.98)
+   max_treedepth = 12, 
+   adapt_delta = 0.96)
 )
 
 # Model 2
@@ -100,14 +97,14 @@ fit_2 = fit_multiplex_model(
  target_regression = ~ 1,
  dyad_regression = ~ 1,
  mode="mcmc",
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 1000, 
    iter_sampling = 1000, 
-   max_treedepth = NULL, 
-   adapt_delta = 0.98)
+   max_treedepth = 12, 
+   adapt_delta = 0.96)
 )
 
 ############################################# Results
@@ -126,20 +123,20 @@ multiplex_plot(fit_2, type="generalized", HPDI=0.9, plot = TRUE, export_as_table
 
 
 ######################################################################## VPCs
-VPCs_1 = strand_VPCs(fit_1, n_partitions = 4)
-VPCs_2 = strand_VPCs(fit_2, n_partitions = 4)
+VPCs_1 = strand_VPCs(fit_1, n_partitions = 5)
+VPCs_2 = strand_VPCs(fit_2, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "Logit"
 df1$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df2 = data.frame(do.call(rbind, VPCs_2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "Probit"
 df2$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df = rbind(df1, df2)
 df$Median = as.numeric(df$Median)
@@ -150,7 +147,6 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Give", "Take", "Reduce"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error")))
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, color=Site,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -166,12 +162,11 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
         "lines")) + scale_color_manual(values=c("Logit" = colors[1], "Probit" = colors[3])) + theme(legend.position="bottom")
 
 p
-# ggsave("rich_res_vpc_probit_v_logit.pdf",p, width=9, height=3)
 
 
 ######################################################################## Reciprocity
-VPCs_1 = strand_VPCs(fit_1, n_partitions = 4, include_reciprocity = TRUE)
-VPCs_2 = strand_VPCs(fit_2, n_partitions = 4, include_reciprocity = TRUE)
+VPCs_1 = strand_VPCs(fit_1, n_partitions = 5, include_reciprocity = TRUE)
+VPCs_2 = strand_VPCs(fit_2, n_partitions = 5, include_reciprocity = TRUE)
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -207,10 +202,10 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Link, col
         "lines")) + scale_color_manual(values=c("Logit" = colors[1], "Probit" = colors[3])) + theme(legend.position="bottom")
 
 p
-# ggsave("rich_res_recip_probit_v_logit.pdf",p, width=9, height=9)
+
 
 ######################################################################## Reciprocity, adjusted
-# Also possible to make amen-style dyadic reciprocity estimates by scaling by ratio of "dyadic variance" to "dyadic variance plus error variance"
+# Also possible to make amen-style dyadic reciprocity estimates by rescaling by the ratio of "dyadic variance" to "dyadic variance plus error variance" with mode="adj"
 VPCs_1 = strand_VPCs(fit_1, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
 VPCs_2 = strand_VPCs(fit_2, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
 

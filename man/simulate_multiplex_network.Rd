@@ -16,7 +16,7 @@ simulate_multiplex_network(
   dr_mu,
   dr_sigma,
   dr_Rho,
-  error_sigma = 0.01,
+  error_sigma,
   outcome_mode = "bernoulli",
   link_mode = "logit",
   individual_predictors = NULL,

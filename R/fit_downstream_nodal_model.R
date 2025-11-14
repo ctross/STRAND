@@ -13,7 +13,7 @@
 #' @param mode A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
-#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
@@ -30,7 +30,7 @@
 #'    outcome_mode = "gamma",
 #'    link_mode = "log",
 #'    mode = "mcmc",
-#'    stan_mcmc_parameters = list(
+#'    mcmc_parameters = list(
 #'      chains = 1,
 #'      iter_warmup = 1500 ,
 #'      iter_sampling = 1500 ,
@@ -53,8 +53,10 @@ fit_downstream_nodal_model = function(
                                 outcome_mode="gaussian",
                                 link_mode="identity",
                                 mode="mcmc",
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init = NULL),
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, 
+                                                      iter_warmup = 500, iter_sampling = 500, 
+                                                      max_treedepth = 12, adapt_delta = 0.95, 
+                                                      chain_method = "vectorized", cores=1, init = 2),
                                 priors=NULL
                                     ){
 
@@ -185,12 +187,26 @@ fit_downstream_nodal_model = function(
 
 
     ###################################################### Create nodal predictor vectors 
-    stanfit = posterior::as_draws_rvars(fit$fit$draws())
+    if(attr(fit, "fit_type")=="numpyro"){
+        numpyro = TRUE
+    }else{
+        numpyro = FALSE
+    }
 
     ################### Network model parameters
-    sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
-    sr_L = posterior::draws_of(stanfit$"sr_L") 
-    sr_raw = posterior::draws_of(stanfit$"sr_raw")
+    if(numpyro==FALSE){
+     stanfit = posterior::as_draws_rvars(fit$fit$draws())
+     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
+     sr_L = posterior::draws_of(stanfit$"sr_L") 
+     sr_raw = posterior::draws_of(stanfit$"sr_raw")
+    }
+
+    if(numpyro==TRUE){
+     samps = convert_posterior(fit$fit$get_samples())
+     sr_sigma = samps$sr_sigma
+     sr_L = samps$sr_L 
+     sr_raw = aperm(samps$sr_raw, perm = c(1, 3, 2))
+    }
 
     sr = sr_raw
 
@@ -256,6 +272,8 @@ fit_downstream_nodal_model = function(
 
 
     ############################################################################# Fit model
+    mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+    
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","downstream_block_plus_social_relations_model.stan"))
 
     data$individual_predictors = NULL
@@ -265,15 +283,15 @@ fit_downstream_nodal_model = function(
     if(mode=="mcmc"){
       fit = model$sample(
         data = unclass(data),
-        seed = stan_mcmc_parameters$seed,
-        chains = stan_mcmc_parameters$chain,
-        parallel_chains = stan_mcmc_parameters$parallel_chains,
-        refresh = stan_mcmc_parameters$refresh,
-        iter_warmup = stan_mcmc_parameters$iter_warmup,
-        iter_sampling = stan_mcmc_parameters$iter_sampling,
-        max_treedepth = stan_mcmc_parameters$max_treedepth,
-        adapt_delta = stan_mcmc_parameters$adapt_delta,
-        init = stan_mcmc_parameters$init
+        seed = mcmc_parameters$seed,
+        chains = mcmc_parameters$chains,
+        parallel_chains = mcmc_parameters$parallel_chains,
+        refresh = mcmc_parameters$refresh,
+        iter_warmup = mcmc_parameters$iter_warmup,
+        iter_sampling = mcmc_parameters$iter_sampling,
+        max_treedepth = mcmc_parameters$max_treedepth,
+        adapt_delta = mcmc_parameters$adapt_delta,
+        init = mcmc_parameters$init
         )
        }
 

@@ -1,11 +1,8 @@
-###################################################
+######################################################################################
 #
 #   Multiplex Poisson analyses with data simulation 
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+######################################################################################
 set.seed(50)
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
@@ -14,7 +11,6 @@ set.seed(50)
 library(stringr)
 library(ggplot2)
 library(psych)
-library(rethinking)
 library(STRAND)
 
 # Make data
@@ -22,7 +18,7 @@ library(STRAND)
  N_layers = 3   # Network layers
 
 # Covariates
- Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
+ Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))
  Dominance = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
  Mass = rbern(N_id, 0.4)
  Age = rnorm(N_id, 0, 1)
@@ -139,7 +135,7 @@ table(G$network[1,,])
 table(G$network[2,,])
 table(G$network[3,,])
 
-#################################################### Create the STRAND data object
+################################################################################## Create the STRAND data object
 outcome = list(Feeding = G$network[1,,], Fighting = G$network[2,,], Grooming = G$network[3,,])
 exposure = list(Feeding = G$exposure[1,,], Fighting = G$exposure[2,,], Grooming = G$exposure[3,,])
 
@@ -218,9 +214,9 @@ fit1a = fit_multiplex_model_missings(data=dat,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = 0.1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 # Model
@@ -231,9 +227,9 @@ fit2a = fit_multiplex_model_missings(data=dat0,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = 0.1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 # Model
@@ -244,9 +240,9 @@ fit0a = fit_multiplex_model(data=dat0,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = 0.1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 
@@ -258,9 +254,9 @@ fit1b = fit_multiplex_model_missings(data=dat,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = -1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 # Model
@@ -271,9 +267,9 @@ fit2b = fit_multiplex_model_missings(data=dat0,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = -1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 # Model
@@ -284,9 +280,9 @@ fit0b = fit_multiplex_model(data=dat0,
                           dyad_regression = ~ Kinship + Dominance,
                           bandage_penalty = -1,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
+                          mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1, init=0,
                                                         iter_warmup = 500, iter_sampling = 500,
-                                                        max_treedepth = NULL, adapt_delta = 0.95)
+                                                        max_treedepth = 12, adapt_delta = 0.95)
 )
 
 

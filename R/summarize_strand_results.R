@@ -18,7 +18,7 @@ summarize_strand_results = function(input, include_samples=TRUE, HPDI=0.9){
         stop("summarize_strand_results() requires a fitted object of class: STRAND Model Object.")
     }
 
-    if(attributes(input)$fit_type != "mcmc"){
+    if(!attributes(input)$fit_type %in% c("mcmc","numpyro")){
       if(attributes(input)$fit_type == "vb"){
          warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 

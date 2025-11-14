@@ -58,8 +58,8 @@ latest_released_version = function(quiet=TRUE, ...) {
   release = release$name
 }
 
-packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan.")
-installed_version = "our_dire_reveille"
+packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan and NumPyro.")
+installed_version = "beauty_in_the_dissonance"
 packageStartupMessage(paste0("This version of STRAND is: ", installed_version, "."))
 
 tryCatch({
@@ -74,7 +74,7 @@ tryCatch({
   },
  # If it throws an error, the following block catches the error
   error = function(msg){
-  print("Could not connect to GitHub to check for latest version. STRAND is under active development, so consider checking for updates.")
+  packageStartupMessage("Could not connect to GitHub to check for latest version. STRAND is under active development, so consider checking for updates.")
   })
 
 }

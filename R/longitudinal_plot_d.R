@@ -22,13 +22,34 @@ longitudinal_plot_d = function(input, HPDI=0.9, mode="cor", plot = TRUE, export_
   palette = c("#975e3d", "black", "#406e6b")  
     } 
 
- stanfit = posterior::as_draws_rvars(input$fit$draws())
- corr = posterior::draws_of(stanfit$"D_corr")
+ if(attr(input, "fit_type")=="numpyro"){
+   numpyro = TRUE
+   } else{
+   numpyro = FALSE
+ }   
+ 
+ if(numpyro==FALSE){
+  stanfit = posterior::as_draws_rvars(input$fit$draws())
+  corr = posterior::draws_of(stanfit$"D_corr")
+ }
+
+ if(numpyro==TRUE){
+   samps = convert_posterior(input$fit$get_samples())
+   corr = samps$D_corr
+ }
+
  lims = c(-1,1)
 
   if(mode %in% c("cov", "adj")){
   new = corr
-  dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
+
+  if(numpyro==FALSE){
+   dr_sigma = matrix(samps$dr_sigma, ncol = N_responses)
+  }
+
+ if(numpyro==TRUE){
+   corr = samps$D_corr
+   }
 
     if(input$data$link_mode==1){
        base_sd = sqrt(0.33333 * (3.14159^2))

@@ -11,7 +11,7 @@
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use. 
 #' @param return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
-#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. Only edits of the values are permitted. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
@@ -23,7 +23,7 @@
 #'                                   target_regression = ~ Age * NoFood,
 #'                                   dyad_regression = ~ Relatedness + Friends * SameSex,
 #'                                   mode="mcmc",
-#'                                   stan_mcmc_parameters = list(seed = 1, 
+#'                                   mcmc_parameters = list(seed = 1, 
 #'                                   chains = 1, parallel_chains = 1, 
 #'                                   refresh = 1, iter_warmup = 100, iter_sampling = 100,
 #'                                   max_treedepth = NULL, adapt_delta = NULL)
@@ -37,8 +37,10 @@ fit_social_relations_model = function(data,
                                       dyad_regression,
                                       mode="mcmc",
                                       return_predicted_network=FALSE,
-                                      stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                                iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init=NULL),
+                                      mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, 
+                                                      iter_warmup = 500, iter_sampling = 500, 
+                                                      max_treedepth = 12, adapt_delta = 0.95, 
+                                                      chain_method = "vectorized", cores=1, init = 2),
                                       priors=NULL
                                       ){
 
@@ -120,6 +122,8 @@ fit_social_relations_model = function(data,
 
 
     ############################################################################# Fit model
+    mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+    
     model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","social_relations_model.stan"))
 
      data$individual_predictors = NULL
@@ -129,15 +133,15 @@ fit_social_relations_model = function(data,
     if(mode=="mcmc"){
       fit = model$sample(
         data = unclass(data),
-        seed = stan_mcmc_parameters$seed,
-        chains = stan_mcmc_parameters$chain,
-        parallel_chains = stan_mcmc_parameters$parallel_chains,
-        refresh = stan_mcmc_parameters$refresh,
-        iter_warmup = stan_mcmc_parameters$iter_warmup,
-        iter_sampling = stan_mcmc_parameters$iter_sampling,
-        max_treedepth = stan_mcmc_parameters$max_treedepth,
-        adapt_delta = stan_mcmc_parameters$adapt_delta,
-        init = stan_mcmc_parameters$init
+        seed = mcmc_parameters$seed,
+        chains = mcmc_parameters$chains,
+        parallel_chains = mcmc_parameters$parallel_chains,
+        refresh = mcmc_parameters$refresh,
+        iter_warmup = mcmc_parameters$iter_warmup,
+        iter_sampling = mcmc_parameters$iter_sampling,
+        max_treedepth = mcmc_parameters$max_treedepth,
+        adapt_delta = mcmc_parameters$adapt_delta,
+        init = mcmc_parameters$init
         )
        }
 

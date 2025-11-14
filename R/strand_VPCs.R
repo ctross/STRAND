@@ -4,6 +4,7 @@
 #'
 #' @param input A STRAND model object with social relations model parameters.
 #' @param n_partitions Should variance on latent scale be partioned into 3 factors (focal, target, dyadic+error) as in amen? Or 4 factors (focal, target, dyadic, error)? Or 5 factors (focal, target, dyadic reciprocal, dyadic noise, error)?
+#' @param merge_noise_terms In the 5-part decomposition, should the two noise terms be merged to yield a 4-way final decomposition.
 #' @param HPDI Highest Posterior Density Interval. Ranges in (0,1).
 #' @param include_samples An indicator for the user to specify if raw samples, or only the summary statistics should be returned. Samples can take up a lot of space.
 #' @param include_reciprocity Should reciprocity estimates be returned?.
@@ -20,12 +21,12 @@
 #' }
 #'
 
-strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FALSE, mode="cor", include_samples=FALSE, plot_pairs=FALSE, plot_type = "vpcs", plot_layer = NULL, verbose=FALSE){
+strand_VPCs = function(input, n_partitions = 5, merge_noise_terms = TRUE, HPDI=0.9, include_reciprocity=FALSE, mode="cor", include_samples=FALSE, plot_pairs=FALSE, plot_type = "vpcs", plot_layer = NULL, verbose=FALSE){
     if(attributes(input)$class != "STRAND Model Object"){
         stop("strand_VPCs() requires a fitted object of class: STRAND Model Object.")
     }
 
-    if(attributes(input)$fit_type != "mcmc"){
+    if(!attributes(input)$fit_type %in% c("mcmc","numpyro")){
       if(attributes(input)$fit_type == "vb"){
          warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
               during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
@@ -48,6 +49,7 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
     }
 
     ################### Network model parameters
+    if(attributes(input)$fit_type == "mcmc"){
     stanfit = posterior::as_draws_rvars(input$fit$draws())
 
     sr_sigma = posterior::draws_of(stanfit$"sr_sigma")
@@ -73,7 +75,39 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
     if(input$data$link_mode==4){
        error_sd = posterior::draws_of(stanfit$"error_sigma")
     }
+    
+    }
 
+    ################### Network model parameters
+    if(attributes(input)$fit_type == "numpyro"){
+     samps = convert_posterior(input$fit$get_samples())
+
+     sr_sigma = samps$sr_sigma
+     G_corr = samps$G_corr 
+
+     D_corr = samps$D_corr
+     D_corr_unadjusted = samps$D_corr
+     dr_sigma = matrix(samps$dr_sigma, ncol = N_responses)
+
+     lims = c(-1,1)
+
+    if(input$data$link_mode==1){
+       error_sd = matrix(sqrt(0.33333 * (3.14159^2)), nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
+    }
+
+    if(input$data$link_mode==2){
+       error_sd = matrix(1, nrow=nrow(dr_sigma), ncol=ncol(dr_sigma))
+    }
+
+    if(input$data$link_mode==3){
+       stop("Automatic VPCs not yet deployable for Poisson models.")
+    }
+
+    if(input$data$link_mode==4){
+       error_sd = matrix(samps$error_sigma , ncol=ncol(dr_sigma))
+    }
+
+    }
 
     #################################### Prep for alternate
      if(mode %in% c("cov", "adj")){
@@ -118,10 +152,12 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
     results_list_vcs3 = list()
     results_list_vcs4 = list()
     results_list_vcs5 = list()
+    results_list_vcs5b = list()
 
     results_list_vpcs3 = list()
     results_list_vpcs4 = list()
     results_list_vpcs5 = list()
+    results_list_vpcs5b = list()
 
     ######### Calculate all variance componants
 
@@ -156,6 +192,21 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
 
       results_list_vcs5[[q]] = vcs
       results_list_vpcs5[[q]] = vcs_normalized
+
+      ################################### Five-way to four-way
+      D_corr_unadjusted_layer_q = samples$srm_model_samples$D_corr_unadjusted[, q, q+N_responses]
+      vcs = cbind(samples$srm_model_samples$focal_target_sd[,q]^2, 
+                  samples$srm_model_samples$focal_target_sd[,N_responses+q]^2, 
+                  D_corr_unadjusted_layer_q^2 * samples$srm_model_samples$dyadic_sd[,q]^2, 
+                  (1 - D_corr_unadjusted_layer_q^2) * samples$srm_model_samples$dyadic_sd[,q]^2 + 
+                  error_sd[,q]^2)
+      vcs_total = rowSums(vcs)
+      vcst = cbind(vcs_total,vcs_total,vcs_total,vcs_total)
+
+      vcs_normalized = vcs/vcst
+
+      results_list_vcs5b[[q]] = vcs
+      results_list_vpcs5b[[q]] = vcs_normalized
      }
 
 
@@ -163,10 +214,12 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
      results_list_3_vcs = list()
      results_list_4_vcs = list()
      results_list_5_vcs = list()
+     results_list_5b_vcs = list()
 
      results_list_3_vpcs = list()
      results_list_4_vpcs = list()
      results_list_5_vpcs = list()
+     results_list_5b_vpcs = list()
 
     ################### SRM model
      results_vcs3 = matrix(NA, nrow=3, ncol=7)
@@ -177,6 +230,9 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
 
      results_vcs5 = matrix(NA, nrow=5, ncol=7)
      results_vpcs5 = matrix(NA, nrow=5, ncol=7)
+
+     results_vcs5b = matrix(NA, nrow=4, ncol=7)
+     results_vpcs5b = matrix(NA, nrow=4, ncol=7)
 
     ######### Calculate all corr and block effects
     layer_names_long = c(paste0(layer_names, " (out)"), paste0(layer_names, " (in)"))
@@ -231,6 +287,18 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
       results_vpcs5[5,] = sum_stats(paste0("error var - ", layer_names[q]), results_list_vpcs5[[q]][,5], HPDI)
 
 
+      results_vcs5b[1,] = sum_stats(paste0("focal var - ", layer_names[q]), results_list_vcs5b[[q]][,1], HPDI)
+      results_vcs5b[2,] = sum_stats(paste0("target var - ", layer_names[q]), results_list_vcs5b[[q]][,2], HPDI)
+      results_vcs5b[3,] = sum_stats(paste0("dyadic reciprocal var - ", layer_names[q]), results_list_vcs5b[[q]][,3], HPDI)
+      results_vcs5b[4,] = sum_stats(paste0("error + dyadic noise var - ", layer_names[q]), results_list_vcs5b[[q]][,4], HPDI)
+
+      results_vpcs5b[1,] = sum_stats(paste0("focal var - ", layer_names[q]), results_list_vpcs5b[[q]][,1], HPDI)
+      results_vpcs5b[2,] = sum_stats(paste0("target var - ", layer_names[q]), results_list_vpcs5b[[q]][,2], HPDI)
+      results_vpcs5b[3,] = sum_stats(paste0("dyadic reciprocal var - ", layer_names[q]), results_list_vpcs5b[[q]][,3], HPDI)
+      results_vpcs5b[4,] = sum_stats(paste0("error + dyadic noise var - ", layer_names[q]), results_list_vpcs5b[[q]][,4], HPDI)
+   
+
+
       colnames(results_vcs3) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
       colnames(results_vpcs3) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
 
@@ -240,33 +308,41 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
       colnames(results_vcs5) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
       colnames(results_vpcs5) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P")
 
+      colnames(results_vcs5b) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
+      colnames(results_vpcs5b) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P")
+
       colnames(results_srm_base) = c("Variable", "Median", paste("HPDI", (1-HPDI)/2, sep=":"), paste("HPDI", (1+HPDI)/2, sep=":"), "Mean","SD","P") 
 
      results_list_3_vcs[[q]] = results_vcs3
      results_list_4_vcs[[q]]  = results_vcs4
      results_list_5_vcs[[q]]  = results_vcs5
+     results_list_5b_vcs[[q]]  = results_vcs5b
 
      results_list_3_vpcs[[q]]  = results_vpcs3
      results_list_4_vpcs[[q]]  = results_vpcs4
      results_list_5_vpcs[[q]]  = results_vpcs5
+     results_list_5b_vpcs[[q]]  = results_vpcs5b
      }
 
    ############# Finally, merge all effects into a list
      names(results_list_3_vcs) = layer_names
      names(results_list_4_vcs) = layer_names
      names(results_list_5_vcs) = layer_names
+     names(results_list_5b_vcs) = layer_names
 
      names(results_list_3_vpcs) = layer_names
      names(results_list_4_vpcs) = layer_names
      names(results_list_5_vpcs) = layer_names
+     names(results_list_5b_vpcs) = layer_names
 
      if(include_reciprocity==FALSE){
       results_srm_base = NULL
      }
           
-   results_out_3 = list( "Raw Variance Componants" = results_list_3_vcs, "Variance Partition Coefficients" = results_list_3_vpcs, "Reciprocity" = results_srm_base)
-   results_out_4 = list( "Raw Variance Componants" = results_list_4_vcs, "Variance Partition Coefficients" = results_list_4_vpcs, "Reciprocity" = results_srm_base)
-   results_out_5 = list( "Raw Variance Componants" = results_list_5_vcs, "Variance Partition Coefficients" = results_list_5_vpcs, "Reciprocity" = results_srm_base)
+   results_out_3 = list( "Raw Variance Components" = results_list_3_vcs, "Variance Partition Coefficients" = results_list_3_vpcs, "Reciprocity" = results_srm_base)
+   results_out_4 = list( "Raw Variance Components" = results_list_4_vcs, "Variance Partition Coefficients" = results_list_4_vpcs, "Reciprocity" = results_srm_base)
+   results_out_5 = list( "Raw Variance Components" = results_list_5_vcs, "Variance Partition Coefficients" = results_list_5_vpcs, "Reciprocity" = results_srm_base)
+   results_out_5b = list( "Raw Variance Components" = results_list_5b_vcs, "Variance Partition Coefficients" = results_list_5b_vpcs, "Reciprocity" = results_srm_base)
    
    if(n_partitions==3){
     if(verbose==TRUE){
@@ -296,6 +372,7 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
 
   
   if(n_partitions==5){
+    if(merge_noise_terms == FALSE){
     if(verbose==TRUE){
      print(results_out_5)
      }
@@ -306,6 +383,20 @@ strand_VPCs = function(input, n_partitions = 4, HPDI=0.9, include_reciprocity=FA
      }
 
     res_final = results_out_5
+    }
+
+    if(merge_noise_terms == TRUE){
+    if(verbose==TRUE){
+     print(results_out_5b)
+     }
+
+     if(include_samples==TRUE){
+      results_out_5b$RawSamples = results_list_vcs5b
+      results_out_5b$VPCsSamples = results_list_vpcs5b
+     }
+
+    res_final = results_out_5b
+    }
    }
 
    if(plot_pairs==TRUE){

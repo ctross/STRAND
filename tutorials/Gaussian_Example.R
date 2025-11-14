@@ -1,17 +1,20 @@
-################################################# Gaussian models 
-# Load libraries
- library(rethinking)
- library(igraph)
- library(STRAND)
- library(ggplot2)
+##############################################################################################
+#
+# Gaussian models 
+#
+##############################################################################################
 
-set.seed(1)
+# Load libraries
+library(STRAND)
+library(ggplot2)
+
 # Make data
-N_id = 50
+set.seed(1)
+N_id = 90
 
 # Covariates
-Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
-Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
+Kinship = standardize_strand(rlkjcorr(1, N_id, eta=1.5))
+Dominant = ceiling(rlkjcorr(1, N_id, eta=1.5) - 0.1)
 Mass = rbern(N_id, 0.4)
 
 # Organize into list
@@ -22,21 +25,21 @@ dyadic_preds[,,2] = Dominant
 dyadic_preds[,,3] = Kinship*Dominant
 
 # Set effect sizes
-sr_mu = c(0,0)  
-sr_sigma = c(2.2, 1.7) 
+sr_mu = c(0, 0)  
+sr_sigma = c(1.5, 1.5) 
 sr_rho = 0.55
 dr_mu = 0 
-dr_sigma = 1.5
-dr_rho= 0.6
-sr_effects_1 = c(1.9, 1.3)
-dr_effects_1 = c(1.2, 1.7, -2.2)
+dr_sigma = 1.0
+dr_rho = 0.8
+sr_effects_1 = c(0.9, 0.3)
+dr_effects_1 = c(0.2, 0.7, -1.2)
 
 # Block structure
 group_probs_block_size = c(0.25, c(0.25, 0.25)*(1-0.25))
 
-B_1 = matrix(-10,nrow=1,ncol=1)
-B_2 = matrix(rnorm(9,0,3),nrow=3,ncol=3)
-B_3 = matrix(rnorm(4,0,3),nrow=2,ncol=2)
+B_1 = matrix(-10, nrow=1, ncol=1)
+B_2 = matrix(rnorm(9, 0, 3), nrow=3, ncol=3)
+B_3 = matrix(rnorm(4, 0, 3), nrow=2, ncol=2)
 
 diag(B_2) = diag(B_2) + 2
 diag(B_3) = diag(B_3) + 3.5
@@ -73,7 +76,7 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
 
 image(G$network)
 
-################################################################################################ Fit STRAND
+##############################################################################################
 # Create the STRAND data object
 # Add row and colnames
 name_vec = paste("Individual", 1:N_id)
@@ -92,7 +95,8 @@ model_dat = make_strand_data(outcome=list(Association = G$network),
                              link_mode="identity"
                              )
 
-
+##############################################################################################
+# Fit model
 fit = fit_block_plus_social_relations_model(
     data=model_dat,
     block_regression = ~ Merica + Quantum,
@@ -100,26 +104,26 @@ fit = fit_block_plus_social_relations_model(
     target_regression = ~ Mass,
     dyad_regression = ~ Kinship*Dominant,
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
-      iter_warmup = 500 ,
-      iter_sampling = 500 ,
-      max_treedepth = 12 ,
+      iter_warmup = 500,
+      iter_sampling = 500,
+      max_treedepth = 12,
       refresh = 1,
-      adapt_delta = 0.96)
+      adapt_delta = 0.95)
   )
 
 res = summarize_strand_results(fit)
 
 
-
+##############################################################################################
 # Plots
 strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, only_slopes=TRUE)
 
 # Estimates of dyadic reciprocity correcting for measurement error (i.e., reciprocity in true network)
-# dr_rho should be 0.6
+# HPDI on dr_rho should include 0.8
 strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="cor")
 
 # Estimates of dyadic reciprocity biased by measurement error (i.e., reciprocity of reports)
-# dyadic rho in reports is only around 0.4, since measurement error leads to biased reporting. From theory, we know the value should be: 0.6*(1.5^2/(1^2 + 1.5^2)) = 0.41... in this example.
+# dyadic rho in reports is only around 0.4, since measurement error leads to biased reporting. From theory, we know the value should be: 0.8*(1^2/(1^2 + 1^2)) = 0.40... in this example.
 strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="adj")

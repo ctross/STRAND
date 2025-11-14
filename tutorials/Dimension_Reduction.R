@@ -1,15 +1,11 @@
-##############################################
+#############################################################################################################
 # Multiplex dimension reduction: Binomial Analyses - Simulated data with interaction 
 # 
 # The idea for this model comes from an anonymous RSOS reviewer. 
 #
-########################################
-
-# Clear working space
+#############################################################################################################
 
 # Load libraries
-library(igraph)
-library(rethinking)
 library(ggplot2)
 library(STRAND)
 
@@ -18,7 +14,7 @@ set.seed(1)
 N_id = 60
 
 # Covariates
-Kinship = STRAND::standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
+Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
 Mass = rbern(N_id, 0.4)
 
@@ -78,17 +74,10 @@ G = simulate_sbm_plus_srm_network(N_id = N_id,
                          dyadic_effects = dr_effects_1
                          )        
 
-
-Net = graph_from_adjacency_matrix(G$network, mode = c("directed"))
-V(Net)$color = c("turquoise4","gray13", "goldenrod3")[G$group_ids$Merica]
-
-par(mfrow=c(1,2))
-plot(Net, edge.arrow.size = 0.1, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
 image(G$network)
 
-
 ############################################# Simulate multiplex layers from the latent network
-M = 5 # Network layers
+M = 5   # Network layers
 EE = 10 # Samples per dyad
 alpha = matrix(NA, nrow=M, ncol=2)
 
@@ -119,7 +108,7 @@ Exposure = matrix(EE, nrow=N_id, ncol=N_id)
 
 # Outcomes stored as a labeled list
 outcome = list(
- Feeding = Outcomes[,,1], 
+ Feeding = Outcomes[,,1],    # Note that the network loading on this layer is forced to be positive to set the direction of the latent axis!
  Territory = Outcomes[,,2], 
  Courtship = Outcomes[,,3], 
  Nesting = Outcomes[,,4],  
@@ -173,13 +162,13 @@ fit = fit_multiplex_model_dimension_reduction(
  dyad_regression = ~ Kinship * Dominant,
  mode="mcmc",
  return_predicted_network = TRUE,
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 500, 
    iter_sampling = 500, 
-   max_treedepth = NULL, 
+   max_treedepth = 12, 
    adapt_delta = 0.98)
 )
 

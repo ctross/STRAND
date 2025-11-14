@@ -1,5 +1,9 @@
-################################################# How does STRAND compare to other models when observations are noisy?
-rm(list=ls(all=TRUE))
+################################################################################################################
+#
+# How does a latent network SRM compare to a standard SRM ?
+#
+################################################################################################################
+
 # Some have argued that STRAND SRM models are not identifiable because we have unit-level random effects and unit-level residual error. 
 # We have three reasons for rejecting this claim:
  
@@ -178,7 +182,7 @@ fit1 =
       "gaussian_error_priors"=c(1, 5)  # Weak prior that permits measurement error to be comparable in scale to sender/receiver/dyad effects
       )
     ),
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       seed=1,
       iter_warmup = 500 ,
@@ -234,7 +238,7 @@ fit2 =
       "gaussian_error_priors"=c(0, 0.1)   # Strong prior: normal(0, 0.1), that measurement error is near zero a priori
       )
     ),
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       seed=1,
       iter_warmup = 500 ,

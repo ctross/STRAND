@@ -38,7 +38,7 @@ simulate_multiplex_network = function(N_id = 99,                        # Number
                                       dr_mu,                            # Average i to j dyad effect and j to i dyad effect log odds
                                       dr_sigma,                         # Variance of dyad effects 
                                       dr_Rho,                           # Correlation of i to j dyad effect and j to i dyad effect 
-                                      error_sigma = 0.01,               # Error variance in Gaussian model
+                                      error_sigma,                      # Error variance in Gaussian model
                                       outcome_mode="bernoulli",         # outcome mode
                                       link_mode = "logit",              # link mode
                                       individual_predictors = NULL,     # A matrix of covariates
@@ -144,10 +144,10 @@ if(outcome_mode=="bernoulli"){
 if(outcome_mode=="gaussian"){
   if(link_mode=="identity"){
  p[l,i,j] = sr[l,i,1] + sr[l,j,2] + dr[l,i,j]
- y_true[l,i,j] = rnorm( 1 , p[l,i,j] , error_sigma)
+ y_true[l,i,j] = rnorm( 1 , p[l,i,j] , error_sigma[l])
 
  p[l,j,i] = sr[l,j,1] + sr[l,i,2] + dr[l,j,i]
- y_true[l,j,i] = rnorm( 1 , p[l,j,i] , error_sigma)
+ y_true[l,j,i] = rnorm( 1 , p[l,j,i] , error_sigma[l])
  }}
  
  }

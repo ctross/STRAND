@@ -1,4 +1,4 @@
-########################################
+##############################################################################################
 #
 #   Poisson Analyses  
 #
@@ -6,10 +6,7 @@
 # i.e., cases where no ties were observable.
 # Using a mask layer is the prefered method.
 #
-########################################
-
-# Clear working space
-rm(list = ls()) 
+##############################################################################################
 
 # Load libraries
 library(STRAND)
@@ -22,7 +19,7 @@ data(Bat_Data)
 nets = list(Lick = round(Bat_Data$Lick/60,0))
 
 # Dyadic variables
-dyad = list(Relatedness = standardize(Bat_Data$Relatedness), 
+dyad = list(Relatedness = standardize_strand(Bat_Data$Relatedness), 
             NoOpportunity = Bat_Data$NoOpportunity
               )
 
@@ -47,9 +44,9 @@ fit0 = fit_block_plus_social_relations_model(data=model_dat_0,
                                             target_regression = ~ 1,
                                             dyad_regression = ~ NoOpportunity * Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = 0.98)
+                                                                        max_treedepth = 11, adapt_delta = 0.95)
 )
 
 # Summary 0
@@ -58,11 +55,11 @@ res0 = summarize_strand_results(fit0)
 # Simple forest plots
 vis_1 = strand_caterpillar_plot(res0, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE,  only_slopes=TRUE)
 vis_1
-#ggsave("Bat_slopes.pdf", vis_1, width=7, height=2.5)
+
 
 vis_2 = strand_caterpillar_plot(res0, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
-#ggsave("Bat_corr.pdf", vis_2, width=6, height=2.5)
+
 
 ############################################################### To compute contrasts with new tools, do this:
 process_block_parameters(input=fit0, focal="Female to Female", base="Male to Female", HPDI=0.9)
@@ -88,9 +85,9 @@ fit = fit_block_plus_social_relations_model(data=model_dat,
                                             target_regression = ~ 1,
                                             dyad_regression = ~ Relatedness,
                                             mode="mcmc",
-                                            stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                                            mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                                         iter_warmup = 1000, iter_sampling = 1000,
-                                                                        max_treedepth = NULL, adapt_delta = 0.98)
+                                                                        max_treedepth = 11, adapt_delta = 0.95)
 )
 
 # Summary 1
@@ -99,11 +96,11 @@ res = summarize_strand_results(fit)
 # Simple forest plots
 vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE,  only_slopes=TRUE)
 vis_1
-#ggsave("Bat_slopes.pdf", vis_1, width=7, height=2.5)
+
 
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="XX", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
-#ggsave("Bat_corr.pdf", vis_2, width=6, height=2.5)
+
 
 # Same results
 

@@ -15,7 +15,7 @@
 #' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
 #' @param bandage_penalty A parameter that controls how tightly stiched together correlation structure parameters are. Default is 0.01 for tight stiching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance. Setting "bandage_penalty=-1" deploys a different Stan model, which fixes the dyadic matrix perfectly. You must set init=0 below, for this model to initialize. 
 #' @param eta Prior on LKJ Cholesky factor, if bandage_penalty = -1.
-#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+#' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
 #' @return A STRAND model object containing the data used, and the Stan results.
@@ -28,7 +28,7 @@
 #'                           target_regression = ~ Age * NoFood,
 #'                           dyad_regression = ~ Relatedness + Friends * SameSex,
 #'                           mode="mcmc",
-#'                           stan_mcmc_parameters = list(seed = 1, chains = 1, 
+#'                           mcmc_parameters = list(seed = 1, chains = 1, 
 #'                             parallel_chains = 1, refresh = 1, 
 #'                             iter_warmup = 100, iter_sampling = 100,
 #'                             max_treedepth = NULL, adapt_delta = NULL)
@@ -42,10 +42,12 @@ fit_multiplex_model_missings = function(data,
                                target_regression,
                                dyad_regression,
                                mode="mcmc",
-                               bandage_penalty = 0.01,
+                               bandage_penalty = 0.05,
                                eta = 4,
-                                stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL,
-                                                            iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL, init=NULL),
+                                mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, 
+                                                      iter_warmup = 500, iter_sampling = 500, 
+                                                      max_treedepth = 12, adapt_delta = 0.95, 
+                                                      chain_method = "vectorized", cores=1, init = 2),
                                 priors=NULL
                                 ){
 
@@ -157,6 +159,8 @@ fit_multiplex_model_missings = function(data,
     data$bandage_penalty = bandage_penalty
 
     ############################################################################# Fit model
+    mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+    
     if(bandage_penalty == -1){
       data = build_multiplex_bindings_dr_multiplex(data)
       data$eta = eta
@@ -177,15 +181,15 @@ fit_multiplex_model_missings = function(data,
     if(mode=="mcmc"){
       fit = model$sample(
         data = unclass(data),
-        seed = stan_mcmc_parameters$seed,
-        chains = stan_mcmc_parameters$chain,
-        parallel_chains = stan_mcmc_parameters$parallel_chains,
-        refresh = stan_mcmc_parameters$refresh,
-        iter_warmup = stan_mcmc_parameters$iter_warmup,
-        iter_sampling = stan_mcmc_parameters$iter_sampling,
-        max_treedepth = stan_mcmc_parameters$max_treedepth,
-        adapt_delta = stan_mcmc_parameters$adapt_delta,
-        init = stan_mcmc_parameters$init
+        seed = mcmc_parameters$seed,
+        chains = mcmc_parameters$chains,
+        parallel_chains = mcmc_parameters$parallel_chains,
+        refresh = mcmc_parameters$refresh,
+        iter_warmup = mcmc_parameters$iter_warmup,
+        iter_sampling = mcmc_parameters$iter_sampling,
+        max_treedepth = mcmc_parameters$max_treedepth,
+        adapt_delta = mcmc_parameters$adapt_delta,
+        init = mcmc_parameters$init
         )
        }
 

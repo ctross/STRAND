@@ -1,24 +1,20 @@
-#####################################################################
+################################################################################################
 #
 #   Computing posterior network metrics from STRAND's latent network
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+################################################################################################
 set.seed(1)
+
 # Load libraries
-library(rethinking)
 library(STRAND)
 library(ggplot2)
 library(igraph)
-
 
 # Make data
 N_id = 90
 
 # Covariates
-Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
+Kinship = standardize_strand(rlkjcorr( 1 , N_id , eta=1.5 ))
 Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
 Mass = rbern(N_id, 0.4)
 
@@ -104,15 +100,14 @@ fit1 = fit_block_plus_social_relations_model(
       dyad_regression = ~ Kinship + Dominant,
     mode="mcmc",
     return_predicted_network = TRUE,   # These samples take up a lot of space, but we need them here
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
-      iter_warmup = 500 ,
-      iter_sampling = 500 ,
-      max_treedepth = 12 ,
+      iter_warmup = 500,
+      iter_sampling = 500,
+      max_treedepth = 12,
       refresh = 1,
       adapt_delta = 0.96)
   )
-
 
 res1 = summarize_strand_results(fit1)
 

@@ -1,22 +1,18 @@
 ##################################################### Simulate longitudinal networks
 ###################################### Load packages
-# install_github('ctross/PlvsVltra')
- library(PlvsVltra) # For colors
- color_set = plvs_vltra("mystic_mausoleum", rev=FALSE, elements=NULL, show=FALSE)
-
  library(stringr)
  library(ggplot2)
  library(psych)
- library(rethinking)
  library(Matrix)
  library(igraph)
  library(STRAND)
+ library(PlvsVltra)
 
 ###################################### Make simulated longitudinal data
  set.seed(666)
 
 # Base settings
- N_id = 125       # Individuals in network
+ N_id = 60        # Individuals in network
  N_timesteps = 5  # Network layers
  labels = paste("ind", 1:N_id)
 
@@ -26,7 +22,7 @@
  Strength = rnorm(N_id, 0, 1)
 
 # Dyadic covariates - Fixed
- Distance = standardize(as.matrix(rlkjcorr(1, N_id, eta=1.5)))
+ Distance = standardize_strand(as.matrix(rlkjcorr(1, N_id, eta=1.5)))
  Dominance = as.matrix(ceiling(rlkjcorr(1, N_id, eta=1.5) - 0.1))
  colnames(Distance) = rownames(Distance) = labels
  colnames(Dominance) = rownames(Dominance) = labels
@@ -56,6 +52,7 @@
              scrap2[i,j] = rbinom(1, size=1, prob=Agression_prob[i,j])
         }
     }
+    
    Friendship[[t]] =  scrap1
    Agression[[t]] =  scrap2
    colnames(Friendship[[t]]) = rownames(Friendship[[t]]) = labels
@@ -288,8 +285,6 @@ A = simulate_longitudinal_network(
  )
 
 
-
-
 #################################################### Create the STRAND data object
  long_dat = NULL
  for(t in 1:5){
@@ -329,8 +324,8 @@ fit_4 = fit_longitudinal_model(long_data=long_dat,
                                coefficient_mode="varying",
                                random_effects_mode="fixed",
                                mode="mcmc",
-                               stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
-                                                           iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                               mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500,
+                                iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95),
                                priors=NULL
                                )
 
@@ -413,7 +408,7 @@ out = longitudinal_plot(fit_4, type="coefficient",
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="none") + ggplot2::theme(legend.title = ggplot2::element_blank())
 p0
-     ggsave("Covariate_Recovery.pdf", p0, height=5, width=12)
+
 
 ########################################################### Dyadic recovery
  out = longitudinal_plot(fit_4, type="dyadic", 
@@ -441,7 +436,7 @@ p0
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="bottom") + ggplot2::theme(legend.title = ggplot2::element_blank())
 p1
- ggsave("Dyadic_Recovery.pdf", p1, height=6.5, width=6.5)
+
 
 ########################################################### Generalized recovery
 out = longitudinal_plot(fit_4, type="generalized", 
@@ -469,7 +464,7 @@ out = longitudinal_plot(fit_4, type="generalized",
      ggplot2::theme(panel.spacing = grid::unit(1, "lines")) + ggplot2::scale_color_manual(values = pal) + 
      ggplot2::theme(legend.position="bottom") + ggplot2::theme(legend.title = ggplot2::element_blank())  
 p2
- ggsave("Generalized_Recovery.pdf", p2, height=6.5, width=6.5)
+
 
 ######################################################### Visualize results
 df_plt = res_4$summary
@@ -549,7 +544,7 @@ p3 = ggplot(res_blocks, aes(x = Variable, y = M, ymin = L, ymax = H, color=Varia
            theme(legend.position="bottom")  + scale_color_manual(values = pal) + theme(legend.position="none")
 p3
 
-ggsave("Block_Recovery.pdf", p3, height=4, width=12)
+
 
 
 

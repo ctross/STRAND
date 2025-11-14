@@ -1,24 +1,20 @@
-#########################################################
+##############################################################################################
 #
 #   Binomial Analyses - Simulated data with interaction  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+##############################################################################################
 set.seed(1)
+
 # Load libraries
 library(STRAND)
-library(rethinking)
 library(ggplot2)
 
-
 # Make data
-N_id = 100
+N_id = 70
 
 # Covariates
-Kinship = standardize(rlkjcorr( 1 , N_id , eta=1.5 ))
-Dominant = ceiling(rlkjcorr( 1 , N_id , eta=1.5 ) - 0.1)
+Kinship = standardize_strand(rlkjcorr(1, N_id, eta=1.5))
+Dominant = ceiling(rlkjcorr(1, N_id, eta=1.5 ) - 0.1)
 Mass = rbern(N_id, 0.4)
 
 # Organize into list
@@ -41,9 +37,9 @@ dr_effects_1 = c(1.2, 1.7, -2.2)
 # Block structure
 group_probs_block_size = c(0.25, c(0.25, 0.25)*(1-0.25))
 
-B_1 = matrix(-10,nrow=1,ncol=1)
-B_2 = matrix(rnorm(9,0,3),nrow=3,ncol=3)
-B_3 = matrix(rnorm(4,0,3),nrow=2,ncol=2)
+B_1 = matrix(-10, nrow=1, ncol=1)
+B_2 = matrix(rnorm(9,0,3), nrow=3, ncol=3)
+B_3 = matrix(rnorm(4,0,3), nrow=2, ncol=2)
 
 diag(B_2) = diag(B_2) + 2
 diag(B_3) = diag(B_3) + 3.5
@@ -51,8 +47,8 @@ diag(B_3) = diag(B_3) + 3.5
 B=list(B_1, B_2, B_3)
  
 groups_1 = rep("Any",N_id) 
-groups_2 = sample( c("Red","White","Blue") , size=N_id , replace=TRUE , prob=group_probs_block_size )
-groups_3 = sample( c("Strange", "Charm") , size=N_id , replace=TRUE , prob=c(0.5,0.5) )
+groups_2 = sample(c("Red","White","Blue"), size=N_id, replace=TRUE, prob=group_probs_block_size)
+groups_3 = sample(c("Strange", "Charm"), size=N_id, replace=TRUE, prob=c(0.5,0.5))
 
 groups = data.frame(Intercept=as.numeric(factor(groups_1)), Merica=as.numeric(factor(groups_2)), Quantum=as.numeric(factor(groups_3)))
 groups_f = data.frame(Intercept=factor(groups_1), Merica=factor(groups_2), Quantum=factor(groups_3))
@@ -61,24 +57,23 @@ individual = data.frame(Mass=Mass)
 #################################################### Simulate SBM + SRM network
 G = simulate_sbm_plus_srm_network(N_id = N_id, 
                          B = B, 
-                         V=3,
-                         groups=groups,                  
+                         V = 3,
+                         groups = groups,                  
                          sr_mu = sr_mu,  
                          sr_sigma = sr_sigma, 
                          sr_rho = sr_rho,
                          dr_mu = dr_mu,  
                          dr_sigma = dr_sigma, 
                          dr_rho = dr_rho,
-                         outcome_mode="binomial", 
-                         link_mode="logit",                 
+                         outcome_mode = "binomial", 
+                         link_mode = "logit",                 
                          individual_predictors = data.frame(Mass=Mass),
                          dyadic_predictors = dyadic_preds,
-                         individual_effects = matrix(sr_effects_1,nrow=2,ncol=1),
+                         individual_effects = matrix(sr_effects_1, nrow=2, ncol=1),
                          dyadic_effects = dr_effects_1
                          )        
 
 ################################################### Organize for model fitting
-
 # Add row and colnames
 name_vec = paste("Individual", 1:N_id)
 rownames(G$network) = colnames(G$network) = name_vec
@@ -89,23 +84,23 @@ rownames(groups_f) = name_vec
 rownames(individual) = name_vec
 
 model_dat = make_strand_data(outcome=list(Outcome = G$network),  
-                             block_covariates=groups_f, 
-                             individual_covariates=individual, 
-                             dyadic_covariates=list(Kinship=Kinship, Dominant=Dominant),  
+                             block_covariates = groups_f, 
+                             individual_covariates = individual, 
+                             dyadic_covariates = list(Kinship=Kinship, Dominant=Dominant),  
                              outcome_mode = "binomial", 
-                             link_mode="logit",
-                             exposure=list(Outcome = G$samps))
+                             link_mode = "logit",
+                             exposure = list(Outcome = G$samps))
 
 # Model the data with STRAND
-fit =  fit_block_plus_social_relations_model(data=model_dat,
+fit =  fit_block_plus_social_relations_model(data = model_dat,
                             block_regression = ~ Merica + Quantum,
                               focal_regression = ~ Mass,
                               target_regression = ~ Mass,
                               dyad_regression = ~ Kinship*Dominant,
-                              mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
+                              mode = "mcmc",
+                              mcmc_parameters = list(chains = 1, parallel_chains = 1, refresh = 1,
                                                           iter_warmup = 500, iter_sampling = 500,
-                                                          max_treedepth = NULL, adapt_delta = .9)
+                                                          max_treedepth = 11, adapt_delta = 0.95)
 )
 
 # Check parameter recovery
@@ -115,10 +110,10 @@ res = summarize_strand_results(fit)
 vis_1 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=TRUE, site="HP", only_slopes=TRUE)
 vis_1
 
-
 vis_2 = strand_caterpillar_plot(res, submodels=c("Focal effects: Out-degree","Target effects: In-degree","Dyadic effects","Other estimates"), normalized=FALSE, site="HP", only_technicals=TRUE, only_slopes=FALSE)
 vis_2
 
+##############################################################################################
 ##### Check all of the block parameters
 B_2_Pred = matrix(res$summary_list$`Other estimates`[5:13,2], nrow=3, ncol=3, byrow=TRUE) # Blue, Red, White
 plot(B_2_Pred~B_2)
@@ -181,6 +176,7 @@ p3
 # STRAND basic 4-way variance partition
 vpc1 = strand_VPCs(fit, n_partitions = 4)
 vpc2 = strand_VPCs(fit, n_partitions = 3)
+vpc3 = strand_VPCs(fit, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, vpc1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -192,9 +188,15 @@ df2 = data.frame(do.call(rbind, vpc2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "3-way VPC"
 df2$Submodel = rep(c("Grooming"),each=3)
-df2$Variable2 = rep(c("Focal","Target","Dyadic+Error"),1)
+df2$Variable2 = rep(c("Focal","Target","Dyadic + Error"),1)
 
-df = rbind(df1, df2)
+df3 = data.frame(do.call(rbind, vpc3[[2]]))
+colnames(df3) = c("Variable", "Median", "L", "H", "Mean", "SD")
+df3$Site = "4-way VPC (alternative)"
+df3$Submodel = rep(c("Grooming"),each=4)
+df3$Variable2 = rep(c("Focal","Target","Dyadic Signal","Dyadic Noise + Error"),1)
+
+df = rbind(df1, df2, df3)
 df$Median = as.numeric(df$Median)
 df$L = as.numeric(df$L)
 df$H = as.numeric(df$H)
@@ -203,7 +205,8 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Grooming"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic+Error")))
+df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error","Dyadic + Error", "Dyadic Signal","Dyadic Noise + Error")))
+
 
 df$Type = df$Site 
 
@@ -218,7 +221,7 @@ p4 = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Type, c
         axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
         axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
-        "lines")) + scale_color_manual(values=c("4-way VPC" = "darkred", "3-way VPC" = "black"))  + theme(legend.position="bottom")
+        "lines")) + scale_color_manual(values=c("4-way VPC" = "darkred", "3-way VPC" = "black", "4-way VPC (alternative)" = "orange1"))  + theme(legend.position="bottom")
 
 p4
 

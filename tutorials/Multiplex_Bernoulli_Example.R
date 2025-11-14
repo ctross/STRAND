@@ -1,11 +1,8 @@
-########################################
+####################################################################################
 #
 #   Multiplex Bernoulli Analyses  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+####################################################################################
 
 # install_github('ctross/PlvsVltra')
  library(PlvsVltra) # For colors
@@ -29,14 +26,14 @@ outcome = list(
 
 # Dyadic data as a labeled list
 dyad = list(
- Relatedness = standardize(RICH$Relatedness), 
+ Relatedness = standardize_strand(RICH$Relatedness), 
  Friends = RICH$Friends,
  Marriage = RICH$Marriage
 )
 
 # Individual data in data-frame
-RICH$Individual$Age = standardize(RICH$Individual$Age)
-RICH$Individual$Wealth = standardize(RICH$Individual$Wealth)
+RICH$Individual$Age = standardize_strand(RICH$Individual$Age)
+RICH$Individual$Wealth = standardize_strand(RICH$Individual$Wealth)
 ind = RICH$Individual
 
 # Individual blocking measures
@@ -65,13 +62,13 @@ fit_1 = fit_multiplex_model(
  target_regression = ~ 1,
  dyad_regression = ~ 1,
  mode="mcmc",
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 500, 
    iter_sampling = 500, 
-   max_treedepth = NULL, 
+   max_treedepth = 11, 
    adapt_delta = 0.98)
 )
 
@@ -83,13 +80,13 @@ fit_2 = fit_multiplex_model(
  target_regression = ~ Age + Wealth + FoodInsecure + Depressed,
  dyad_regression = ~ Relatedness + Friends + Marriage,
  mode="mcmc",
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 500, 
    iter_sampling = 500, 
-   max_treedepth = NULL, 
+   max_treedepth = 11, 
    adapt_delta = 0.98)
 )
 
@@ -99,14 +96,14 @@ res_1 = summarize_strand_results(fit_1)
 colors = plvs_vltra("dust_storm", rev=FALSE, elements=c(2,4))
 colors = c(colors[1], "grey90", colors[2])
 
-multiplex_plot(fit_1, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE, save_plot = "Colombia_1_dyadic.pdf", height=6, width=7, palette=colors)
-multiplex_plot(fit_1, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, save_plot = "Colombia_1_generalized.pdf", height=6, width=7, palette=colors)
+multiplex_plot(fit_1, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE, height=6, width=7, palette=colors)
+multiplex_plot(fit_1, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, height=6, width=7, palette=colors)
 
 # Model 2 results
 res_2 = summarize_strand_results(fit_2)
 
-multiplex_plot(fit_2, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  save_plot = "Colombia_2_dyadic.pdf", height=6, width=7, palette=colors)
-multiplex_plot(fit_2, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  save_plot = "Colombia_2_generalized.pdf", height=6, width=7, palette=colors)
+multiplex_plot(fit_2, type="dyadic", HPDI=0.9, plot = TRUE, export_as_table = FALSE,  height=6, width=7, palette=colors)
+multiplex_plot(fit_2, type="generalized", HPDI=0.9, plot = TRUE, export_as_table = FALSE, height=6, width=7, palette=colors)
 
 # Example Contrasts, new way
 process_block_parameters(fit_2, "Afrocolombian to Afrocolombian", "Afrocolombian to Embera", HPDI=0.9)
@@ -171,24 +168,21 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Site, col
 
 p
 
-# ggsave("rich_res.pdf",p, width=9, height=4.5)
-
-
-
-VPCs_1 = strand_VPCs(fit_1, n_partitions = 4)
-VPCs_2 = strand_VPCs(fit_2, n_partitions = 4)
+######################################################################
+VPCs_1 = strand_VPCs(fit_1, n_partitions = 5)
+VPCs_2 = strand_VPCs(fit_2, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "Base model"
 df1$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df2 = data.frame(do.call(rbind, VPCs_2[[2]]))
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df2$Site = "Full model"
 df2$Submodel = rep(c("Give","Take","Reduce"),each=4)
-df2$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df2$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 df = rbind(df1, df2)
 df$Median = as.numeric(df$Median)
@@ -199,7 +193,6 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Give", "Take", "Reduce"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error")))
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, color=Site,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -216,9 +209,8 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
 
 p
 
-# ggsave("rich_res_vpc.pdf",p, width=9, height=3)
 
-
+############################################################################################################
 # Compare with AMEN probit model
 Q = function(x){
   return(c(median(x),HPDI(x)))
@@ -307,7 +299,7 @@ AME_Measures_Reduce = rbind(Q(ame_generalized_reciprocity), Q(ame_dyadic_cor), Q
 colnames(AME_Measures_Reduce) = c("M","L","H")
 rownames(AME_Measures_Reduce) = c("Gen. Recip.","Dyad. Recip.","Focal VPC","Target VPC","Dyadic VPC", "Error VPC", "DyadicError VPC")
 
-VPCs_1 = strand_VPCs(fit_1, n_partitions = 3)
+VPCs_1 = strand_VPCs(fit_1, n_partitions = 3) # Amen merges the error and dyadic effects
 
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
@@ -351,7 +343,6 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Software
 
 p
 
-# ggsave("rich_res_vpc_3.pdf",p, width=9, height=3)
 # Basically the same as AMEN layer-wise
 
 ###############################################################################################################

@@ -1,11 +1,8 @@
-###########################################
+##############################################################################################
 #
 #   Binomial Analyses with sampling biases  
 #
-########################################
-
-# Clear working space
-rm(list = ls())
+##############################################################################################
 
 # Load libraries
 library(STRAND)
@@ -13,18 +10,18 @@ library(ggplot2)
 library(igraph)
 
 # Create data
-set.seed(420)
+set.seed(67)
 
 V = 1            # One blocking variable
 G = 3            # Three categories in this variable
 N_id = 85        # Number of bonobos
 
 Group = sample(1:3, N_id, replace=TRUE)
-B = matrix(-13, nrow=G, ncol=G)
-diag(B) = -9.2  # Block matrix
+B = matrix(-12, nrow=G, ncol=G)
+diag(B) = -8.2  # Block matrix
 
-B[1,3] = -10.1
-B[3,2] = -11.9
+B[1,3] = -9.1
+B[3,2] = -10.9
 
 Coloration = matrix(rnorm(N_id, 0, 1), nrow=N_id, ncol=1)
 SizeDiff = array(rnorm(N_id*N_id, 0, 1), c(N_id, N_id, 1))
@@ -57,10 +54,7 @@ A = simulate_sbm_plus_srm_network_with_measurement_bias(N_id = N_id,
                                                    )
 
 # Plot data
-Net = graph_from_adjacency_matrix(A$network, mode = c("directed"))
-V(Net)$color = c("turquoise4","brown4", "goldenrod3")[A$group_ids$Group]
-E(Net)$color = c("grey60","black")[is.mutual(Net)+1]
-plot(Net, edge.arrow.size =0.3, edge.curved = 0.3, vertex.label=NA, vertex.size = 5)
+image(A$network)
 
 # Prep dyadic data
 # Add colnames and rownames
@@ -109,7 +103,7 @@ fit =  fit_block_plus_social_relations_model_with_measurement_bias(data=model_da
                               censoring_regression = ~ Coloration,
                               dyad_regression = ~  SizeDiff,
                               mode="mcmc",
-                              stan_mcmc_parameters = list(chains = 1, refresh = 1,
+                              mcmc_parameters = list(chains = 1, refresh = 1,
                                                           iter_warmup = 500, iter_sampling = 500,
                                                           max_treedepth = NULL, adapt_delta = .98)
 )
@@ -120,7 +114,7 @@ res = summarize_strand_results(fit)
 # Parameter estimates look good, in spite of censoring based on coloration
 
 ####################################### Variance partition and reciprocity
-VPCs_1 = strand_VPCs(fit, n_partitions = 4, include_reciprocity = TRUE, mode="cor")  # STRAND STYLE, separates error and dyadic effects
+VPCs_1 = strand_VPCs(fit, n_partitions = 5, include_reciprocity = TRUE, mode="adj")  # STRAND STYLE, separates error and dyadic effects
 VPCs_2 = strand_VPCs(fit, n_partitions = 3, include_reciprocity = TRUE, mode="adj")  # AMEN STYLE, merges error and dyadic effects
 
 VPCs_1

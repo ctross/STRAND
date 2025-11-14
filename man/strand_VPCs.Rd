@@ -6,7 +6,8 @@
 \usage{
 strand_VPCs(
   input,
-  n_partitions = 4,
+  n_partitions = 5,
+  merge_noise_terms = TRUE,
   HPDI = 0.9,
   include_reciprocity = FALSE,
   mode = "cor",
@@ -21,6 +22,8 @@ strand_VPCs(
 \item{input}{A STRAND model object with social relations model parameters.}
 
 \item{n_partitions}{Should variance on latent scale be partioned into 3 factors (focal, target, dyadic+error) as in amen? Or 4 factors (focal, target, dyadic, error)? Or 5 factors (focal, target, dyadic reciprocal, dyadic noise, error)?}
+
+\item{merge_noise_terms}{In the 5-part decomposition, should the two noise terms be merged to yield a 4-way final decomposition.}
 
 \item{HPDI}{Highest Posterior Density Interval. Ranges in (0,1).}
 

@@ -1,13 +1,13 @@
 Package: STRAND
-Title: An R package for simulating and analyzing social network data in R and Stan
-Version: 1.1.6.01
+Title: An R package for simulating and analyzing social network data in R, Stan, and NumPyro
+Version: 1.2.1.01
 Authors@R: c(person(given = "Cody", family = "Ross", email = "ctross@ucdavis.edu", role = c("aut", "cre")))
-Description: An R package for simulating and analyzing social network data using full Bayesian inference in Stan.
-Imports: coda,cmdstanr,ggplot2,grid,posterior,utils,jsonlite,pingr
+Description: An R package for simulating and analyzing social network data using full Bayesian inference in Stan or NumPyro.
+Imports: coda,cmdstanr,ggplot2,grid,posterior,utils,jsonlite,pingr,reticulate
 URL: https://github.com/ctross/STRAND
 BugReports: https://github.com/ctross/STRAND/issues
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-GitHubRelease: our_dire_reveille
+GitHubRelease: beauty_in_the_dissonance
 RoxygenNote: 7.3.3

@@ -1,16 +1,17 @@
 STRAND
 ========
- Social network analysis and simulation in R using Stan 
+ Social network analysis and simulation in R using Stan and NumPyro
  ------
 
  <img align="right" src="logos/logo.gif" alt="logo" width="250">
 
 **STRAND** is an R package designed for simulation and analysis of network data.  The package can be used to simulate network data under stochastic block models, social relations models, and latent network models. These tools allow for simulation not only of realistic human and animal social networks, but also allow researchers to simulate the effects of potential biases—like respondents falsely reporting ties or failing to recall real ties—on network level properties. We also provide tools for Bayesian network-based diffusion analysis, downstream nodal regressions, and other network analysis protocols.
 
-**STRAND** is focused mainly on users aiming to conduct network data analysis. Users can specify complex Bayesian social network models using a simple, lm-style, syntax. Single-sampled self report data can be modeled using stochastic block models or the Social Relations Model, with or with-out covariates. Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement. STRAND also provides methods for more rigorously dealing with missing data and measurement error. We have recently added support for multiplex network models and longitudinal network models. Here we provide a brief overview of various STRAND workflows. For further details, see our full publications at:
+**STRAND** is focused mainly on users aiming to conduct network data analysis. Users can specify complex Bayesian social network models using a simple, lm-style, syntax. Single-sampled self report data can be modeled using stochastic block models or the Social Relations Model, with or with-out covariates. Double-sampled network data can be modeled using a latent network approach that accounts for inter-respondent disagreement. STRAND also provides methods for more rigorously dealing with missing data and measurement error. We have recently added support for multiplex network models, dimension reduction models, and longitudinal network models. Here we provide a brief overview of various STRAND workflows. For further details, see our full publications at:
 + [**Psychological Methods**](https://psycnet.apa.org/record/2023-51200-001) (for latent network models)
 + [**Journal of Animal Ecology**](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.14021) (for simple network models)
 + [**Methods in Ecology and Evolution**](https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.70017) (for censoring-robust methods in ecology). 
++ [**Royal Society Open Science**](https://doi.org/10.1098/rsos.250555) (for multiplex network models). 
 + [**SocArXiv**](https://sciety.org/articles/activity/10.31235/osf.io/ghwts_v1) (for longitudinal network models). 
 
 
@@ -25,15 +26,15 @@ Install by running on R:
 ```{r}
 ################################### Install the latest release
  library(devtools)
- install_github('ctross/STRAND@our_dire_reveille')
+ install_github('ctross/STRAND@beauty_in_the_dissonance')
  library(STRAND)
 ```
 
-You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) installed.
+You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) installed. We are also slowly building up [**NumPyro**](https://num.pyro.ai/en/stable/) support for all of our models. **STRAND** will remain an R-based front-end, but the JAX back-end via **NumPyro** in Python allows our highly parameterized models to be fit with substantially shorter run-times (**NumPyro** models are typically 10x to 50x faster than Stan models).
 
-Quickstart guides can be found [**here.**](https://mc-stan.org/cmdstanr/articles/cmdstanr.html). 
+Quickstart guides for Stan can be found [**here**](https://mc-stan.org/cmdstanr/articles/cmdstanr.html).  
 
-**STRAND** calls **Stan** models in the background, so you will need a C++ compiler in your toolchain. Users frequently rely on [**RTools**](https://cran.r-project.org/bin/windows/Rtools/).
+**STRAND** calls **Stan** models in the background, so you will need a C++ compiler in your toolchain. Users frequently rely on [**RTools**](https://cran.r-project.org/bin/windows/Rtools/). For **NumPyro** you will need **Python**, **NumPyro**, and **JAX**, and they will be called under-the-hood via **reticulate** from R.
 
 Uses:
 ========
@@ -41,6 +42,7 @@ Example models, with test data, can be found here. Note that analysis of large n
 + We teach users how to fit different kinds of network models using example data sets, 
 + We compare STRAND to other software packages for network analysis, and comment on similarities and differences
 + We try to clarify any misconceptions potential users might have about Bayesian network analysis models---e.g, we show that Bayesian models with proper priors are always identifiable, that probit versus logit models are essentially equivalent, that STRAND's implementation of the SRM (Social Relations Model) is a measurement-error robust generalization of the original SRM model.
++ One thing to note, is that we use short MCMC runs (of 500 warmup, 500 samples) of a single chain in many of the examples below, just so that the tutorial has a quicker run-time. When using these models on real data, we recommend using several chains and running them for at least 1000 warmup and 1000 samples. Always check the *fit* slot of the STRAND fit object, and then use base **Stan** or **JAX** summary functions to check *rhat* and *effective sample size*.
 
 
 Basic single-layer network models
@@ -59,19 +61,14 @@ The most basic network analysis models are generalizations of the SRM that accou
 
 + Undirected networks (tested using simulated data): [**Undirected networks**](https://github.com/ctross/STRAND/blob/main/tutorials/Undirected_Example.R)
 
++ Deploy the SRM using NumPyro (tested using simulated data): [**How to fit models using NumPyro/JAX back-end**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_SRM_Example.R)
 
-
-Double-sampled single-layer network models
---------------
-Respondents often disagree on ties. Alice might report giving to Bob, but Bob might not report receiving from Alice. To make sense of network data with such potential discordance, we integrate a reporting model into the SRM. Users can explicitly model the predictors of false positive reports, the recall rate of true ties, and inter-question duplication rates,  as well as all of the standard predictors using lm-style syntax.
-
-+ Double-sampled binary outcomes (self-reported food/money sharing from rural Colombia): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
-
++ Deploy the SRM using NumPyro (emprical data): [**NumPyro for the Colombian Friendship Data**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Empirical_SRM_Example.R)
 
 
 Multiplex network models
 --------------
-Networks typically influence each other. Users may wish to study if outgoing ties in one network layer are predictive of incoming ties in a different layer. To model such structure, we provide multiplex generalizations of the SRM for various types of outcomes. Users can still estimate the effects of focal, target, dyadic, and block predictors within each layer, while also estimating residual correlations in random effects within and across network layers at both a generalized and dyadic level (see our application paper at [**Communications Psychology**](https://www.nature.com/articles/s44271-024-00098-1) for a primer on these models). 
+Networks typically influence each other. Users may wish to study if outgoing ties in one network layer are predictive of incoming ties in a different layer. To model such structure, we provide multiplex generalizations of the SRM for various types of outcomes. Users can still estimate the effects of focal, target, dyadic, and block predictors within each layer, while also estimating residual correlations in random effects within and across network layers at both a generalized and dyadic level (see our papers at [**Royal Society Open Science**](https://doi.org/10.1098/rsos.250555) and [**Communications Psychology**](https://www.nature.com/articles/s44271-024-00098-1) for a primer on these models). 
 
 + Multiplex Binary/Bernoulli outcomes (using RICH economic games): [**Multiplex Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example.R)
 
@@ -83,24 +80,40 @@ Networks typically influence each other. Users may wish to study if outgoing tie
 
 + Multiplex models with undirected layers (tested using simulated data): [**Undirected multiplex networks**](https://github.com/ctross/STRAND/blob/main/tutorials/Undirected_Multiplex_Bernoulli_Example.R)
 
- + Multiplex network modeling requires estimation of a highly-structured dyadic correlation matrix with special symmetries. We have two approaches for constructing such block-structured matrices, one based on an $\ell^{2}$
- norm penalty, and one based on constructing a Cholesky factor with a special set of constraints. Here we show that both methods are equally effective: [**Different methods for estimating dyadic reciprocity**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example_Dyadic_Modes.R)
++ Deploy the Multiplex SRM using NumPyro (tested using simulated data): [**How to fit multiplex models using NumPyro/JAX back-end**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Multiplex_Example.R)
 
-Multiplex dimension reduction network models (experimental)
++ Deploy the Multiplex SRM using NumPyro (empirical data): [**NumPyro for the RICH games data**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Multiplex_Empirical_Example.R)
+
+
+Multiplex dimension-reduction network models (experimental)
 --------------
 Sometimes we have multiple network layers of observations that are reflective of a single underlying social network. In these models, we use the SRM to estimate a single latent network, and then estimate loadings of the observation layers onto that latent network. 
 
-+ Multiplex dimension reduction (using simulated data): [**Multiplex dimension reduction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Dimension_Reduction.R)
++ Multiplex dimension-reduction in Stan (using simulated data): [**Multiplex dimension reduction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Dimension_Reduction.R)
+
++ Deploy the Multiplex dimension-reduction model using NumPyro (tested using simulated data): [**How to fit multiplex dimension-reduction models using NumPyro/JAX back-end**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Dimension_Reduction.R)
+
 
  Longitudinal network dynamics (experimental)
 --------------
-STRAND now supports longitudinal network analysis. These models draw on a multiplex network analysis framework to study network evolution over time. Longitudinal network models can be thought of as multiplex models with additional symmetries that arise from assuming transportability of effects across time-steps. See details in our [**SocArXiv preprint**](https://sciety.org/articles/activity/10.31235/osf.io/ghwts_v1). These methods are currently passing the basic test fits, but are considered experimental. We appreciate any feedback or test reports. 
+STRAND now supports longitudinal network analysis. These models draw on a multiplex network analysis framework to study network evolution over time. Longitudinal network models can be thought of as multiplex models with additional symmetries that arise from assuming transportability of some effects across time-steps. See details in our [**SocArXiv preprint**](https://sciety.org/articles/activity/10.31235/osf.io/ghwts_v1). These methods are currently passing the basic tests, but are considered experimental. We appreciate any feedback or test reports. 
 
-Longitudinal Binary/Bernoulli outcomes (using Colombian friendship data): [**Longitudinal Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Bernoulli_Example.R)
++ Longitudinal Binary/Bernoulli outcomes (using Colombian friendship data): [**Longitudinal Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Bernoulli_Example.R)
 
-Longitudinal Binomial outcomes (using baboon data): [**Longitudinal Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Binomial_Example.R)
++ Longitudinal Binomial outcomes (using baboon data): [**Longitudinal Binomial models**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Binomial_Example.R)
 
-Longitudinal simulation analysis (using simulated data): [**Longitudinal Generative Simulations**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Simulation_Example.R)
++ Longitudinal simulation analysis (using simulated data): [**Longitudinal Generative Simulations**](https://github.com/ctross/STRAND/blob/main/tutorials/Longitudinal_Simulation_Example.R)
+
++ Deploy the Longitudinal SRM using NumPyro (tested using simulated data): [**How to fit longitudinal models using NumPyro/JAX back-end**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Longitudinal_Example.R)
+  
++ Deploy the Longitudinal SRM using NumPyro (using the baboon data): [**NumPyro for the baboon data**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Longitudinal_Example.R)
+
+
+Double-sampled single-layer network models
+--------------
+Respondents often disagree on ties. Alice might report giving to Bob, but Bob might not report receiving from Alice. To make sense of network data with such potential discordance, we integrate a reporting model into the SRM. Users can explicitly model the predictors of false positive reports, the recall rate of true ties, and inter-question duplication rates,  as well as all of the standard predictors using lm-style syntax.
+
++ Double-sampled binary outcomes (self-reported food/money sharing from rural Colombia): [**Latent network models**](https://github.com/ctross/STRAND/blob/main/tutorials/LatentNetwork_Example.R)
 
 
 Automatic Bayesian imputation of missing data (experimental)
@@ -120,9 +133,10 @@ STRAND now supports automatic Bayesian imputation for continuous predictor varia
 
 Downstream nodal regression (experimental)
 --------------
-Often, users are not only interested in networks as outcomes, but also want to know how nodal out-flow and in-flow propensities are linked to downstream nodal outcomes. To support this, we have added a function for running downstream nodal regressions. In this workflow, the user first fits a network model. Then, they run a downstream regression using the estimated node-level random effects as predictors of the downstream outcome. This two-step model propagates uncertainty by running a measurement error model on the nodal random effects. We are currently preparing a brief methods note on this method.
+Often, users are not only interested in networks as outcomes, but also want to know how nodal out-flow and in-flow propensities are linked to downstream nodal outcomes. To support this, we have added a function for running downstream nodal regressions. In this workflow, the user first fits a network model. Then, they run a downstream regression using the estimated node-level random effects as predictors of the downstream outcome. This two-step model propagates uncertainty by running a measurement error model on the nodal random effects. We are currently preparing a brief methods note on this model.
 
 + Predicting downstream outcomes from nodal random effects: [**Downstream nodal regressions**](https://github.com/ctross/STRAND/blob/main/tutorials/Downstream_Nodal_Model_Example.R)
+
 
 Network-based diffusion analysis (experimental)
 --------------
@@ -136,6 +150,8 @@ Miscellaneous features and toy examples
 Below we provide a few more pointed tutorials showing how to deal with specific issues, like structural zeros, prior specification, data simulation, and comparison of STRAND to other tools. We also show a few other things about STRAND models, e.g., probit and logit links yield equivalent inference, binary SRM models are well-specified in a Bayesian framework, etc. We will also include some minimum working examples to address some common questions we get via email.
 
 + An example on computing posterior distributions for network metrics like betweenness, centrality, transitivity, etc.: [**Posterior distributions for network metrics**](https://github.com/ctross/STRAND/blob/main/tutorials/Network_Metrics_Example.R)
+  
++ An example on how the predicted network is affected if a mask layer is applied: [**Predicted Network Example**](https://github.com/ctross/STRAND/blob/main/tutorials/Predicted_Network_Example.R)
 
 + An example on both simulating and fitting networks (includes interactions): [**Simulating data and fitting interaction models**](https://github.com/ctross/STRAND/blob/main/tutorials/Interaction_Example.R)
 
@@ -143,7 +159,7 @@ Below we provide a few more pointed tutorials showing how to deal with specific 
 
 + An example on accounting for structural-zeros/censored-data. For example, there may be N groups of individuals in a dataset, where each group is in a separate enclosure, and thus only with-group ties can be modeled: [**Structural Zeros**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Callithrix_Example.R).
 
-+ An example on interactions between focal (sender), target (receiver), and dyadic effect: [**Between-level interaction**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Between_Level_Interaction_Example.R)
++ An example on interactions between focal (sender), target (receiver), and dyadic effect: [**Between-level interactions**](https://github.com/ctross/STRAND/blob/main/tutorials/Bernoulli_Between_Level_Interaction_Example.R)
 
 + An example on changing default priors: [**Changing priors**](https://github.com/ctross/STRAND/blob/main/tutorials/ChangingPriors_Example.R)
 
@@ -155,6 +171,8 @@ Below we provide a few more pointed tutorials showing how to deal with specific 
 
 + STRAND's probit/logit SRM has both dyad-level random effects and dyad-level error. Can we still recover parameters?  [**Yes.**](https://github.com/ctross/STRAND/blob/main/tutorials/Probit_Measurement_Example.R)
 
++ Multiplex network modeling requires estimation of a highly-structured dyadic correlation matrix with special symmetries. We have two approaches for constructing such block-structured matrices, one based on an $\ell^{2}$
+ norm penalty, and one based on constructing a Cholesky factor with a special set of constraints. Here we show that both methods are equally effective: [**Different methods for estimating dyadic reciprocity**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example_Dyadic_Modes.R)
 
 
 Citations:
@@ -170,6 +188,19 @@ If you use STRAND, please cite us using the most relevant paper:
   pages={254--266},
   year={2024},
   publisher={Wiley Online Library}
+}
+```
+
+```{bibtex}
+@article{ross2025bayesian,
+  title={Bayesian multiplex network models in R using STRAND: Methods for biologists and social scientists},
+  author={Ross, Cody T and Kajokaite, Kotrina and Pinkney, Sean and Sosa, Sebastian},
+  journal={Royal Society Open Science},
+  volume={12},
+  number={10},
+  pages={250555},
+  year={2025},
+  publisher={The Royal Society}
 }
 ```
 
@@ -202,7 +233,7 @@ Note:
 ========
 Each of the models included in this package have been fit to real empirical datasets, and tested across a wide-range of simulated data to ensure their quality. However, some models are still rather new. If you come across any weird behavior, or notice any bugs, typos, or other problems, please open an issue on GitHub, and we will work to address it! 
 
-Additionally, our settings are such that anyone can issue pull requests. If you notice any typos in the documentation, want to add functionality, or feel like you can add something else useful, please submit a pull request with your proposed changes. We will inspect the changes closely and integrate them if they are helpful.
+Additionally, our settings are such that anyone can issue pull requests. If you notice any typos in the documentation, want to add functionality, or feel like you can add something else useful, please submit a pull request with your proposed changes. We will inspect the changes closely and integrate them if they are helpful. Publicly opening issues for your questions or concerns helps the whole community.
 
 
 

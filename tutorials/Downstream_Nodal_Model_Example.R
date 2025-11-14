@@ -1,14 +1,11 @@
-###############################################################################
+###########################################################################################################
 #
 #   Estimating the effect of nodal out- and in-strength on downstream variables
 #
-########################################
-
-# Clear working space
-# rm(list = ls())
+###########################################################################################################
 set.seed(1)
+
 # Load libraries
-library(rethinking)
 library(STRAND)
 library(ggplot2)
 library(igraph)
@@ -20,7 +17,7 @@ N_id = 180
 
 # Covariates
 Mass = rbern(N_id, 0.4)
-Age = standardize(runif(N_id, 5, 50))
+Age = standardize_strand(runif(N_id, 5, 50))
 individual = data.frame(Mass=Mass, Age=Age)
 
 V = 1            # One blocking variable
@@ -61,7 +58,7 @@ fit1 = fit_block_plus_social_relations_model(
       target_regression = ~ 1,
       dyad_regression = ~ 1,
     mode="mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 500 ,
       iter_sampling = 500 ,
@@ -69,7 +66,6 @@ fit1 = fit_block_plus_social_relations_model(
       refresh = 1,
       adapt_delta = 0.96)
   )
-
 
 res1 = summarize_strand_results(fit1)
 
@@ -84,8 +80,8 @@ set.seed(1)
 B = c(-2, 0.5, 1.9, 0.6, -1.5)
 RS = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 
 for(i in 1:length(Age)){
   RS[i] = rnorm(1, (B[1] + B[2]*out_strength[i] + B[3]*in_strength[i] + B[4]*Age[i] + B[5]*Mass[i]), 0.35)
@@ -103,7 +99,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "gaussian",
     link_mode = "identity",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -116,8 +112,8 @@ res1d = summarize_strand_results(fit1d)
 B 
 
 ####################### Compare to lm
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(lm(RS ~ OS + IS + Age + Mass ))
 B
 
@@ -129,8 +125,8 @@ set.seed(7)
 B = c(-1.7, 0.7, -1.1, 0.70, -1.25)
 RS = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 
 for(i in 1:length(Age)){
   RS[i] = rbinom(1, prob=inv_logit(B[1] + B[2]*out_strength[i] + B[3]*in_strength[i] + B[4]*Age[i] + B[5]*Mass[i]), size=1)
@@ -148,7 +144,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "bernoulli",
     link_mode = "logit",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -161,8 +157,8 @@ res1d = summarize_strand_results(fit1d)
 B 
 
 ####################### Compare to glm
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(glm(RS ~ OS + IS + Age + Mass, family="binomial"))
 B 
 
@@ -176,8 +172,8 @@ B = c(-2, 1.7, -1.99, 0.6, -0.75)
 RS = c()
 Exposure = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 
 for(i in 1:length(Age)){
   Exposure[i] = rpois(1, 30)
@@ -198,7 +194,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "binomial",
     link_mode = "logit",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -211,8 +207,8 @@ res1d = summarize_strand_results(fit1d)
 B 
 
 ####################### Compare to glm
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(glm(formula = cbind(RS, Exposure - RS) ~ OS + IS + Age + Mass, family = "binomial"))
 B
 
@@ -225,8 +221,8 @@ set.seed(42)
 B = c(-1, 0.7, -0.99, 0.6, -0.95)
 RS = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 
 for(i in 1:length(Age)){
   RS[i] = rpois(1, lambda=exp(B[1] + B[2]*out_strength[i] + B[3]*in_strength[i] + B[4]*Age[i] + B[5]*Mass[i]))
@@ -244,7 +240,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "poisson",
     link_mode = "log",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -257,8 +253,8 @@ res1d = summarize_strand_results(fit1d)
 B 
 
 ####################### Compare to glm
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(glm(RS ~ OS + IS + Age + Mass, family="poisson"))
 B
 
@@ -276,8 +272,8 @@ rgampois = function (n, mu, scale){
     rnbinom(n, size = shape, prob = prob)
 }
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 
 for(i in 1:length(Age)){
   RS[i] = rgampois(1, mu=exp(B[1] + B[2]*out_strength[i] + B[3]*in_strength[i] + B[4]*Age[i] + B[5]*Mass[i]), scale=2)
@@ -295,7 +291,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "negative_binomial",
     link_mode = "log",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -309,8 +305,8 @@ B
 
 ####################### Compare to glm
 library(MASS)
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(glm.nb(RS ~ OS + IS + Age + Mass))
 B
 
@@ -322,8 +318,8 @@ set.seed(1337)
 B = c(-1, 0.7, -0.8, 0.6, -0.75)
 RS = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 scale = 90
 
 for(i in 1:length(Age)){
@@ -344,7 +340,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "beta",
     link_mode = "logit",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -358,8 +354,8 @@ B
 
 ####################### Compare to glm
 library(betareg)
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(betareg(RS ~ OS + IS + Age + Mass))
 B
 
@@ -372,8 +368,8 @@ set.seed(8675309)
 B = c(-1, 0.7, -0.4, 0.6, -0.75)
 RS = c()
 
-out_strength = standardize(G$sr[,1])
-in_strength = standardize(G$sr[,2])
+out_strength = standardize_strand(G$sr[,1])
+in_strength = standardize_strand(G$sr[,2])
 scale = 20
 
 for(i in 1:length(Age)){
@@ -394,7 +390,7 @@ fit1d = fit_downstream_nodal_model(
     outcome_mode = "gamma",
     link_mode = "log",
     mode = "mcmc",
-    stan_mcmc_parameters = list(
+    mcmc_parameters = list(
       chains = 1,
       iter_warmup = 1500 ,
       iter_sampling = 1500 ,
@@ -407,8 +403,8 @@ res1d = summarize_strand_results(fit1d)
 B 
 
 ####################### Compare to glm
-OS = standardize(rowSums(Net))
-IS = standardize(colSums(Net))
+OS = standardize_strand(rowSums(Net))
+IS = standardize_strand(colSums(Net))
 summary(glm(RS ~ OS + IS + Age + Mass, family = Gamma(link = "log"))) 
 B
 

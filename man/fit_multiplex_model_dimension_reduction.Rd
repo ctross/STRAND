@@ -10,11 +10,13 @@ fit_multiplex_model_dimension_reduction(
   focal_regression,
   target_regression,
   dyad_regression,
+  expected_ties = NULL,
+  stop_reflection_invariance = TRUE,
   return_predicted_network = FALSE,
   mode = "mcmc",
-  stan_mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
-    iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL,
-    init = NULL),
+  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1,
+    iter_warmup = 500, iter_sampling = 500, max_treedepth = 12, adapt_delta = 0.95,
+    chain_method = "vectorized", cores = 1, init = 2),
   priors = NULL
 )
 }
@@ -29,13 +31,17 @@ fit_multiplex_model_dimension_reduction(
 
 \item{dyad_regression}{A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship}
 
+\item{expected_ties}{In your latent network, of N_id by N_id nodes, about how many strong ties do you expect? This parameter helps stop reflection invariance. Default is to construct it automatically assuming sparsity: expected_ties = (0.15*N)^2.}
+
+\item{stop_reflection_invariance}{If TRUE we add a penalty to the target: target += normal_lpdf(sum(p) | S, penalty). This prevents the backwards loading of p as 1-p, by forcing p to be sparse. The cost is a slower runtime.}
+
 \item{return_predicted_network}{Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.}
 
-\item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" is default and recommended, and STRAND has functions to make processing the mcmc samples easier. Other options are "optim", to
+\item{mode}{A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. Other options are "optim", to
 use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
 users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.}
 
-\item{stan_mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
+\item{mcmc_parameters}{A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.}
 
 \item{priors}{A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed.}
@@ -46,7 +52,7 @@ A STRAND model object containing the data used, and the Stan results.
 \description{
 This function allows users to analyse empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
 and a series of formulas following standard lm() style syntax. Unlike the standard multiplex model, this model is designed for dimension reduction. A single latent network is estimated,
-and loadings of each multiplex layer onto the latent network are estimated.
+and loadings of each multiplex layer onto the latent network are estimated. Note that the first layer should be positively valenced with respect to the latent dimension of interest!
 }
 \details{
 It is important to note that all individual block (or group) assignment must be supplied as data.  Latent blocks or groups will be supported in future releases of STRAND.
@@ -59,7 +65,7 @@ fit = fit_multiplex_model_dimension_reduction(data=model_dat,
                           target_regression = ~ Age * NoFood,
                           dyad_regression = ~ Relatedness + Friends * SameSex,
                           mode="mcmc",
-                          stan_mcmc_parameters = list(seed = 1, chains = 1, 
+                          mcmc_parameters = list(seed = 1, chains = 1, 
                             parallel_chains = 1, refresh = 1, 
                             iter_warmup = 100, iter_sampling = 100,
                             max_treedepth = NULL, adapt_delta = NULL)

@@ -4,9 +4,6 @@
 #
 ########################################
 
-# Clear working space
-rm(list = ls())
-
 # install_github('ctross/PlvsVltra')
 library(PlvsVltra) # For colors
 
@@ -34,7 +31,7 @@ exposure = list(
 )
 
 # Individual data in data-frame
-Baboon$Individual$Age = standardize(Baboon$Individual$Age)
+Baboon$Individual$Age = standardize_strand(Baboon$Individual$Age)
 ind = Baboon$Individual 
 
 # Merge data
@@ -57,13 +54,13 @@ fit3 = fit_multiplex_model(
  target_regression = ~ Age + Sex,
  dyad_regression = ~ 1,
  mode="mcmc",
- stan_mcmc_parameters = list(
+ mcmc_parameters = list(
    chains = 1, 
    parallel_chains = 1, 
    refresh = 1, 
    iter_warmup = 1000, 
    iter_sampling = 1000, 
-   max_treedepth = NULL, 
+   max_treedepth = 11, 
    adapt_delta = 0.98)
 )
 
@@ -120,13 +117,13 @@ p
 
 
 ######################## VPCs
-VPCs_1 = strand_VPCs(fit3, n_partitions = 4)
+VPCs_1 = strand_VPCs(fit3, n_partitions = 5)
 
 df1 = data.frame(do.call(rbind, VPCs_1[[2]]))
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
 df1$Site = "Base model"
 df1$Submodel = rep(c("Groom","Present","Threat"),each=4)
-df1$Variable2 = rep(c("Focal","Target","Dyadic","Error"),3)
+df1$Variable2 = rep(c("Focal","Target","Dyadic signal","Dyadic noise + Error"),3)
 
 
 df = rbind(df1)
@@ -138,7 +135,7 @@ df$Submodel = factor(df$Submodel)
 df$Submodel = factor(df$Submodel, levels=c("Groom", "Present", "Threat"))
 
 df$Variable2 = factor(df$Variable2)
-df$Variable2 = factor(df$Variable2, levels=rev(c("Focal","Target","Dyadic","Error")))
+
 
 p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, color=Site,
         ymin = L, ymax = H)) + ggplot2::geom_linerange(size = 1,, position = position_dodge(width = 0.6)) + 
@@ -151,13 +148,13 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
         axis.title.y = ggplot2::element_text(size = 14, face = "bold"), 
         axis.title.x = ggplot2::element_blank()) + ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 360)) + 
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
-        "lines")) + scale_color_manual(values=c("Base model" = colors[1], "Full model" = colors[3])) + theme(legend.position="bottom")
+        "lines")) + scale_color_manual(values=c("Base model" = "darkred")) + theme(legend.position="bottom")
 
 p
 
 
 ######################################################################## Reciprocity
-VPCs_1 = strand_VPCs(fit3, n_partitions = 4, include_reciprocity = TRUE)
+VPCs_1 = strand_VPCs(fit3, n_partitions = 5, include_reciprocity = TRUE)
 
 df1 = data.frame(VPCs_1[[3]])
 colnames(df1) = c("Variable", "Median", "L", "H", "Mean", "SD")
@@ -173,7 +170,7 @@ df1$Submodel = factor(df1$Submodel)
 df1$Model = df1$Site 
 
 ## Adjusted
-VPCs_2 = strand_VPCs(fit3, n_partitions = 4, include_reciprocity = TRUE, mode="adj")
+VPCs_2 = strand_VPCs(fit3, n_partitions = 5, include_reciprocity = TRUE, mode="adj")
 
 df2 = data.frame(VPCs_2[[3]])
 colnames(df2) = c("Variable", "Median", "L", "H", "Mean", "SD")

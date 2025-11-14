@@ -6,12 +6,12 @@
 #' @param eta Prior on the LKJ Cholesky factor.
 #' @param mode Which method to use? "cholesky" or "l2norm".
 #' @param setting Which matrix to create? "multiplex_dyadic_reciprocity", "longitudinal_dyadic_reciprocity", or "longitudinal_generalized_reciprocity".
-#' @param stan_mcmc_parameters A list of Stan parameters that often need to be tuned.
+#' @param mcmc_parameters A list of Stan parameters that often need to be tuned.
 #' @return A Stan object.
 #' @export
 #'
 
-generate_structured_correlation_matrix = function(data, eta, mode, setting, stan_mcmc_parameters) {
+generate_structured_correlation_matrix = function(data, eta, mode, setting, mcmc_parameters) {
   data$eta = eta
 
   if (setting == "multiplex_dyadic_reciprocity") {
@@ -41,24 +41,24 @@ generate_structured_correlation_matrix = function(data, eta, mode, setting, stan
     # Correlation matrix methods contributed to STRAND by Sean Pinkney
     # Copyright 2025 Sean Pinkney <sean.pinkney@gmail.com>
     # Subject to the BSD 3-Clause License
-    model = cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_cholesky.stan")
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","generate_structured_correlation_matrix_cholesky.stan"))
   }
 
   if (mode == "l2norm") {
-    model = cmdstanr::cmdstan_model("Code/Stan/generate_structured_correlation_matrix_l2norm.stan")
+    model = cmdstanr::cmdstan_model(paste0(path.package("STRAND"),"/","generate_structured_correlation_matrix_l2norm.stan"))
   }
 
   fit = model$sample(
     data = unclass(data),
-    seed = stan_mcmc_parameters$seed,
-    chains = stan_mcmc_parameters$chain,
-    parallel_chains = stan_mcmc_parameters$parallel_chains,
-    refresh = stan_mcmc_parameters$refresh,
-    iter_warmup = stan_mcmc_parameters$iter_warmup,
-    iter_sampling = stan_mcmc_parameters$iter_sampling,
-    max_treedepth = stan_mcmc_parameters$max_treedepth,
-    adapt_delta = stan_mcmc_parameters$adapt_delta,
-    init = stan_mcmc_parameters$init
+    seed = mcmc_parameters$seed,
+    chains = mcmc_parameters$chains,
+    parallel_chains = mcmc_parameters$parallel_chains,
+    refresh = mcmc_parameters$refresh,
+    iter_warmup = mcmc_parameters$iter_warmup,
+    iter_sampling = mcmc_parameters$iter_sampling,
+    max_treedepth = mcmc_parameters$max_treedepth,
+    adapt_delta = mcmc_parameters$adapt_delta,
+    init = mcmc_parameters$init
   )
 
   bob = list(data = data, fit = fit)

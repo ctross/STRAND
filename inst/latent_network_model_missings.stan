@@ -87,6 +87,7 @@ data{
   //# Accessory paramters 
     matrix[23, 2] priors;                      //# Priors in a matrix, see details in the make_priors() function
     int export_network;                        //# Controls export of predictions
+    int stop_reflection_invariance;            //# Boolean to turn on penalty
 }
 
 transformed data{
@@ -448,8 +449,10 @@ model{
    }
 
  target += sum(mixed_p);
-
- target += normal_lpdf(sum(p) | S, penalty); //# Stop label switching by penalizing the distance between report density and outcome density
+ 
+ if(stop_reflection_invariance==1){
+  target += normal_lpdf(sum(p) | S, penalty); //# Stop label switching by penalizing the distance between report density and outcome density
+  }
  }
 
 generated quantities{

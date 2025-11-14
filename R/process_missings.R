@@ -159,7 +159,8 @@ process_missings = function(data){
 
         if(length(locations_missing_outcomes)>0){
             warning("Missing data detected in the outcome layer. These outcomes will be sliced out of the model using a masking layer.") 
-            data$outcomes[locations_missing_outcomes] = -99  
+            data$outcomes[locations_missing_outcomes] = -99 
+            data$outcomes_real[locations_missing_outcomes] = -99   
         }
 
         if(length(locations_missing_exposure)>0){
