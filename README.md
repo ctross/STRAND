@@ -106,7 +106,7 @@ STRAND now supports longitudinal network analysis. These models draw on a multip
 
 + Deploy the Longitudinal SRM using NumPyro (tested using simulated data): [**How to fit longitudinal models using NumPyro/JAX back-end**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Longitudinal_Example.R)
   
-+ Deploy the Longitudinal SRM using NumPyro (using the baboon data): [**NumPyro for the baboon data**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Longitudinal_Example.R)
++ Deploy the Longitudinal SRM using NumPyro (using the baboon data): [**NumPyro for the baboon data**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_Longitudinal_Binomial_Example.R)
 
 
 Double-sampled single-layer network models
