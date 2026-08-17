@@ -37,7 +37,7 @@ build_multiplex_bindings_dr_longitudinal = function(data, verbose = FALSE){
 
   # Compute lookup table
   dr_indices = which(bindings_mat > 0, arr.ind=TRUE)
-  dr_indices = dr_indices[order(dr_indices[,1]),]
+  dr_indices = dr_indices[order(dr_indices[,1]), , drop = FALSE]
   dr_id = bindings_mat[dr_indices]
 
   # Compute other info 

@@ -4,6 +4,7 @@ def numpyro_multiplex_dimension_reduction(
     export_network, 
     long_outcome_set_np, 
     long_exposure_set_np, 
+    long_mask_set_np,
     long_ids_int, 
     block_mu_np, 
     block_sigma_np,
@@ -78,6 +79,7 @@ def numpyro_multiplex_dimension_reduction(
     # Outcome models
     linear_model = mu + dr + gr_long
     p = jax.nn.sigmoid(linear_model)
+    keep_mask = jnp.asarray(long_mask_set_np).astype(bool)
 
     if export_network == 1:
         numpyro.deterministic("p", p)
@@ -88,14 +90,15 @@ def numpyro_multiplex_dimension_reduction(
     beta_0 = numpyro.sample("beta_0", dist.TruncatedNormal(loc=3.0, scale=3.0, low=0.0))
     beta = numpyro.deterministic("beta", jnp.concatenate([jnp.reshape(beta_0, (1, 1, 1)), beta_raw], axis=0))
 
-    if outcome_mode == 1:
-        numpyro.sample("obs", dist.Bernoulli(logits=alpha + beta * p), obs=long_outcome_set_np)
-    elif outcome_mode == 2:
-        numpyro.sample("obs", dist.Binomial(total_count=long_exposure_set_np, logits=alpha + beta * p), obs=long_outcome_set_np)
-    elif outcome_mode == 3:
-        numpyro.sample("obs", dist.Poisson(rate=jnp.exp(alpha + beta * p)), obs=long_outcome_set_np)
-    elif outcome_mode == 4:
-        numpyro.sample("obs", dist.Normal(loc=alpha + beta * p, scale=error_sigma), obs=long_outcome_set_np)
+    with numpyro.handlers.mask(mask=keep_mask):
+        if outcome_mode == 1:
+            numpyro.sample("obs", dist.Bernoulli(logits=alpha + beta * p), obs=long_outcome_set_np)
+        elif outcome_mode == 2:
+            numpyro.sample("obs", dist.Binomial(total_count=long_exposure_set_np, logits=alpha + beta * p), obs=long_outcome_set_np)
+        elif outcome_mode == 3:
+            numpyro.sample("obs", dist.Poisson(rate=jnp.exp(alpha + beta * p)), obs=long_outcome_set_np)
+        elif outcome_mode == 4:
+            numpyro.sample("obs", dist.Normal(loc=alpha + beta * p, scale=error_sigma), obs=long_outcome_set_np)
 
     # Penalty term to prevent label switching
     if stop_reflection_invariance == 1:

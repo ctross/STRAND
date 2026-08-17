@@ -217,7 +217,7 @@
                     Strength=Strength)
 
 ### col and row names are now a soft requirement
-# can turn off with check_data_organization = FALSE, but its reccmended to always run checks on row and col names
+# can turn off with check_data_organization = FALSE, but its recommended to always run checks on row and col names
  labels = paste("Ind", 1:N_id)
  colnames(outcome$Feeding) = rownames(outcome$Feeding) = labels
  colnames(outcome$Fighting) = rownames(outcome$Fighting) = labels

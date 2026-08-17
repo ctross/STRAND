@@ -15,8 +15,9 @@ merge_mcmc_parameters = function(user_params = list()){
     max_treedepth = 12, 
     adapt_delta = 0.95, 
     chain_method = "vectorized", 
-    cores=1, 
-    init = 2
+    cores = 1, 
+    init = 2,
+    float_type = "x64"
     )
   modifyList(default_mcmc_parameters, user_params)
 }

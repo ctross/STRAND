@@ -5,6 +5,7 @@ def numpyro_longitudinal(
     bandage_penalty,
     long_outcome_set_np,
     long_exposure_set_np,
+    long_mask_set_np, 
     long_ids_int,
     block_mu_np,
     block_sigma_np,
@@ -85,17 +86,26 @@ def numpyro_longitudinal(
     
     # Model outcomes
     linear_model = mu + dr_long + gr_long
+    keep_mask = jnp.asarray(long_mask_set_np).astype(bool)
 
-    if outcome_mode == 1:
-        numpyro.sample("obs", dist.Bernoulli(logits=linear_model), obs=long_outcome_set_np)
-    elif outcome_mode == 2:
-        numpyro.sample("obs", dist.Binomial(total_count=long_exposure_set_np, logits=linear_model), obs=long_outcome_set_np)
-    elif outcome_mode == 3:
-        numpyro.sample("obs", dist.Poisson(rate=jnp.exp(linear_model)), obs=long_outcome_set_np)
-    elif outcome_mode == 4:
-        numpyro.sample("obs", dist.Normal(loc=linear_model, scale=error_sigma), obs=long_outcome_set_np)
+    with numpyro.handlers.mask(mask=keep_mask):
+        if outcome_mode == 1:
+            # Bernoulli logits
+            numpyro.sample("obs", dist.Bernoulli(logits=linear_model), obs=long_outcome_set_np)
+
+        elif outcome_mode == 2:
+            # Binomial with provided total_count and logits
+            numpyro.sample("obs", dist.Binomial(total_count=long_exposure_set_np, logits=linear_model), obs=long_outcome_set_np)
+
+        elif outcome_mode == 3:
+            # Poisson using exp of linear predictor as rate
+            numpyro.sample("obs", dist.Poisson(rate=jnp.exp(linear_model)), obs=long_outcome_set_np)
+
+        elif outcome_mode == 4:
+            # Gaussian observation
+            numpyro.sample("obs", dist.Normal(loc=linear_model, scale=error_sigma), obs=long_outcome_set_np)
     
-    # Corelation structure
+    # Correlation structure
     G_corr = numpyro.deterministic("G_corr", jnp.matmul(sr_L, sr_L.T))
     D_corr = numpyro.deterministic("D_corr", jnp.matmul(dr_L, dr_L.T))
 
@@ -106,3 +116,11 @@ def numpyro_longitudinal(
         numpyro.factor("long_bandage_constraint_1", -0.5 * jnp.sum(((D_corr[numpyro_dr_long_bindings_in_1, numpyro_dr_long_bindings_in_2] - D_corr[numpyro_dr_long_bindings_out_1, numpyro_dr_long_bindings_out_2])/bandage_penalty) ** 2))
         numpyro.factor("long_bandage_constraint_2", -0.5 * jnp.sum(((G_corr[numpyro_gr_long_bindings_in_1, numpyro_gr_long_bindings_in_2] - G_corr[numpyro_gr_long_bindings_out_1, numpyro_gr_long_bindings_out_2])/bandage_penalty) ** 2))
     
+
+
+
+
+
+
+
+

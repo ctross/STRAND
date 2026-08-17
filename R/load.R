@@ -59,7 +59,7 @@ latest_released_version = function(quiet=TRUE, ...) {
 }
 
 packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan and NumPyro.")
-installed_version = "beauty_in_the_dissonance"
+installed_version = "shine_on_benevolent_sun"
 packageStartupMessage(paste0("This version of STRAND is: ", installed_version, "."))
 
 tryCatch({

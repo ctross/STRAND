@@ -4,6 +4,7 @@ def numpyro_bsrm_model(
     export_network,
     long_outcome_set_np,
     long_exposure_set_np,
+    long_mask_set_np,
     long_ids_int,
     block_mu_np,
     block_sigma_np,
@@ -78,29 +79,32 @@ def numpyro_bsrm_model(
 
     # Outcome models
     linear_model = mu + dr + gr_long
-    if outcome_mode == 1:
-        # Bernoulli (binary)
-        numpyro.sample("obs", dist.Bernoulli(logits = linear_model), obs = long_outcome_set_np)
-        if export_network == 1:
-            numpyro.deterministic("p", jax.nn.sigmoid(linear_model))
+    keep_mask = jnp.asarray(long_mask_set_np).astype(bool)
 
-    elif outcome_mode == 2:
-        # Binomial
-        numpyro.sample("obs", dist.Binomial(total_count = long_exposure_set_np, logits = linear_model), obs = long_outcome_set_np)
-        if export_network == 1:
-            numpyro.deterministic("p", jax.nn.sigmoid(linear_model))
+    with numpyro.handlers.mask(mask=keep_mask):
+        if outcome_mode == 1:
+            # Bernoulli (binary)
+            numpyro.sample("obs", dist.Bernoulli(logits = linear_model), obs = long_outcome_set_np)
+            if export_network == 1:
+                numpyro.deterministic("p", jax.nn.sigmoid(linear_model))
 
-    elif outcome_mode == 3:
-        # Poisson
-        numpyro.sample("obs", dist.Poisson(rate = jnp.exp(linear_model)), obs = long_outcome_set_np)
-        if export_network == 1:
-            numpyro.deterministic("p", jnp.exp(linear_model))
+        elif outcome_mode == 2:
+            # Binomial
+            numpyro.sample("obs", dist.Binomial(total_count = long_exposure_set_np, logits = linear_model), obs = long_outcome_set_np)
+            if export_network == 1:
+                numpyro.deterministic("p", jax.nn.sigmoid(linear_model))
 
-    elif outcome_mode == 4:
-        # Gaussian
-        numpyro.sample("obs", dist.Normal(loc = linear_model, scale = error_sigma), obs = long_outcome_set_np)
-        if export_network == 1:
-            numpyro.deterministic("p", linear_model)
+        elif outcome_mode == 3:
+            # Poisson
+            numpyro.sample("obs", dist.Poisson(rate = jnp.exp(linear_model)), obs = long_outcome_set_np)
+            if export_network == 1:
+                numpyro.deterministic("p", jnp.exp(linear_model))
+
+        elif outcome_mode == 4:
+            # Gaussian
+            numpyro.sample("obs", dist.Normal(loc = linear_model, scale = error_sigma), obs = long_outcome_set_np)
+            if export_network == 1:
+                numpyro.deterministic("p", linear_model)
 
     # Store correlation matrices for diagnostics
     numpyro.deterministic("G_corr", jnp.matmul(sr_L, sr_L.T))
