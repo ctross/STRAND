@@ -18,20 +18,41 @@ fit_multiplex_with_numpyro = function(
 ){
 
 ########################### Input checks   
- if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}  
- if(sum(data$mask) != 0){stop("NumPyro back-end does not support outcome masking. Fit with Stan using 'mcmc'.")}               
+ if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}           
  
 # Import numpy, jax, numpyro, and numpyro.distributions
   reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
   np = reticulate::import("numpy")
   jax = reticulate::import("jax")
   numpyro = reticulate::import("numpyro")
+  
+  if(mcmc_parameters$float_type=="x64"){
+     numpyro$enable_x64()
+  } else{
+     numpyro$enable_x64(FALSE)
+  }
+ 
   dist = reticulate::import("numpyro.distributions")
   jnp = reticulate::import("jax.numpy")
   numpyro_init = reticulate::import("numpyro.infer.initialization")
+
+  # Verify x64 actually took effect
+  current_dtype = as.character(jnp$zeros(1L)$dtype)
+  if(current_dtype != "float64"){
+    print(paste0(
+      "Failed to enable x64 precision in JAX/NumPyro. ",
+      "Got dtype '", current_dtype, "' instead of 'float64'. ",
+      "This usually happens if you request faster 32bit floats, of if jax.numpy or another jax-based module ",
+      "was imported/used before numpyro$enable_x64() was called ",
+      "(possibly in a prior reticulate session that is still active). ",
+      "If you aren't expecting this note, try restarting R."
+    ))
+  }  else{
+    print("JAX check: x64 enabled in JAX/NumPyro.")
+  }
   
   numpyro_multiplex = NULL
-  reticulate::source_python(paste0(path.package("STRAND"),"/","numpyro_multiplex.py"))       
+  reticulate::source_python(paste0(path.package("STRAND"),"/","numpyro_multiplex.py"))    
 
 ########################### NumPyro backend prep
   dyadic_block_set = block_set_to_dyadic_block_set(data$block_set, data$priors)
@@ -43,6 +64,7 @@ fit_multiplex_with_numpyro = function(
   long_block_set = dyadic_set_to_long(dyadic_block_set[[1]])
   long_outcome_set = dyadic_set_to_long(data$outcomes)
   long_exposure_set = dyadic_set_to_long(data$exposure)
+  long_mask_set = dyadic_set_to_long(ifelse(data$mask==1, 0, 1))       
   long_ids = make_dyadic_edgelist(nrow(data$focal_set))
 
   # Convert to numpy arrays                         
@@ -52,6 +74,7 @@ fit_multiplex_with_numpyro = function(
   long_block_set_np = np$array(long_block_set)
   long_outcome_set_np = np$array(aperm(long_outcome_set, perm = c(3,1,2)))
   long_exposure_set_np = np$array(aperm(long_exposure_set, perm = c(3,1,2)))
+  long_mask_set_np = np$array(aperm(long_mask_set, perm = c(3,1,2)))
   block_mu_np = np$array(block_mu)
   block_sigma_np = np$array(block_sigma)
   long_ids_np = np$array(
@@ -138,6 +161,7 @@ fit_multiplex_with_numpyro = function(
            jnp$array(bandage_penalty),
            jnp$array(long_outcome_set_np), 
            jnp$array(long_exposure_set_np), 
+           jnp$array(long_mask_set_np),
            jnp$array(long_ids_int), 
            jnp$array(block_mu_np), 
            jnp$array(block_sigma_np), 

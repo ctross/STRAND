@@ -19,7 +19,7 @@ build_multiplex_bindings_dr_numpyro = function(data, verbose = FALSE){
   bindings_mat_A[lower.tri(bindings_mat_A)] = 0
 
   bind_set = which(bindings_mat_A>0, arr.ind = TRUE)
-  bind_set = bind_set[order(bind_set[,1]),]
+  bind_set = bind_set[order(bind_set[,1]), , drop = FALSE]
 
   bind_set_1 = bind_set
   bind_set_2 = bind_set

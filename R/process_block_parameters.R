@@ -15,21 +15,44 @@ process_block_parameters = function(input, focal, base, HPDI=0.9){
         stop("process_block_parameters() requires a fitted object of class: STRAND Model Object.")
     }
 
-    if(attributes(input)$fit_type != "mcmc"){
-        stop("Fitted results can only be processed for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
-              during experimental model runs, but final inferences should be based on MCMC sampling.")   
+    ###################################################### Check input 
+     if(attr(input, "fit_type")=="numpyro"){
+        numpyro = TRUE
+    }else{
+        numpyro = FALSE
+            if(attributes(input)$fit_type != "mcmc"){
+            if(attributes(input)$fit_type == "vb"){
+         warning("Final, publication-ready model fits for STRAND models should always be produced using MCMC! Variational inference via Pathfinder can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling. In our tests, Pathfinder results are decently similar to MCMC results, 
+              but often failed to recover strong true effects. ")  
+         } else{
+         stop("Fitted results can only be reorganized for STRAND model objects fit using MCMC. Variational inference or optimization can be used in Stan
+              during experimental model runs, but final inferences should be based on MCMC sampling.")  
+      }    
+     }
     }
 
     ###################################################### Create samples 
     N_responses = input$data$N_responses
     layer_names = attr(input$data,"layer_names")
 
-    stanfit = posterior::as_draws_rvars(input$fit$draws())
-
     ################### Block model parameters
+    if(numpyro==FALSE){
+    stanfit = posterior::as_draws_rvars(input$fit$draws())
+    
     if(dim(input$data$block_set)[2]>0)
     block_effects_raw = posterior::draws_of(stanfit$"block_effects")
+      }
 
+    ################### Block model parameters numpyro
+    if(numpyro==TRUE){
+    samps = convert_posterior(input$fit$get_samples())
+     
+    if(dim(input$data$block_set)[2]>0)
+    block_effects_raw = samps$block_effects
+      }   
+
+    ################### Block model parameters
     if(attr(input, "model_type") %in% c("LNM","LNM+Flows")){
        N_responses = 1
        layer_names = layer_names[1]
@@ -145,12 +168,21 @@ process_block_parameters = function(input, focal, base, HPDI=0.9){
      }}
 
      }}
+
   ################ Process
   results_srm_out = matrix(NA, nrow=N_responses, ncol=11)
 
      for(l in 1:N_responses){
        base_wave = results_srm_base[,which(names_of_layers == layer_names[l])]
        nbv = names_of_block_vars[which(names_of_layers == layer_names[l])]
+
+       if(!focal %in% nbv){
+        stop(" 'focal' case is not a string in the block model effects list. Strings are case sensitive.")
+       }
+
+       if(!focal %in% nbv){
+        stop(" 'base' case is not a string in the block model effects list. Strings are case sensitive.")
+       }
 
        contrast_wave = base_wave[,which(nbv == focal)] - base_wave[,which(nbv == base)] 
 
@@ -164,5 +196,4 @@ process_block_parameters = function(input, focal, base, HPDI=0.9){
    ############# Finally, return
     return(results_srm_out)
 }
-
 

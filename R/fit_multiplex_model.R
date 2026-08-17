@@ -1,6 +1,6 @@
 #' A function to apply combined a stochastic block and social relations model to multiplex networks using the STRAND framework
 #' 
-#' This function allows users to analyse empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
+#' This function allows users to analyze empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. 
 #'
 #' It is important to note that all individual block (or group) assignment must be supplied as data.  Latent blocks or groups will be supported in future releases of STRAND.
@@ -10,10 +10,11 @@
 #' @param focal_regression A formula for the predictors of out-degree (i.e., focal effects, or the effects of individual covariates on outgoing ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param target_regression A formula for the predictors of in-degree (i.e., target effects, or the effects of individual covariates on incoming ties). This should be specified as in lm(), e.g.: ~ Age * Education
 #' @param dyad_regression A formula for the predictors of dyadic relationships. This should be specified as in lm(), e.g.: ~ Kinship + Friendship
-#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. Other options are "optim", to
+#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. For numpyro models,  mcmc_parameters will have float_type="x64" 
+#' set as default. This helps the HMC run more smoothly, at the cost of speed. For some models, float_type="x32" runs much faster without introducing problems.  Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
-#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
-#' @param bandage_penalty A parameter that controls how tightly stiched together correlation structure parameters are. Default is 0.01 for tight stiching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance. Setting "bandage_penalty=-1" deploys a different Stan model, which fixes the dyadic matrix perfectly. You must set init=0 below, for this model to initialize. 
+#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
+#' @param bandage_penalty A parameter that controls how tightly stitched together correlation structure parameters are. Default is 0.01 for tight stitching of parameters that should be equal. Relaxing to 0.05, or 0.1 can sometimes aid model performance. Setting "bandage_penalty=-1" deploys a different Stan model, which fixes the dyadic matrix perfectly. You must set init=0 below, for this model to initialize. 
 #' @param eta Prior on LKJ Cholesky factor, if bandage_penalty = -1.
 #' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.

@@ -48,11 +48,9 @@ for(y in 1:14){
   )
  }
 
-dat_long[[2]] = dat_long[[3]]  # Just for this test, clone the missing layers
-dat_long[[9]] = dat_long[[10]] # Dont do this with real data, just use Stan
+# Layers 2 and 9 are unobserved, so the mask layer is all 1s
 
 names(dat_long) = paste("Time", c(1:14))
-
 
 
 ############################################## 
@@ -91,7 +89,7 @@ longitudinal_plot(fit_2a,type="coefficient",
     focal="SexMale", target="SexMale",
     dyadic="Presenting"),
     palette=pal,
-    normalized=TRUE)
+    normalized=FALSE)
 
 
 ############################################## 

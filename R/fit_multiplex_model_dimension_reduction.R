@@ -1,6 +1,6 @@
 #' A function to apply combined a stochastic block and social relations model to multiplex networks using the STRAND framework
 #' 
-#' This function allows users to analyse empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
+#' This function allows users to analyze empirical or simulated data using a Bayesian stochastic block and social relations model in Stan. The user must supply a STRAND data object,
 #' and a series of formulas following standard lm() style syntax. Unlike the standard multiplex model, this model is designed for dimension reduction. A single latent network is estimated,
 #' and loadings of each multiplex layer onto the latent network are estimated. Note that the first layer should be positively valenced with respect to the latent dimension of interest!
 #'
@@ -14,9 +14,10 @@
 #' @param expected_ties In your latent network, of N_id by N_id nodes, about how many strong ties do you expect? This parameter helps stop reflection invariance. Default is to construct it automatically assuming sparsity: expected_ties = (0.15*N)^2.
 #' @param stop_reflection_invariance If TRUE we add a penalty to the target: target += normal_lpdf(sum(p) | S, penalty). This prevents the backwards loading of p as 1-p, by forcing p to be sparse. The cost is a slower runtime.
 #' @param return_predicted_network Should predicted tie probabilities be returned? Requires large memory overhead, but can be used to check model fit.
-#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. Other options are "optim", to
+#' @param mode A string giving the mode that stan should use to fit the model. "mcmc" via Stan is default and recommended, "numpyro" is substantially faster if you have a Python pipeline. For numpyro models,  mcmc_parameters will have float_type="x64" 
+#' set as default. This helps the HMC run more smoothly, at the cost of speed. For some models, float_type="x32" runs much faster without introducing problems.  Other options are "optim", to
 #' use the optimizer provided by Stan, and "vb" to run the variational inference routine provided by Stan. "optim" and "vb" are fast and can be used for test runs. To process their output, however,
-#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommmend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
+#' users must be familar with [cmdstanr](https://mc-stan.org/users/interfaces/cmdstan). We recommend that users refer to the [Stan user manual](https://mc-stan.org/users/documentation/) for more information about the different modes that Stan can use.
 #' @param mcmc_parameters A list of Stan parameters that often need to be tuned. Defaults set to: list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = NULL, iter_sampling = NULL, max_treedepth = NULL, adapt_delta = NULL)
 #' We recommend 1000 sampling and warmup iterations on a single chain for exploratory model fitting. For final runs, we recommend running 2 to 4 chains for twice as long. Be sure to check r_hat, effective sample size, and traceplots.
 #' @param priors A labeled list of priors for the model. User are only permitted to edit the values. Distributions are fixed. 
