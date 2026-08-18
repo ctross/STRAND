@@ -17,16 +17,26 @@ fit_bsrm_with_numpyro = function(
 
 ########################### Input checks   
  if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}             
- 
+  if(!mcmc_parameters$jax_device_type %in% c("gpu","cpu")){stop("JAX device type must be 'cpu' or 'gpu'.")}   
+
 # Import numpy, jax, numpyro, and numpyro.distributions
   create_strand_venv()
-  reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+  if(mcmc_parameters$jax_device_type=="cpu"){
+    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+  }
+
+  if(mcmc_parameters$jax_device_type=="gpu"){
+    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7"))
+  }
+  
   np = reticulate::import("numpy")
   jax = reticulate::import("jax")
   numpyro = reticulate::import("numpyro")
+  
+  jax$config$update("jax_platforms", mcmc_parameters$jax_device_type)
 
   if(mcmc_parameters$float_type=="x64"){
-     numpyro$enable_x64()
+     numpyro$enable_x64(TRUE)
   } else{
      numpyro$enable_x64(FALSE)
   }
@@ -35,7 +45,7 @@ fit_bsrm_with_numpyro = function(
   jnp = reticulate::import("jax.numpy")
   numpyro_init = reticulate::import("numpyro.infer.initialization")
 
-  # Verify x64 actually took effect
+  # Verify x64 actually took effect and that the device is correct
   current_dtype = as.character(jnp$zeros(1L)$dtype)
   if(current_dtype != "float64"){
     print(paste0(
@@ -49,6 +59,8 @@ fit_bsrm_with_numpyro = function(
   }  else{
     print("JAX check: x64 enabled in JAX/NumPyro.")
   }
+
+   print(paste0("JAX back-end: ", jax$default_backend()))
   
   numpyro_bsrm_model = NULL
   reticulate::source_python(paste0(path.package("STRAND"),"/","numpyro_bsrm.py"))          

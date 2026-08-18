@@ -17,7 +17,8 @@ merge_mcmc_parameters = function(user_params = list()){
     chain_method = "vectorized", 
     cores = 1, 
     init = 2,
-    float_type = "x64"
+    float_type = "x64",
+    jax_device_type = "cpu"
     )
   modifyList(default_mcmc_parameters, user_params)
 }
