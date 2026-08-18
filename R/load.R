@@ -59,7 +59,7 @@ latest_released_version = function(quiet=TRUE, ...) {
 }
 
 packageStartupMessage("STRAND: Social network analysis and simulation in R using Stan and NumPyro.")
-installed_version = "shine_on_benevolent_sun"
+installed_version = "a_million_light_reflections"
 packageStartupMessage(paste0("This version of STRAND is: ", installed_version, "."))
 
 tryCatch({
@@ -69,7 +69,7 @@ tryCatch({
 
   if(installed_version != latest_version){
   packageStartupMessage(paste0("The latest release of STRAND is: ", latest_version, ".\n 
-   STRAND is under active development, so consider updating with: devtools::install_github('ctross/STRAND@", latest_version,"')"))
+   STRAND is under active development, so consider updating with: remotes::install_github('ctross/STRAND@", latest_version,"')"))
   }}
   },
  # If it throws an error, the following block catches the error

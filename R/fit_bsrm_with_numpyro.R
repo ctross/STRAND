@@ -57,10 +57,12 @@ fit_bsrm_with_numpyro = function(
       "If you aren't expecting this note, try restarting R."
     ))
   }  else{
-    print("JAX check: x64 enabled in JAX/NumPyro.")
+    print("Active JAX float type: x64")
   }
 
-   print(paste0("JAX back-end: ", jax$default_backend()))
+   print(paste0("Active JAX back-end: ", jax$default_backend()))
+   print("Active JAX devices:")
+   print(jax$devices())
   
   numpyro_bsrm_model = NULL
   reticulate::source_python(paste0(path.package("STRAND"),"/","numpyro_bsrm.py"))          
