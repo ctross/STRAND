@@ -21,6 +21,7 @@ fit_multiplex_with_numpyro = function(
  if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}           
  
 # Import numpy, jax, numpyro, and numpyro.distributions
+  create_strand_venv()
   reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
   np = reticulate::import("numpy")
   jax = reticulate::import("jax")
