@@ -6,7 +6,8 @@
 #' @param rebuild The user needs to run this once as TRUE to rebuild. Inside of STRAND we will load the pre-built venv.
 #' @param verbose If TRUE, it will print details of GPU detections.
 #' @param cpu_versions Libraries to install for CPU build.
-#' @param gpu_versions Libraries to install for GPU build. Only cuda13 is tested.
+#' @param gpu_versions Libraries to install for GPU build.
+#' @param cusparse_path Location of cuSPARSE. Needed sometimes.
 #' @export
 #'
 
@@ -14,7 +15,8 @@ create_strand_venv = function(back_end = "cpu",
                               rebuild = FALSE, 
                               verbose = TRUE,
                               cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"), 
-                              gpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7")
+                              gpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7"),
+                              cusparse_path = NULL
                               ){
   if(rebuild == TRUE | reticulate::virtualenv_exists("strand_venv")==FALSE){
    reticulate::virtualenv_create("strand_venv", force = TRUE)
@@ -40,6 +42,17 @@ create_strand_venv = function(back_end = "cpu",
 
     # Install GPU toolchain 
     reticulate::py_install(gpu_versions)
+
+    # Deal with missing cuSPARSE
+    if(!is.null(cusparse_path)){
+     if(!file.exists(cusparse_path)){
+      stop("cuSPARSE library not found at: ", cusparse_path)
+     }
+
+      ctypes = reticulate::import("ctypes")
+      ctypes$CDLL(cusparse_path)
+      message("cuSPARSE library loaded successfully")
+    }
    }
   
   if(verbose == TRUE){
@@ -76,6 +89,19 @@ create_strand_venv = function(back_end = "cpu",
  if(rebuild == FALSE){
    reticulate::use_virtualenv("strand_venv")
    reticulate::py_config()
+    # Deal with missing cuSPARSE
+    if(!is.null(cusparse_path)){
+     if(!file.exists(cusparse_path)){
+      stop("cuSPARSE library not found at: ", cusparse_path)
+     }
+
+      ctypes = reticulate::import("ctypes")
+      ctypes$CDLL(cusparse_path)
+      message("cuSPARSE library loaded successfully")
+    }
  }
 
 }
+
+
+
