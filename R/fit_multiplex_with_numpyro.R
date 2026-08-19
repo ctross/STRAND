@@ -28,7 +28,7 @@ fit_multiplex_with_numpyro = function(
     reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
   }
 
-  if(mcmc_parameters$jax_device_type=="gpu"){
+  if(mcmc_parameters$jax_device_type %in% c("gpu","cuda")){
     reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax[cuda12]>=0.7", "jaxlib>=0.7"))
   }
 
