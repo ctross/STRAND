@@ -19,17 +19,19 @@ fit_multiplex_with_numpyro = function(
 
 ########################### Input checks   
  if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}
- if(!mcmc_parameters$jax_device_type %in% c("gpu","cpu","cuda")){stop("JAX device type must be 'cuda', 'cpu' or 'gpu'.")}            
+ if(!mcmc_parameters$jax_device_type %in% c("cuda", "gpu", "cpu")){stop("JAX device type must be 'cpu', 'gpu', or 'cuda'.")}            
  
+ mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+
 # Import numpy, jax, numpyro, and numpyro.distributions
-  create_strand_venv()
+  create_strand_venv(rebuild = FALSE, verbose = TRUE, mcmc_parameters)
 
   if(mcmc_parameters$jax_device_type=="cpu"){
-    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+    reticulate::py_require(mcmc_parameters$cpu_versions)
   }
 
-  if(mcmc_parameters$jax_device_type %in% c("gpu","cuda")){
-    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax[cuda12]>=0.7", "jaxlib>=0.7"))
+  if(mcmc_parameters$jax_device_type %in% c("cuda", "gpu")){
+    reticulate::py_require(mcmc_parameters$gpu_versions)
   }
 
   np = reticulate::import("numpy")

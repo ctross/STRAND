@@ -18,7 +18,10 @@ merge_mcmc_parameters = function(user_params = list()){
     cores = 1, 
     init = 2,
     float_type = "x64",
-    jax_device_type = "cpu"
+    jax_device_type = "cpu",
+    cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"), 
+    gpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax[cuda12]>=0.7", "jaxlib>=0.7"),
+    cusparse_path = NULL
     )
   modifyList(default_mcmc_parameters, user_params)
 }
