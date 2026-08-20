@@ -1,13 +1,8 @@
 #######################################################################################
 #
-#   Multiplex analyses with JAX 
+#   Multiplex analyses with JAX using GPU
 #
 #######################################################################################
-
-# install_github('ctross/PlvsVltra')
- library(PlvsVltra) # For colors
- colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
-
  library(STRAND)
  library(stringr)
  library(ggplot2)
@@ -23,10 +18,13 @@
  gpu_settings$cusparse_path = "/home/cody_ross/.local/share/r-miniconda/pkgs/libcusparse-12.8.2.51-hf6fa245_0/lib/libcusparse.so.12"
 
  # The next two lines only need to be run once per machine, to build the GPU toolchain in a virtual environment
-  # gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
-  # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
+ gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
+ create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
+
+ # You may need to restart your session, and then comment out the previous two lines
 
 # ########################################################################################################################################
+# Then you can run your models as normal
 
 # Load data
  data(RICH_Data)
@@ -79,13 +77,12 @@ fit_numpyro = fit_multiplex_model(
  mode="numpyro",
  mcmc_parameters = list(
    seed = 1,
-   chains = 3, 
+   chains = 1, 
    refresh = 1, 
-   iter_warmup = 3500, 
+   iter_warmup = 3000,                            
    iter_sampling = 3000, 
-   max_treedepth = 13, 
+   max_treedepth = 12, 
    adapt_delta = 0.98,
-   cores=16,
    chain_method = "vectorized",
    jax_device_type = gpu_settings$jax_device_type,
    gpu_versions = gpu_settings$gpu_versions,
@@ -105,8 +102,8 @@ fit_stan = fit_multiplex_model(
    refresh = 1, 
    iter_warmup = 1000, 
    iter_sampling = 1000, 
-   max_treedepth = 11, 
-   adapt_delta = 0.95)
+   max_treedepth = 12, 
+   adapt_delta = 0.98)
 )
 
 
@@ -174,14 +171,10 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable, y = Median, group = Site, col
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
         "lines")) + scale_color_manual(values=c("NumPyro"="chocolate1", "Stan"="deepskyblue2", "True" = "black")) + theme(legend.position="bottom")
 
-ggsave("res.pdf",p, height=8, width=12)
+ggsave("res_multiplex.pdf", p, height=8, width=12)
 
 
 ###################################### Plots
-colors = plvs_vltra("dust_storm", rev=FALSE, elements=c(2,4))
-colors = c(colors[1], "grey90", colors[2])
-
-####################################### VPCs
 VPCs_1 = strand_VPCs(fit_numpyro, n_partitions = 5)
 VPCs_2 = strand_VPCs(fit_stan, n_partitions = 5)
 
@@ -221,15 +214,17 @@ p = ggplot2::ggplot(df, ggplot2::aes(x = Variable2, y = Median, group = Site, co
         ggplot2::coord_flip() + ggplot2::theme(panel.spacing = grid::unit(1, 
         "lines")) + scale_color_manual(values=c("NumPyro"="chocolate1", "Stan"="deepskyblue2", "True" = "black"))  + theme(legend.position="bottom")
 
-ggsave("res2.pdf",p, height=8, width=12)
+ggsave("res_multiplex_vpcs.pdf", p, height=8, width=12)
 
 
 #################################### Run time
 fit_numpyro[[6]]
 fit_stan[[6]]
 
-###############################################
-# Dont forget to check rhat and ess
+# GPU is much faster
+
+###################################################
+# But be careful, dont forget to check rhat and ess
 
 # Stan
  fit_stan$fit$summary("dyad_effects")
@@ -243,3 +238,6 @@ fit_stan[[6]]
  jax_summary(samples$focal_effects)
  jax_summary(samples$target_effects)
  jax_summary(samples$block_effects)
+
+ # Stan often has much nicer fit diagnositics, but much longer run times
+

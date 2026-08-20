@@ -17,31 +17,33 @@ fit_multiplex_dimension_reduction_with_numpyro = function(
 
 ########################### Input checks   
  if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}
- if(!mcmc_parameters$jax_device_type %in% c("gpu","cpu")){stop("JAX device type must be 'cpu' or 'gpu'.")}                 
+ if(!mcmc_parameters$jax_device_type %in% c("cuda", "gpu", "cpu")){stop("JAX device type must be 'cpu', 'gpu', or 'cuda'.")}            
  
-# Import numpy, jax, numpyro, and numpyro.distributions
-  create_strand_venv()
+ mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+
+ # Import numpy, jax, numpyro, and numpyro.distributions
+  create_strand_venv(rebuild = FALSE, verbose = TRUE, mcmc_parameters)
+
   if(mcmc_parameters$jax_device_type=="cpu"){
-    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+    reticulate::py_require(mcmc_parameters$cpu_versions)
   }
 
-  if(mcmc_parameters$jax_device_type=="gpu"){
-    reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7"))
+  if(mcmc_parameters$jax_device_type %in% c("cuda", "gpu")){
+    reticulate::py_require(mcmc_parameters$gpu_versions)
   }
 
-  reticulate::py_require(c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
   np = reticulate::import("numpy")
   jax = reticulate::import("jax")
   numpyro = reticulate::import("numpyro")
 
   jax$config$update("jax_platforms", mcmc_parameters$jax_device_type)
-
+  
   if(mcmc_parameters$float_type=="x64"){
-     numpyro$enable_x64()
+     numpyro$enable_x64(TRUE)
   } else{
      numpyro$enable_x64(FALSE)
   }
-
+ 
   dist = reticulate::import("numpyro.distributions")
   jnp = reticulate::import("jax.numpy")
   numpyro_init = reticulate::import("numpyro.infer.initialization")

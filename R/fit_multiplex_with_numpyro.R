@@ -23,7 +23,7 @@ fit_multiplex_with_numpyro = function(
  
  mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
 
-# Import numpy, jax, numpyro, and numpyro.distributions
+ # Import numpy, jax, numpyro, and numpyro.distributions
   create_strand_venv(rebuild = FALSE, verbose = TRUE, mcmc_parameters)
 
   if(mcmc_parameters$jax_device_type=="cpu"){
