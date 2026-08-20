@@ -51,7 +51,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Cody Ross \email{ctross@ucdavis.edu}
+\strong{Maintainer}: Cody Ross \email{cody_ross@eva.mpg.de}
 
 }
 \keyword{internal}

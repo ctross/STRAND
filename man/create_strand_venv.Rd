@@ -4,24 +4,14 @@
 \alias{create_strand_venv}
 \title{A function to create a Python venv for STRAND to use for NumPyro models}
 \usage{
-create_strand_venv(
-  back_end = "cpu",
-  rebuild = FALSE,
-  verbose = TRUE,
-  cpu_versions = c("numpy>=1.27", "numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"),
-  gpu_versions = c("numpy>=1.27", "numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7")
-)
+create_strand_venv(rebuild = FALSE, verbose = TRUE, mcmc_parameters)
 }
 \arguments{
-\item{back_end}{A string: either "cpu" for basic models, or "gpu" for Linux systems with NVIDIA GPUs.}
-
 \item{rebuild}{The user needs to run this once as TRUE to rebuild. Inside of STRAND we will load the pre-built venv.}
 
 \item{verbose}{If TRUE, it will print details of GPU detections.}
 
-\item{cpu_versions}{Libraries to install for CPU build.}
-
-\item{gpu_versions}{Libraries to install for GPU build. Only cuda13 is tested.}
+\item{mcmc_parameters}{A parameter list to control NUTS sampling. NumPyro uses the same control set as Stan.}
 }
 \description{
 This is a simple helper function to get Python running smoothly
