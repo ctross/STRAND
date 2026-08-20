@@ -17,7 +17,7 @@ fit_bsrm_with_numpyro = function(
 
 ########################### Input checks   
  if(data$link_mode == 2){stop("NumPyro back-end only supports logit links in the SRM. Fit with Stan using 'mcmc' if you want a probit model.")}             
-  if(!mcmc_parameters$jax_device_type %in% c("gpu","cpu")){stop("JAX device type must be 'cpu' or 'gpu'.")}   
+  if(!mcmc_parameters$jax_device_type %in% c("gpu","cpu","cuda")){stop("JAX device type must be 'cuda', 'cpu' or 'gpu'.")}   
 
 # Import numpy, jax, numpyro, and numpyro.distributions
   create_strand_venv()

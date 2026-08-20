@@ -2,31 +2,30 @@
 #'
 #' This is a simple helper function to get Python running smoothly
 #'
-#' @param back_end A string: either "cpu" for basic models, or "gpu" for Linux systems with NVIDIA GPUs.
 #' @param rebuild The user needs to run this once as TRUE to rebuild. Inside of STRAND we will load the pre-built venv.
 #' @param verbose If TRUE, it will print details of GPU detections.
-#' @param cpu_versions Libraries to install for CPU build.
-#' @param gpu_versions Libraries to install for GPU build. Only cuda13 is tested.
+#' @param mcmc_parameters A parameter list to control NUTS sampling. NumPyro uses the same control set as Stan.
 #' @export
 #'
 
-create_strand_venv = function(back_end = "cpu", 
-                              rebuild = FALSE, 
+create_strand_venv = function(rebuild = FALSE, 
                               verbose = TRUE,
-                              cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"), 
-                              gpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax[cuda13]>=0.7", "jaxlib>=0.7")
+                              mcmc_parameters
                               ){
+  mcmc_parameters = merge_mcmc_parameters(mcmc_parameters)
+  if(!mcmc_parameters$jax_device_type %in% c("cuda", "gpu", "cpu")){stop("JAX device type must be 'cpu', 'gpu', or 'cuda'.")} 
+
   if(rebuild == TRUE | reticulate::virtualenv_exists("strand_venv")==FALSE){
    reticulate::virtualenv_create("strand_venv", force = TRUE)
    reticulate::use_virtualenv("strand_venv")
    reticulate::py_config()
 
-   if(back_end == "cpu"){
+   if(mcmc_parameters$jax_device_type == "cpu"){
     # Install CPU toolchain 
-    reticulate::py_install(cpu_versions)
+    reticulate::py_install(mcmc_parameters$cpu_versions)
    }
 
-   if(back_end == "gpu"){
+   if(mcmc_parameters$jax_device_type %in% c("gpu","cuda")){
     # Check OS
     user_os = Sys.info()[["sysname"]]
      if(user_os != 'Linux'){
@@ -35,15 +34,26 @@ create_strand_venv = function(back_end = "cpu",
 
     # Check for GPU
      if(suppressWarnings(system("nvidia-smi", ignore.stdout = TRUE, ignore.stderr = TRUE)) != 0){
-      stop("No NVIDIA GPU detected")
+      stop("No NVIDIA GPU detected.")
      }
 
     # Install GPU toolchain 
-    reticulate::py_install(gpu_versions)
+    reticulate::py_install(mcmc_parameters$gpu_versions)
+
+    # Deal with missing cuSPARSE
+    if(!is.null(mcmc_parameters$cusparse_path)){
+     if(!file.exists(mcmc_parameters$cusparse_path)){
+      stop("cuSPARSE library not found at: ", mcmc_parameters$cusparse_path)
+     }
+
+      ctypes = reticulate::import("ctypes")
+      ctypes$CDLL(mcmc_parameters$cusparse_path)
+      message("cuSPARSE library loaded successfully")
+    }
    }
   
   if(verbose == TRUE){
-    if(back_end == "gpu"){
+    if(mcmc_parameters$jax_device_type %in% c("gpu","cuda")){
     jax = reticulate::import("jax")
     devices = jax$devices()
     device_strs = sapply(seq_along(devices), function(i) reticulate::py_str(devices[[i]]))
@@ -56,7 +66,7 @@ create_strand_venv = function(back_end = "cpu",
      }
     }
 
-    if(back_end == "cpu"){
+    if(mcmc_parameters$jax_device_type == "cpu"){
     jax = reticulate::import("jax")
     devices = jax$devices()
     device_strs = sapply(seq_along(devices), function(i) reticulate::py_str(devices[[i]]))
@@ -76,6 +86,20 @@ create_strand_venv = function(back_end = "cpu",
  if(rebuild == FALSE){
    reticulate::use_virtualenv("strand_venv")
    reticulate::py_config()
+   
+    # Deal with missing cuSPARSE
+    if(!is.null(mcmc_parameters$cusparse_path)){
+     if(!file.exists(mcmc_parameters$cusparse_path)){
+      stop("cuSPARSE library not found at: ", mcmc_parameters$cusparse_path)
+     }
+
+      ctypes = reticulate::import("ctypes")
+      ctypes$CDLL(mcmc_parameters$cusparse_path)
+      message("cuSPARSE library loaded successfully")
+    }
  }
 
 }
+
+
+
