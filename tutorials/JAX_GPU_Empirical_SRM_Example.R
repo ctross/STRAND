@@ -25,7 +25,6 @@ library(ggplot2)
 
 # ########################################################################################################################################
 # Then you can run your models as normal
-
 #Load package data
 data(Colombia_Data)
 
@@ -92,7 +91,6 @@ fit_stan = fit_block_plus_social_relations_model(data=dat,
 
 
 # Summaries
-res_numpyro = summarize_strand_results(fit_numpyro)
 res_stan = summarize_strand_results(fit_stan)
 
 # Plots
@@ -146,6 +144,6 @@ fit_stan[[6]]
  jax_summary(samples$target_effects)
  jax_summary(samples$block_effects)
 
- # Stan often has much nicer fit diagnositics, but much longer run times
+ # Stan often has much nicer fit diagnositics, but much longer run times. As such, its good to make longer runs in NumPyro to compensate as we do above.
 
 
