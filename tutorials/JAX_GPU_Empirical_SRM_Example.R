@@ -18,8 +18,8 @@ library(ggplot2)
  gpu_settings$cusparse_path = "/home/cody_ross/.local/share/r-miniconda/pkgs/libcusparse-12.8.2.51-hf6fa245_0/lib/libcusparse.so.12"
 
  # The next two lines only need to be run once per machine, to build the GPU toolchain in a virtual environment
- gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
- create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
+ #gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
+ #create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
 
  # You may need to restart your session, and then comment out the previous two lines
 
@@ -63,10 +63,10 @@ fit_numpyro = fit_block_plus_social_relations_model(data=dat,
                                             mode="numpyro",
                                             mcmc_parameters = list(
                                                seed = 1,
-                                               chains = 1, 
+                                               chains = 2, 
                                                refresh = 1, 
-                                               iter_warmup = 3000,                            
-                                               iter_sampling = 3000, 
+                                               iter_warmup = 1000,                            
+                                               iter_sampling = 1000, 
                                                max_treedepth = 12, 
                                                adapt_delta = 0.98,
                                                chain_method = "vectorized",
@@ -128,8 +128,10 @@ fit_stan[[6]]
 
 # GPU is much faster
 
-###################################################
-# But be careful, dont forget to check rhat and ess
+###############################################
+# Dont forget to check rhat and ess
+# These estimates come from the raw samples, prior to STRAND matching names to coefficients,
+# so the parameter names are not helpful.
 
 # Stan
  fit_stan$fit$summary("dyad_effects")
@@ -139,11 +141,13 @@ fit_stan[[6]]
 
 # JAX
  samples = fit_numpyro$fit$get_samples()
- jax_summary(samples$dyad_effects)
- jax_summary(samples$focal_effects)
- jax_summary(samples$target_effects)
- jax_summary(samples$block_effects)
+ # Due to some awkward differences in converting from Python to R, we need to reshape by hand
+ jax_summary(samples$dyad_effects, n_iter = 1000, n_chains = 2)
+ jax_summary(samples$focal_effects, n_iter = 1000, n_chains = 2)
+ jax_summary(samples$target_effects, n_iter = 1000, n_chains = 2)
+ jax_summary(samples$block_effects, n_iter = 1000, n_chains = 2)
 
- # Stan often has much nicer fit diagnositics, but much longer run times. As such, its good to make longer runs in NumPyro to compensate as we do above.
+
+ # Stan often has much nicer fit diagnostics, but much longer run times. As such, its good to make longer runs in NumPyro to compensate.
 
 
