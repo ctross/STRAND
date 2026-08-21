@@ -16,7 +16,7 @@ STRAND
 
 
   
-[**STRAND**](https://github.com/ctross/STRAND) is part of an ecosystem of tools for modern social network analysis. [**DieTryin**](https://github.com/ctross/DieTryin) is a companion package designed to facilitate the collection of [**RICH economic games**](https://journals.sagepub.com/doi/abs/10.1177/1525822X16643709), dyadic peer ratings, and roster-based network data in human communities. [**XLSFormulatoR**](https://github.com/ADR1993/XLSFormulatoR) is a package for automatically building name-generator network surveys for KoboToolbox.
+[**STRAND**](https://github.com/ctross/STRAND) is part of an ecosystem of tools for modern social network analysis. [**DieTryin**](https://github.com/ctross/DieTryin) is a companion package designed to facilitate the collection of [**RICH economic games**](https://journals.sagepub.com/doi/abs/10.1177/1525822X16643709), dyadic peer ratings, and roster-based network data in human communities. [**XLSFormulatoR**](https://github.com/ADR1993/XLSFormulatoR) is a package for automatically building name-generator network surveys for KoboToolbox. [**PlvVltra**](https://github.com/ctross/PlvsVltra) provides some color palettes.
 
 
 
@@ -26,11 +26,11 @@ Install by running on R:
 ```{r}
 ################################### Install the latest release
  library(devtools)
- install_github('ctross/STRAND@beauty_in_the_dissonance')
+ install_github('ctross/STRAND@a_million_light_reflections')
  library(STRAND)
 ```
 
-You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) installed. We are also slowly building up [**NumPyro**](https://num.pyro.ai/en/stable/) support for all of our models. **STRAND** will remain an R-based front-end, but the JAX back-end via **NumPyro** in Python allows our highly parameterized models to be fit with substantially shorter run-times (**NumPyro** models are typically 10x to 50x faster than Stan models).
+You will need to have [**cmdstanr**](https://mc-stan.org/cmdstanr/) installed. We are also building up [**NumPyro**](https://num.pyro.ai/en/stable/) support for all of our models. **STRAND** will remain an R-based front-end, but the JAX back-end via **NumPyro** in Python allows our highly parameterized models to be fit with substantially shorter run-times (**NumPyro** models are typically 10x to 50x faster than Stan models).
 
 Quickstart guides for Stan can be found [**here**](https://mc-stan.org/cmdstanr/articles/cmdstanr.html).  
 
@@ -43,6 +43,7 @@ Example models, with test data, can be found here. Note that analysis of large n
 + We compare STRAND to other software packages for network analysis, and comment on similarities and differences
 + We try to clarify any misconceptions potential users might have about Bayesian network analysis models---e.g, we show that Bayesian models with proper priors are always identifiable, that probit versus logit models are essentially equivalent, that STRAND's implementation of the SRM (Social Relations Model) is a measurement-error robust generalization of the original SRM model.
 + One thing to note, is that we use short MCMC runs (of 500 warmup, 500 samples) of a single chain in many of the examples below, just so that the tutorial has a quicker run-time. When using these models on real data, we recommend using several chains and running them for at least 1000 warmup and 1000 samples. Always check the *fit* slot of the STRAND fit object, and then use base **Stan** or **JAX** summary functions to check *rhat* and *effective sample size*.
++ The NumPyro back-end is much faster than Stan (10x to 50x), and is useful for model development. We recommend cross-checking any NumPyro fits against Stan fits for final inference.
 
 
 Basic single-layer network models
@@ -68,7 +69,7 @@ The most basic network analysis models are generalizations of the SRM that accou
 
 Multiplex network models
 --------------
-Networks typically influence each other. Users may wish to study if outgoing ties in one network layer are predictive of incoming ties in a different layer. To model such structure, we provide multiplex generalizations of the SRM for various types of outcomes. Users can still estimate the effects of focal, target, dyadic, and block predictors within each layer, while also estimating residual correlations in random effects within and across network layers at both a generalized and dyadic level (see our papers at [**Royal Society Open Science**](https://doi.org/10.1098/rsos.250555) and [**Communications Psychology**](https://www.nature.com/articles/s44271-024-00098-1) for a primer on these models). 
+Networks typically influence each other. Users may wish to study if outgoing ties in one network layer are predictive of incoming ties in a different layer. To model such structure, we provide multiplex generalizations of the SRM for various types of outcomes. Users can still estimate the effects of focal, target, dyadic, and block predictors within each layer, while also estimating residual correlations in random effects within and across network layers at both a generalized and dyadic level (see our papers at [**Royal Society Open Science**](https://doi.org/10.1098/rsos.250555), [**Communications Psychology**](https://www.nature.com/articles/s44271-024-00098-1), and [**Proceedings B**](https://royalsocietypublishing.org/rspb/article/293/2077/20261504/482849) for primers on these models). 
 
 + Multiplex Binary/Bernoulli outcomes (using RICH economic games): [**Multiplex Bernoulli models**](https://github.com/ctross/STRAND/blob/main/tutorials/Multiplex_Bernoulli_Example.R)
 
@@ -145,6 +146,19 @@ How do networks structure the evolution of binary traits? A classic method here 
 + Predicting the evolution of binary traits: [**Network-based diffusion analysis**](https://github.com/ctross/STRAND/blob/main/tutorials/Network_Based_Diffusion_Analysis_Example.R)
 
 
+GPU Acceleration
+--------------
+STRAND models are highly parameterized, with roughly $KN^2$ parameters (where K is the number of layers and N is the number of nodes). As such, our models are typically best suited to smaller social networks of 400 nodes or less. At around 400-500 nodes, model-fits in Stan might take days. As such, we also provide a JAX-based backend that allows users to fit the same models using NumPyro, with 10x to 50x speed-up. Our NumPyro models can also be fit using the GPU, which further reduces run-time for large models, and also expands the feasible sample size to near 1,000 nodes for the single-layer SRM. NumPyro models, however, generally have worse $\hat r$ and $ess$ metrics than Stan, and are more prone to stuck chains that don't move off of their inits. We typically develop our models using the JAX back-end, and always perform final publication-ready runs using Stan. 
+
++ Simple single-layer SRM models: [**SRM on the GPU**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_GPU_Empirical_SRM_Example.R)
+
++ Multiplex SRM models: [**Multiplex SRM on the GPU**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_GPU_Multiplex_Empirical_Example.R)
+ 
++ Longitudinal SRM models: [**Longitudinal SRM on the GPU**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_GPU_Longitudinal_Bernoulli_Example.R)
+
++ Dimension reduction models: [**Dimension reduction the GPU**](https://github.com/ctross/STRAND/blob/main/tutorials/JAX_GPU_Dimension_Reduction.R)
+
+
 Miscellaneous features and toy examples
 --------------
 Below we provide a few more pointed tutorials showing how to deal with specific issues, like structural zeros, prior specification, data simulation, and comparison of STRAND to other tools. We also show a few other things about STRAND models, e.g., probit and logit links yield equivalent inference, binary SRM models are well-specified in a Bayesian framework, etc. We will also include some minimum working examples to address some common questions we get via email.
@@ -179,19 +193,6 @@ Citations:
 --------------
 If you use STRAND, please cite us using the most relevant paper:
 ```{bibtex}
-@article{ross2024modelling,
-  title={Modelling animal network data in R using STRAND},
-  author={Ross, Cody T and McElreath, Richard and Redhead, Daniel},
-  journal={Journal of Animal Ecology},
-  volume={93},
-  number={3},
-  pages={254--266},
-  year={2024},
-  publisher={Wiley Online Library}
-}
-```
-
-```{bibtex}
 @article{ross2025bayesian,
   title={Bayesian multiplex network models in R using STRAND: Methods for biologists and social scientists},
   author={Ross, Cody T and Kajokaite, Kotrina and Pinkney, Sean and Sosa, Sebastian},
@@ -201,6 +202,19 @@ If you use STRAND, please cite us using the most relevant paper:
   pages={250555},
   year={2025},
   publisher={The Royal Society}
+}
+```
+
+```{bibtex}
+@article{ross2024modelling,
+  title={Modelling animal network data in R using STRAND},
+  author={Ross, Cody T and McElreath, Richard and Redhead, Daniel},
+  journal={Journal of Animal Ecology},
+  volume={93},
+  number={3},
+  pages={254--266},
+  year={2024},
+  publisher={Wiley Online Library}
 }
 ```
 
@@ -222,9 +236,9 @@ If you use STRAND, please cite us using the most relevant paper:
  author = {Sosa, Sebastian and McElreath, Mary B. and Redhead, Daniel and Ross, Cody T.},
  title = {Robust Bayesian analysis of animal networks subject to biases in sampling intensity and censoring},
  journal = {Methods in Ecology and Evolution},
- volume = {},
- number = {},
- pages = {1--22},
+ volume = {16},
+ number = {6},
+ pages = {1273-1294},
  doi = {https://doi.org/10.1111/2041-210X.70017}
 }
 ```
