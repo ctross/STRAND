@@ -25,8 +25,7 @@ Install:
 Install by running on R:
 ```{r}
 ################################### Install the latest release
- library(devtools)
- install_github('ctross/STRAND@a_million_light_reflections')
+ remotes::install_github('ctross/STRAND@a_million_light_reflections')
  library(STRAND)
 ```
 

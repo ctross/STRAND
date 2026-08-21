@@ -18,8 +18,8 @@ library(PlvsVltra)
  gpu_settings$cusparse_path = "/home/cody_ross/.local/share/r-miniconda/pkgs/libcusparse-12.8.2.51-hf6fa245_0/lib/libcusparse.so.12"
 
  # The next two lines only need to be run once per machine, to build the GPU toolchain in a virtual environment
- gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
- create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
+  # gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
+  # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
 
  # You may need to restart your session, and then comment out the previous two lines
 
@@ -150,10 +150,13 @@ fit_1 = fit_longitudinal_model(long_data=dat_long,
                                   dyad_regression = ~ Friend + Relatedness,
                                   coefficient_mode="varying",
                                   random_effects_mode="fixed",
-                                  mode="mcmc",
-                                  bandage_penalty = -1,
-                                  mcmc_parameters = list(seed = 1, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 500, init=0,
-                                                              iter_sampling = 500, max_treedepth = 12, adapt_delta = NULL),
+                                  mode="numpyro",
+                                  mcmc_parameters = list(seed = 67, chains = 1, parallel_chains = 1, refresh = 1, iter_warmup = 1000,
+                                   iter_sampling = 1000, max_treedepth = 11, adapt_delta = 0.95, 
+                                   chain_method = "vectorized",
+                                   jax_device_type = gpu_settings$jax_device_type,
+                                   gpu_versions = gpu_settings$gpu_versions,
+                                   cusparse_path = gpu_settings$cusparse_path),
                                   priors=NULL
                                   )
 
@@ -163,16 +166,16 @@ palLH = plvs_vltra("mystic_mausoleum", elements=c(7,5))
 palM = plvs_vltra("skinny_dipping", elements=c(4))
 pal = c(palLH[1], "grey80", palLH[2])
 
-multiplex_plot(fit_1, type="dyadic", HPDI=0.9, plot = TRUE, height=7, width=10.5, palette = pal)
-multiplex_plot(fit_1, type="generalized", HPDI=0.9, plot = TRUE, height=7, width=10.5, palette = pal)
+multiplex_plot(fit_1, type="dyadic", HPDI=0.9, plot = FALSE, height=7, width=10.5, palette = pal, save_plot="long_1.pdf")
+multiplex_plot(fit_1, type="generalized", HPDI=0.9, plot = FALSE, height=7, width=10.5, palette = pal, save_plot="long_2.pdf")
 
 
 ####################### Results
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,9,2))
-longitudinal_plot(fit_1, type="dyadic", palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_1, type="dyadic", palette = pal, height=6, width=6.5, plot = FALSE, save_plot="long_3.pdf")
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,2,9,3,4))
-longitudinal_plot(fit_1, type="generalized",  palette = pal, height=6, width=6.5)
+longitudinal_plot(fit_1, type="generalized",  palette = pal, height=6, width=6.5, plot = FALSE, save_plot="long_4.pdf")
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,2,9,7,5,10,8,6))
 longitudinal_plot(fit_1,type="coefficient", 
@@ -182,19 +185,10 @@ longitudinal_plot(fit_1,type="coefficient",
     focal="SexMale", target="SexMale",
     dyadic="Friend", dyadic="Relatedness"),
     palette=pal,
-    normalized=TRUE,
-    height=4, width=9)
-
-# Model 1 - Plot results
-strand_caterpillar_plot(res_1, 
- submodels=c(
- "Focal effects: Out-degree",
- "Target effects: In-degree",
- "Dyadic effects"), 
- export_as_table = FALSE, 
- normalized=FALSE
-)
-
+    normalized=FALSE,
+    height=4, width=9, 
+    plot = FALSE,
+    save_plot="long_5.pdf")
 
 block_pars = rbind(
 process_block_parameters(fit_1, "Afrocolombian to Afrocolombian", "Afrocolombian to Embera", HPDI=0.9),
@@ -203,5 +197,16 @@ process_block_parameters(fit_1, "Embera to Afrocolombian", "Afrocolombian to Emb
 )
 
 pal = plvs_vltra("mystic_mausoleum", elements=c(1,3,7))
-longitudinal_plot(fit_1, type="custom", results=block_pars, plot = TRUE, save_plot = "Block_params.pdf", height=6, width=6, palette=pal)
+longitudinal_plot(fit_1, type="custom", results=block_pars, plot = FALSE, height=6, width=6, palette=pal, save_plot="long_6.pdf")
+
+
+# JAX
+ samples = fit_1$fit$get_samples()
+ jax_summary(samples$dyad_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$focal_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$target_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$block_effects, n_iter=1000, n_chains=1)
+
+
+
 
