@@ -84,7 +84,7 @@
                          dyadic_effects = dr_effects_1
                          )      
 
- image(G$network)
+ # image(G$network)
 
 ################################################################################################ Fit STRAND
 # Create the STRAND data object
@@ -131,7 +131,7 @@
  format(object.size(res_numpyro_0), units = "Mb")
  fit_numpyro_0[[6]]
 
-###### Now compare the full model agaist Stan
+###### Now compare the full model against Stan
  fit_numpyro = fit_block_plus_social_relations_model(
     data=model_dat,
     block_regression = ~ Merica,
@@ -271,10 +271,10 @@
 
 # JAX
  samples = fit_numpyro$fit$get_samples()
- jax_summary(samples$dyad_effects)
- jax_summary(samples$focal_effects)
- jax_summary(samples$target_effects)
- jax_summary(samples$block_effects)
+ jax_summary(samples$dyad_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$focal_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$target_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$block_effects, n_iter=1000, n_chains=1)
 
 
 
