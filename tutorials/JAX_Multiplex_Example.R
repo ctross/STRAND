@@ -13,11 +13,13 @@
  library(stringr)
  library(psych)
 
- set.seed(1)
+ # The next three lines only need to be run once per machine, to build the JAX toolchain in a virtual environment
+ # cpu_settings = list(jax_device_type = "cpu",
+ #                     cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+ # cpu_build_parameters = merge_mcmc_parameters(cpu_settings)
+ # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = cpu_build_parameters) 
 
-# install_github('ctross/PlvsVltra')
- library(PlvsVltra) # For colors
- colors = plvs_vltra("dust_storm", rev=FALSE, elements=NULL, show=FALSE)
+ set.seed(1)
 
 # Make data
  N_id = 50       # Individuals in network
@@ -192,14 +194,14 @@
   error_sigma = error_sigma           
  )
 
- par(mfrow=c(1,7))
- hist(G$network[1,,])
- hist(G$network[2,,])
- hist(G$network[3,,])
- hist(G$network[4,,])
- hist(G$network[5,,])
- hist(G$network[6,,])
- hist(G$network[7,,])
+ # par(mfrow=c(1,7))
+ # hist(G$network[1,,])
+ # hist(G$network[2,,])
+ # hist(G$network[3,,])
+ # hist(G$network[4,,])
+ # hist(G$network[5,,])
+ # hist(G$network[6,,])
+ # hist(G$network[7,,])
 
 #################################################### Create the STRAND data object
  outcome = list(Feeding = G$network[1,,], Fighting = G$network[2,,], Grooming = G$network[3,,],
@@ -931,10 +933,10 @@ p2
 
 # JAX
  samples = fit_numpyro$fit$get_samples()
- jax_summary(samples$dyad_effects)
- jax_summary(samples$focal_effects)
- jax_summary(samples$target_effects)
- jax_summary(samples$block_effects)
+ jax_summary(samples$dyad_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$focal_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$target_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$block_effects, n_iter=1000, n_chains=1)
 
 
 

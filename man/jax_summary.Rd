@@ -4,10 +4,14 @@
 \alias{jax_summary}
 \title{A function to compute summary stats from a JAX object}
 \usage{
-jax_summary(X)
+jax_summary(X, n_iter, n_chains)
 }
 \arguments{
 \item{X}{A set of sample to summarize.}
+
+\item{n_iter}{Iterations.}
+
+\item{n_chains}{Chains.}
 }
 \value{
 A table of MCMC summaries.

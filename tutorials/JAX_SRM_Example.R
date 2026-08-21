@@ -11,6 +11,12 @@
  library(STRAND)
  library(ggplot2)
 
+ # The next three lines only need to be run once per machine, to build the JAX toolchain in a virtual environment
+ # cpu_settings = list(jax_device_type = "cpu",
+ #                     cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+ # cpu_build_parameters = merge_mcmc_parameters(cpu_settings)
+ # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = cpu_build_parameters) 
+
  set.seed(1)
 
 # Make data

@@ -19,8 +19,8 @@
  gpu_settings$cusparse_path = "/home/cody_ross/.local/share/r-miniconda/pkgs/libcusparse-12.8.2.51-hf6fa245_0/lib/libcusparse.so.12"
 
  # The next two lines only need to be run once per machine, to build the GPU toolchain in a virtual environment
-   gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
-   create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
+   # gpu_build_parameters = merge_mcmc_parameters(gpu_settings)
+   # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = gpu_build_parameters) 
 
 # ########################################################################################################################################
 

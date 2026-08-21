@@ -10,6 +10,12 @@
  library(igraph)
  library(STRAND)
 
+ # The next three lines only need to be run once per machine, to build the JAX toolchain in a virtual environment
+ # cpu_settings = list(jax_device_type = "cpu",
+ #                     cpu_versions = c("numpy>=1.27","numpyro>=0.18", "jax>=0.7", "jaxlib>=0.7"))
+ # cpu_build_parameters = merge_mcmc_parameters(cpu_settings)
+ # create_strand_venv(rebuild = TRUE, verbose = TRUE, mcmc_parameters = cpu_build_parameters) 
+
 ###################################### Make simulated longitudinal data
  set.seed(999)
 
@@ -718,10 +724,10 @@ multiplex_plot(fit_stan, type="generalized", HPDI=0.9, plot = TRUE)
 
 # JAX
  samples = fit_numpyro$fit$get_samples()
- jax_summary(samples$dyad_effects)
- jax_summary(samples$focal_effects)
- jax_summary(samples$target_effects)
- jax_summary(samples$block_effects)
+ jax_summary(samples$dyad_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$focal_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$target_effects, n_iter=1000, n_chains=1)
+ jax_summary(samples$block_effects, n_iter=1000, n_chains=1)
 
 
 
