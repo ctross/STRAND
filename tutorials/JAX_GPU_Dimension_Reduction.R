@@ -323,7 +323,7 @@ ggsave("res_dim_reduce.pdf", p, height=8, width=12)
 
 # JAX
  samples = fit_numpyro$fit$get_samples()
- jax_summary(samples$dyad_effects)
- jax_summary(samples$focal_effects)
- jax_summary(samples$target_effects)
- jax_summary(samples$block_effects)
+ jax_summary(samples$dyad_effects, n_iter = 1000, n_chains = 1)
+ jax_summary(samples$focal_effects, n_iter = 1000, n_chains = 1)
+ jax_summary(samples$target_effects, n_iter = 1000, n_chains = 1)
+ jax_summary(samples$block_effects, n_iter = 1000, n_chains = 1)
