@@ -80,7 +80,7 @@ fit_multiplex_dimension_reduction_with_numpyro = function(
   long_block_set = dyadic_set_to_long(dyadic_block_set[[1]])
   long_outcome_set = dyadic_set_to_long(data$outcomes)
   long_exposure_set = dyadic_set_to_long(data$exposure)
-  long_mask_set = dyadic_set_to_long(data$mask)
+  long_mask_set = dyadic_set_to_long(ifelse(data$mask==1, 0, 1)) 
   long_ids = make_dyadic_edgelist(nrow(data$focal_set))
 
   # Convert to numpy arrays
