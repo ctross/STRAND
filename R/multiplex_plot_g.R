@@ -22,8 +22,9 @@ multiplex_plot_g = function(input, HPDI=0.9, plot = TRUE, export_as_table = FALS
     }
 
   if(attr(input, "fit_type")=="numpyro"){
-         samps = convert_posterior(input$fit$get_samples())
-         corr = samps$G_corr 
+         np = reticulate::import('numpy')
+         R_list = reticulate::py_to_r(input$fit$get_samples())
+         corr = reticulate::py_to_r(np$array(R_list$G_corr))
     }else{
          stanfit = posterior::as_draws_rvars(input$fit$draws())
          corr = posterior::draws_of(stanfit$"G_corr")
