@@ -23,18 +23,20 @@ multiplex_plot_d = function(input, HPDI=0.9, mode="cor", plot = TRUE, export_as_
     }
  
    if(attr(input, "fit_type")=="numpyro"){
-         samps = convert_posterior(input$fit$get_samples())
-         corr = samps$D_corr 
+         np = reticulate::import('numpy')
+         R_list = reticulate::py_to_r(input$fit$get_samples())
+         corr = reticulate::py_to_r(np$array(R_list$D_corr))
+         dr_sigma = reticulate::py_to_r(np$array(R_list$dr_sigma)) 
     }else{
          stanfit = posterior::as_draws_rvars(input$fit$draws())
          corr = posterior::draws_of(stanfit$"D_corr")
+         dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
       }
 
  lims = c(-1,1)
 
  if(mode %in% c("cov", "adj")){
   new = corr
-  dr_sigma = posterior::draws_of(stanfit$"dr_sigma")
 
     if(input$data$link_mode==1){
        base_sd = sqrt(0.33333 * (3.14159^2))
