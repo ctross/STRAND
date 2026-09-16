@@ -528,11 +528,23 @@ make_strand_data = function(outcome=NULL, self_report=NULL, outcome_mode=NULL, l
      )
     
     if(imputation == FALSE){
-    for(q in 1:length(model_dat)){
-      if(sum(is.na(model_dat[[q]]))>0){
-       stop(paste0("Variable: ", names(model_dat)[q], " contains missing values. Set: imputation=TRUE, or rebuild your data objects."))
+      # GPT recursive wizardry
+      has_na = function(x){
+       if(is.list(x)){
+        any(vapply(x, has_na, logical(1)))
+        } else {
+        anyNA(x)
+        }
+       }
+
+     for(q in seq_along(model_dat)){
+      if(has_na(model_dat[[q]])){
+       stop(paste0(
+       "Variable: ", names(model_dat)[q],
+       " contains missing values. Set: imputation=TRUE, or rebuild your data objects."
+       ))
       }
-     }
+      }
     }
 
    attr(model_dat, "class") = "STRAND Data Object"
